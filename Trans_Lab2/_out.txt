@@ -1,0 +1,23 @@
+ROM	$idb[20][10]
+push 6138312
+push 6136792
+pop	$A
+$A	=	$A	*	10
+$B	=	$B	+	$A
+$A	=	$idb[$B]
+$B	=	$A
+ $A	=	$cCXVII[$B]
+$C	=	op[=]	$B$A	=	$CINT	$idfoo
+FLOAT	$idbar
+push 6154016
+push 6152640
+pop	$A
+$A	=	$A	*	10
+$B	=	$B	+	$A
+$A	=	$idb[$B]
+$B	=	$A
+ $A	=	$cXLV[$B]
+$C	=	op[<=]	$B$A	=	$Ciffalse[$A]	goto	$L0INT	$idfoo
+goto	$L1
+FLOAT	$idbar
+$L1:

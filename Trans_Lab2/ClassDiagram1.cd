@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="BaseTypeInfo" Collapsed="true">
+    <Position X="7.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAgAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAABEA=</HashCode>
+      <FileName>types.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="IntType" Collapsed="true">
+    <Position X="7.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAEA=</HashCode>
+      <FileName>types.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LiteralType" Collapsed="true">
+    <Position X="11.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACIBEAAAAAAAAAAAAAAAAAAAAAABEA=</HashCode>
+      <FileName>types.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="FloatType" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAEA=</HashCode>
+      <FileName>types.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="InvalidType" Collapsed="true">
+    <Position X="5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAEA=</HashCode>
+      <FileName>types.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VoidType" Collapsed="true">
+    <Position X="9.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAEA=</HashCode>
+      <FileName>types.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ArrayType" Collapsed="true">
+    <Position X="14" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEAABABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABEA=</HashCode>
+      <FileName>types.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StructType" Collapsed="true">
+    <Position X="2.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAgAAAAAAAAAAAAAIAAAAAAAgAAAAAAAAAAgEA=</HashCode>
+      <FileName>types.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UnionType" Collapsed="true">
+    <Position X="2.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAgAAACAAAAAAAAAAAAAAAAAAAAAIAAAAAAgEA=</HashCode>
+      <FileName>types.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Enum Name="enumTypes" Collapsed="true">
+    <Position X="16.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>types.h</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Tahoma" Size="8.25" />
+</ClassDiagram>

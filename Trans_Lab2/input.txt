@@ -1,0 +1,12 @@
+rom[10][20] b;
+b[0][1] = CXVII;
+int foo;
+float bar;
+if (b[1][1] <= XLV)
+{
+	int foo;
+}
+else
+{
+	float bar;
+}

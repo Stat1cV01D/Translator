@@ -1,0 +1,28 @@
+Starting parse
+Entering state 0
+Reducing stack by rule 7 (line 102):
+-> $$ = nterm stmnt_list (-858993460.-858993460--858993460.-858993460: )
+Stack now 0
+Entering state 2
+Reading a token: Next token is token TOK_FLOAT_DECL (1.1-1.4: )
+Shifting token TOK_FLOAT_DECL (1.1-1.4: )
+Entering state 15
+Reducing stack by rule 17 (line 190):
+   $1 = token TOK_FLOAT_DECL (1.1-1.4: )
+-> $$ = nterm type (1.1-1.4: )
+Stack now 0 2
+Entering state 22
+Reading a token: Next token is token TOK_IDENTIFIER (1.5-1.6: )
+Shifting token TOK_IDENTIFIER (1.5-1.6: )
+Entering state 30
+Reading a token: Next token is token TOK_CLOSEPAR (1.6-1.7: )
+Error: popping token TOK_IDENTIFIER (1.5-1.6: )
+Stack now 0 2 22
+Error: popping nterm type (1.1-1.4: )
+Stack now 0 2
+Error: popping nterm stmnt_list (-858993460.-858993460--858993460.-858993460: )
+Stack now 0
+Cleanup: discarding lookahead token TOK_CLOSEPAR (1.6-1.7: )
+Stack now 0
+
+There are syntax errors!
