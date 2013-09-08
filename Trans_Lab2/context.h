@@ -22,8 +22,8 @@ public:
 	static void Init();
 	static void Push();
 	static void Pop();
-	std::string GetBlockNamepace();
 	static TBlockContext *GetCurrent();
+	std::string GetBlockNamepace();
 	TBlockContext *GetParent();
 };
 

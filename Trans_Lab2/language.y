@@ -106,7 +106,7 @@ struct Node;
 %type <_node> start declaration_list stmnt stmnt_list stmnt_block_start stmnt_block 
 %type <_node> expr struct_item identifier declaration_stmt struct_type
 %type <_node> if_stmt loop_decl switch_stmt print_stmt read_stmt assignment struct_def struct_head struct_body struct_tail
-%type <_node> loop_for_expr loop_body loop_while_expr type array left_assign_expr num_const
+%type <_node> loop_for_expr loop_body loop_while_expr type array type_name left_assign_expr num_const
 %type <_node> switch_head case_list default switch_tail case_stmt case_head case_body
 %type <_node> default_head default_body 
 
@@ -418,7 +418,7 @@ read_stmt:
 if_stmt :
 	TOK_IF[if] TOK_OPENPAR[open] expr[cond] TOK_CLOSEPAR[close] stmnt[if_true] %prec IF_WITHOUT_ELSE
 	{
-		assumeOneOfTypes($cond, @cond, 1, BOOL_TYPE);
+		AssertOneOfTypes($cond, @cond, 1, BOOL_TYPE);
 
 		$$ = createNode(new ConditionalAstNode($cond->astNode, $if_true->astNode), 
 				createPtNodeWithChildren("stmnt", 5, $if->ptNode, $open->ptNode, $cond->ptNode, $close->ptNode, $if_true->ptNode));
@@ -426,7 +426,7 @@ if_stmt :
 	|
 	TOK_IF[if] TOK_OPENPAR[open] expr[cond] TOK_CLOSEPAR[close] stmnt[if_true] TOK_ELSE[else] stmnt[if_false]
 	{
-		assumeOneOfTypes($cond, @cond, 1, BOOL_TYPE);
+		AssertOneOfTypes($cond, @cond, 1, BOOL_TYPE);
 
 		$$ = createNode(new ConditionalAstNode($cond->astNode, $if_true->astNode, $if_false->astNode), 
 				createPtNodeWithChildren("stmnt", 7, $if->ptNode, $open->ptNode, $cond->ptNode, $close->ptNode,
@@ -487,7 +487,7 @@ loop_body:
 	stmnt_block;
 
 type:
-	type[t] array[array_decl]
+	type_name[t] array[array_decl]
 	{
 		DimensionAstNode *dimNode = dynamic_cast<DimensionAstNode*>($array_decl->astNode);
 		if (dimNode->GetExpr() == nullptr)
@@ -510,22 +510,24 @@ type:
 				sizes.emplace_back(numValueNode->ToInt());
 				
 				// we will now delete the DimensionAstNode's as we no more need them
+				// as we converted the info to a more comfortable vector format
 				AstNode *del = cur;
 				cur = cur->GetNextDim();
 				delete del;
 			}	
 
-			if ($$ != nullptr)
+			if ($$ == nullptr) // IF there were no errors...
 			{
 				$$ = createNode(new DeclIDAstNode(new ArrayType($t->astNode->GetResultType(), sizes)), 
 						createPtNodeWithChildren("array decl", 2, $t->ptNode, $array_decl->ptNode));
 			}
 
-			// we will also delete the original DeclIDAstNode as we need only type info
+			// we will also delete the original DeclIDAstNode as we only need type info
 			delete $t->astNode;
 		}
 	}
-	|
+
+type_name:
 	TOK_ROM_DECL[decl]
 	{
         $$ = createNode(new DeclIDAstNode(new RomanType()), 
@@ -578,7 +580,7 @@ assignment:
 	left_assign_expr[left] TOK_ASSIGN_OP[op] expr[right]
 	{
 		BaseTypeInfo *type = $left->astNode->GetResultType();
-		assumeOneOfTypes($right, @right, 1, type);
+		AssertOneOfTypes($right, @right, 1, type->getID());
 
 		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode), 
 				createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));
@@ -594,8 +596,8 @@ expr :
 	|
 	expr[left] TOK_B_LOGICAL_OP[op] expr[right]
 	{
-		assumeOneOfTypes($left, @left, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
-		assumeOneOfTypes($right, @right, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
+		AssertOneOfTypes($left, @left, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
+		AssertOneOfTypes($right, @right, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
 		
 		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode /*, new BoolType()*/), 
 				createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));
@@ -603,7 +605,7 @@ expr :
 	|
 	TOK_U_LOGICAL_OP[op] expr[right] %prec TOK_U_LOGICAL
 	{
-		BaseTypeInfo *type = assumeOneOfTypes($right, @right, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
+		AssertOneOfTypes($right, @right, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
 
 		$$ = createNode(new OperatorAstNode($op->ptNode->text, $right->astNode /*, new BoolType()*/), 
 				createPtNodeWithChildren("expr", 2, $op->ptNode, $right->ptNode));
@@ -611,7 +613,7 @@ expr :
 	|
 	TOK_U_ARITHMETICAL_OP[op] expr[right] %prec TOK_U_ARITHMETICAL
 	{
-		BaseTypeInfo *type = assumeOneOfTypes($right, @right, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
+		AssertOneOfTypes($right, @right, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
 
 		$$ = createNode(new OperatorAstNode($op->ptNode->text, $right->astNode), 
 				createPtNodeWithChildren("expr", 2, $op->ptNode, $right->ptNode));
@@ -619,8 +621,8 @@ expr :
 	|
 	expr[left] TOK_ARITHMETICAL_OP[op] expr[right]
 	{
-		assumeOneOfTypes($left, @left, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
-		assumeOneOfTypes($right, @right, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
+		AssertOneOfTypes($left, @left, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
+		AssertOneOfTypes($right, @right, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
 
 		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode), 
 				createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));
@@ -628,8 +630,8 @@ expr :
 	|
 	expr[left] TOK_COMP_OP[op] expr[right]
 	{
-		assumeOneOfTypes($left, @left, 4, BITS_TYPE, ROM_TYPE, INT_TYPE, FLOAT_TYPE);
-		assumeOneOfTypes($right, @right, 4, BITS_TYPE, ROM_TYPE, INT_TYPE, FLOAT_TYPE);
+		AssertOneOfTypes($left, @left, 4, BITS_TYPE, ROM_TYPE, INT_TYPE, FLOAT_TYPE);
+		AssertOneOfTypes($right, @right, 4, BITS_TYPE, ROM_TYPE, INT_TYPE, FLOAT_TYPE);
 
 		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode/*, new BoolType()*/), 
 				createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));
@@ -663,8 +665,8 @@ array:
 	TOK_OPENSQ[open] expr[val] TOK_CLOSESQ[close] array[decl]
 	{
 		AstNode *astNode = new DimensionAstNode(
-			dynamic_cast<OperatorAstNode*>($val->astNode)->GetResultType(), 
-			dynamic_cast<AstNode*>($val->astNode),
+			$val->astNode->GetResultType(), 
+			$val->astNode,
 			dynamic_cast<DimensionAstNode*>($decl->astNode));
 		PtNode *ptNode = createPtNodeWithChildren("array_dimension", 4, $decl->ptNode, $open->ptNode, $val->ptNode, $close->ptNode);
         
@@ -686,7 +688,7 @@ array:
 
 struct_item: identifier[id] TOK_DOT TOK_IDENTIFIER[name]
 	{
-		assumeOneOfTypes($id, @id, 2, STRUCT_TYPE, UNION_TYPE);
+		AssertOneOfTypes($id, @id, 2, STRUCT_TYPE, UNION_TYPE);
 		//if(FALSE == CheckNodeTypeByTypeId($1, TYPE_STRUCT) 
 		//	&& FALSE == CheckNodeTypeByTypeId($1, TYPE_UNION))
 		//{
@@ -790,7 +792,7 @@ switch_stmt: switch_head case_list default switch_tail
 switch_head: TOK_SWITCH TOK_OPENPAR expr TOK_CLOSEPAR TOK_OPENBR	/*<s1>*/
 	{
 		//AstNode *astNode;
-		assumeOneOfTypes($3, @3, 1, INT_TYPE);
+		AssertOneOfTypes($3, @3, 1, INT_TYPE);
 
 		if($3->astNode->GetResultType()->getID() != INT_TYPE)
 		{
@@ -837,7 +839,7 @@ case_stmt: case_head case_body
 case_head: TOK_CASE expr TOK_DOUBLEDOT	/* <s3> */
 	{
 		//TODO: проверка значени€ ключа! оно не может повтор€тьс€
-		assumeOneOfTypes($2, @2, 1, INT_TYPE);
+		AssertOneOfTypes($2, @2, 1, INT_TYPE);
 		
 		if(Context.IsRepeatedCaseKeyVal($2->astNode))
 		{

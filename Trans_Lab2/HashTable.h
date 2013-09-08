@@ -10,8 +10,9 @@ private:
 
 	int st_statopcount;
 
-	struct Record
+	class Record
 	{
+	public:
 		TKEY name;
 		TVALUE value;
 		Record *prev;
@@ -79,7 +80,7 @@ public:
 			rec->prev->next = rec->next;
 		if (rec->next)
 			rec->next->prev = rec->prev;
-		free(rec);
+		delete (rec);
 		return 1;
 	}
 
@@ -116,7 +117,7 @@ private:
 	{
 		int h = hash(name);
 
-		Record *result = (Record *)malloc(sizeof(Record));
+		Record *result = new Record();
 		result->name = name;
 		result->prev = NULL;
 		result->next = NULL;

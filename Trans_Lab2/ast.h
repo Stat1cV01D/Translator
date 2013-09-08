@@ -44,7 +44,7 @@ public:
 		delete resultType;
 	}
 
-	BaseTypeInfo * GetResultType() { return resultType; }
+	virtual BaseTypeInfo * GetResultType() { return resultType; }
 	TreeType GetASTType() { return nodeType; }
 
 	bool IsEqual(AstNode *n2)
@@ -245,7 +245,6 @@ class NumValueAstNode: public AstNode
 {
 	bool isConstant;
 	std::string value; //string because of ROM type which is to be converted
-	TVariable *varTableReference;
 
 	int RomanToInt()
 	{
@@ -307,7 +306,7 @@ public:
 
 	int ToInt()
 	{
-		switch (varTableReference->GetType()->getID())
+		switch (GetResultType()->getID())
 		{
 		case INT_TYPE:
 			return atoi(value.c_str());
@@ -322,7 +321,7 @@ public:
 
 	double ToDouble()
 	{
-		switch (varTableReference->GetType()->getID())
+		switch (GetResultType()->getID())
 		{
 		case INT_TYPE:
 			return atoi(value.c_str());
@@ -343,7 +342,7 @@ public:
 
 class DimensionAstNode: public AstNode
 {
-	// Either expression node or NumValue node
+	// Either expression node (addressing) or NumValue node (declaration)
 	AstNode *dimension_expr;
 	DimensionAstNode *next_dimension;
 public:
@@ -383,17 +382,57 @@ class ArrayAddressAstNode: public AstNode
 {
 	VarAstNode *var;
 	DimensionAstNode *dimensions;
-public:
-	ArrayAddressAstNode(VarAstNode *var, DimensionAstNode *dimensions): 
-	  AstNode(ARRAY_ITEM_NODE, var->GetResultType()) 
-	  {
-		  this->var = var;
-		  this->dimensions = dimensions;
-	  }
 
-	  virtual int Print3AC(TACWriter* output) { return 0; }
-	  virtual int PrintASTree(AstPrintInfo* output) { return 0; }
-	  virtual int Serialize(TMLWriter* output);
+	int GetNumDimensions()
+	{
+		int dimensions_num = 0;
+		for (auto cur = this->dimensions; cur->GetNextDim() != nullptr; cur = cur->GetNextDim())
+		{
+			dimensions_num++;
+		}
+		return dimensions_num;
+	}
+
+public:
+	ArrayAddressAstNode(VarAstNode *var, DimensionAstNode *dimensions)
+		: AstNode(ARRAY_ITEM_NODE, var->GetResultType()) 
+	{
+		this->var = var;
+		this->dimensions = dimensions;
+
+		auto varType = dynamic_cast<ArrayType*>(var->GetResultType());
+
+		if (varType->GetSizes().size() < GetNumDimensions())
+			throw std::string("Error: too much dimensions for the declared variable");
+	}
+
+	~ArrayAddressAstNode()
+	{
+
+	}
+
+	// TODO: make it more flexible to assignment checks for:
+	// 1) array = var
+	// 2) var = array
+	// 3) array = array
+	virtual BaseTypeInfo *GetResultType()
+	{
+		int dimensions_num = GetNumDimensions();
+		auto varType = dynamic_cast<ArrayType*>(var->GetResultType());
+		
+		if (varType->GetSizes().size() == dimensions_num)
+		{
+			return varType->GetBaseType();
+		}
+		else
+		{
+			return varType; //same as return AstNode::GetResultType();
+		}
+	}
+
+	virtual int Print3AC(TACWriter* output) { return 0; }
+	virtual int PrintASTree(AstPrintInfo* output) { return 0; }
+	virtual int Serialize(TMLWriter* output);
 };
 
 class StructAddressAstNode: public AstNode
@@ -426,14 +465,12 @@ public:
 
 class DeclIDAstNode: public AstNode
 {
-	bool isConstant;
-	std::string name;
-	DimensionAstNode* dim_list;
+	//bool isConstant;
+	//std::string name;
 public:
 	DeclIDAstNode(BaseTypeInfo *Type)
 		: AstNode(DECL_ID_NODE, Type) 
 	{
-		this->dim_list = dim_list;
 	}
 
 	virtual int Print3AC(TACWriter* output) { throw std::string("Not available"); return 0; }

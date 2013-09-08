@@ -22,6 +22,8 @@ public:
 	virtual int SizeOf() = 0;
 	virtual unsigned int Offset(std::string& fieldName) { return 0; /* unions and base types have no field offsets */}
 
+	virtual BaseTypeInfo* Clone() = 0;
+
 	virtual std::string GetName() { return std::string(TypeStrings[getID()]); }
 	virtual enumTypes getID() = 0;
 	void PrintType(FILE *stream);

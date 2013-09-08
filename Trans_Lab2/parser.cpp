@@ -29,7 +29,7 @@ Node *addStmntToBlock(Node *block, const Node *stmnt)
     return block;
 }
 
-BaseTypeInfo *assumeOneOfTypes( const Node *node, YYLTYPE loc, int n, ... )
+void AssertOneOfTypes( const Node *node, YYLTYPE loc, int n, ... )
 {
 	va_list args;
 	va_start(args, n);
@@ -38,7 +38,7 @@ BaseTypeInfo *assumeOneOfTypes( const Node *node, YYLTYPE loc, int n, ... )
 	for (i=0; i<n; i++)
 	{
 		if (node->astNode->GetResultType()->getID() == va_arg(args, enumTypes))
-			return node->astNode->GetResultType();
+			return; // no errors here
 	}
 	va_end(args);
 
@@ -58,7 +58,6 @@ BaseTypeInfo *assumeOneOfTypes( const Node *node, YYLTYPE loc, int n, ... )
 	va_end(args);
 
 	print_error(errStr, loc);
-	return nullptr;
 }
 
 

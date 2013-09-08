@@ -26,17 +26,17 @@ void TBlockContext::Pop()
 	delete (oldContext);
 }
 
-std::string TBlockContext::GetBlockNamepace()
-{
-	return ns;
-}
-
 TBlockContext *TBlockContext::GetCurrent()
 {
-	return bl_context->parent;
+	return bl_context;
+}
+
+std::string TBlockContext::GetBlockNamepace()
+{
+	return this->ns;
 }
 
 TBlockContext *TBlockContext::GetParent()
 {
-	return parent;
+	return this->parent;
 }

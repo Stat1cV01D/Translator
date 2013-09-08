@@ -37,7 +37,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <CustomBuildBeforeTargets>BuildCompile</CustomBuildBeforeTargets>
+    <CustomBuildBeforeTargets>
+    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -53,10 +54,12 @@
       <AdditionalDependencies>libfl.lib;libfl.a;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <CustomBuildStep>
-      <Command>run.bat</Command>
+      <Command>
+      </Command>
     </CustomBuildStep>
     <CustomBuildStep>
-      <Outputs>language.tab.c; lex.yy.c</Outputs>
+      <Outputs>
+      </Outputs>
     </CustomBuildStep>
     <PreBuildEvent>
       <Command>run.bat</Command>

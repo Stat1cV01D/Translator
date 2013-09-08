@@ -31,7 +31,7 @@ extern ParserContext Context;
 
 int main(int argc, char* argv[])
 {
-    //initBlockContext();
+    TBlockContext::Init();
 
     int printPt, printAst, print3AC;
     if (argc < 2)

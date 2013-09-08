@@ -22,7 +22,7 @@ extern PtNode *ptTree;
 class DimensionAstNode;
 
 Node *addStmntToBlock(Node *block, const Node *stmnt);
-BaseTypeInfo *assumeOneOfTypes(const Node *node, YYLTYPE loc, int n, ...);
+void AssertOneOfTypes(const Node *node, YYLTYPE loc, int n, ...);
 int GetDimensionInfo(DimensionAstNode *dimensions_list, int **sizes);
 
 #endif // PARSER_H_INCLUDED

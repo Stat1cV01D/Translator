@@ -100,7 +100,8 @@ class ArrayType: public BaseTypeInfo
 	std::vector<int> sizes;
 	BaseTypeInfo *itemTypeRef; //The base type of the array
 public:
-	virtual int SizeOf() {
+	virtual int SizeOf() 
+	{
 		int itemsCount = 0;
 		for(auto it = sizes.begin(); it != sizes.end(); it++)
 			itemsCount += *it;
@@ -125,8 +126,8 @@ public:
 	
 	BaseTypeInfo *GetBaseType() { return itemTypeRef; }
 
-	ArrayType(BaseTypeInfo *itemTypeRef, int arity, ...):
-		sizes()
+	ArrayType(BaseTypeInfo *itemTypeRef, int arity, ...)
+		: sizes()
 	{
 		this->itemTypeRef = itemTypeRef;
 		sizes.reserve(arity);
@@ -140,8 +141,8 @@ public:
 		va_end(sizesList);
 	}
 
-	ArrayType(BaseTypeInfo *itemTypeRef, std::vector<int> &SizesList):
-		sizes()
+	ArrayType(BaseTypeInfo *itemTypeRef, std::vector<int> &SizesList)
+		: sizes()
 	{
 		this->itemTypeRef = itemTypeRef;
 		this->sizes = SizesList;
