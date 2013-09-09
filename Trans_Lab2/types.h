@@ -24,12 +24,22 @@ extern void PrintVariable(FILE *stream, void *item);
 #define SIZE_OF_FLOAT	1
 #define CHAR_IN_WORD	4
 
+class BoolType: public BaseTypeInfo
+{
+public:
+	virtual int SizeOf() { return SIZE_OF_INT; }
+	virtual enumTypes getID() { return enumTypes::BOOL_TYPE; }
+	BoolType() {}
+	virtual BaseTypeInfo* Clone() { return new BoolType(*this); }
+};
+
 class IntType: public BaseTypeInfo
 {
 public:
 	virtual int SizeOf() { return SIZE_OF_INT; }
 	virtual enumTypes getID() { return enumTypes::INT_TYPE; }
 	IntType() {}
+	virtual BaseTypeInfo* Clone() { return new IntType(*this); }
 };
 
 class LiteralType: public BaseTypeInfo
@@ -56,6 +66,7 @@ public:
 	}
 
 	LiteralType(unsigned short length) {this->length = length; }
+	virtual BaseTypeInfo* Clone() { return new LiteralType(*this); }
 };
 
 class FloatType: public BaseTypeInfo
@@ -64,6 +75,7 @@ public:
 	virtual int SizeOf() { return SIZE_OF_FLOAT; }
 	virtual enumTypes getID() { return enumTypes::FLOAT_TYPE; }
 	FloatType() {}
+	virtual BaseTypeInfo* Clone() { return new FloatType(*this); }
 };
 
 class RomanType: public BaseTypeInfo
@@ -77,6 +89,7 @@ public:
 
 	virtual int SizeOf() { return GetLength(); }
 	RomanType() { this->length = 10; }
+	virtual BaseTypeInfo* Clone() { return new RomanType(*this); }
 };
 
 class InvalidType: public BaseTypeInfo
@@ -85,6 +98,7 @@ public:
 	virtual int SizeOf() { return 0; }
 	virtual enumTypes getID() { return enumTypes::INVALID_TYPE; }
 	InvalidType() {}
+	virtual BaseTypeInfo* Clone() { return new InvalidType(*this); }
 };
 
 class VoidType: public BaseTypeInfo
@@ -93,6 +107,7 @@ public:
 	virtual int SizeOf() { return 0; }
 	virtual enumTypes getID() { return enumTypes::VOID_TYPE; }
 	VoidType(){}
+	virtual BaseTypeInfo* Clone() { return new VoidType(*this); }
 };
 
 class ArrayType: public BaseTypeInfo
@@ -149,8 +164,9 @@ public:
 	}
 
 	virtual enumTypes getID() { return enumTypes::ARRAY_TYPE; } 
+	virtual BaseTypeInfo* Clone() { return new ArrayType(*this); }
 };
 
-// Struct and Unoin types are in Variable module
+// Struct and Union types are in Variable module
 
 #endif /* _TYPES_H_ */

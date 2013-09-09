@@ -131,6 +131,7 @@ public:
 	~StructType()
 	{
 	}
+	virtual BaseTypeInfo* Clone() { return new StructType(*this); }
 };
 
 class UnionType: public StructType
@@ -156,6 +157,7 @@ public:
 	~UnionType()
 	{
 	}
+	virtual BaseTypeInfo* Clone() { return new UnionType(*this); }
 };
 
 std::string GenerateVariableName(std::string& prefix, unsigned int number);

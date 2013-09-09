@@ -17,6 +17,7 @@
 #pragma warning(disable : 4005)
 
 void yyerror(const char *message);
+#define YYDEBUG 1
 }
 
 %code requires
@@ -106,7 +107,7 @@ struct Node;
 %type <_node> start declaration_list stmnt stmnt_list stmnt_block_start stmnt_block 
 %type <_node> expr struct_item identifier declaration_stmt struct_type
 %type <_node> if_stmt loop_decl switch_stmt print_stmt read_stmt assignment struct_def struct_head struct_body struct_tail
-%type <_node> loop_for_expr loop_body loop_while_expr type array type_name left_assign_expr num_const
+%type <_node> loop_for_expr instruction_body loop_while_expr type array type_name left_assign_expr num_const
 %type <_node> switch_head case_list default switch_tail case_stmt case_head case_body
 %type <_node> default_head default_body 
 
@@ -125,10 +126,16 @@ start :  /* empty */
 	| 
 	declaration_list stmnt_list
 	{
-		$$ = $2;
+		PtNode *ptNode = createPtNode("start");
+		setPtNodeChildren(ptNode, 1, $stmnt_list->ptNode);
+		astTree = $stmnt_list->astNode;
+		ptTree = ptNode;
 	}
 	|
 	declaration_list
+	{
+		$$ = NULL;
+	}
 	|
 	stmnt_list
 	{
@@ -139,11 +146,12 @@ start :  /* empty */
 	}
 	;
 
-declaration_list: declaration_stmt ';'
+declaration_list: 
+	declaration_stmt TOK_ENDEXPR[end]
 	{
 		$$ = NULL;
 	}
-	| declaration_list declaration_stmt ';' 
+	| declaration_list declaration_stmt TOK_ENDEXPR[end] 
 	{
 		$$ = NULL;
 	}
@@ -158,7 +166,7 @@ stmnt_list: stmnt
 	{
 		$$ = $1;
 	}
-	| stmnt stmnt_list
+	| stmnt_list stmnt
 	{
 		$$ = addStmntToBlock($2, $1);
 	}
@@ -185,6 +193,18 @@ stmnt_block
 		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_CLOSE_BRACE, @error), 
 				nullptr);
 	}
+	| 
+	stmnt_block_start[st] declaration_list[decls] TOK_CLOSEBR[end] {TBlockContext::Pop();}
+	{
+		$$ = createNode(nullptr, 
+				createPtNodeWithChildren("stmnt_block", 2, $st->ptNode, $end->ptNode));
+	}
+	| 
+	stmnt_block_start[st] declaration_list[decls] stmnt_list[stmnts] TOK_CLOSEBR[end] {TBlockContext::Pop();}
+	{
+		$$ = createNode($stmnts->astNode, 
+				createPtNodeWithChildren("stmnt_block", 3, $st->ptNode, $stmnts->ptNode, $end->ptNode));
+	}
 	;
 
 stmnt
@@ -194,12 +214,14 @@ stmnt
 		$$ = createNode(new StatementAstNode($expr->astNode), 
 				createPtNodeWithChildren("stmnt", 2, $expr->ptNode, $end->ptNode));
 	}
-	| expr error
+	| 
+	expr error
 	{
 		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_SEPARATOR, @error), 
 				nullptr);
 	}
-	| TOK_IDENTIFIER TOK_DOUBLEDOT
+	| 
+	TOK_IDENTIFIER TOK_DOUBLEDOT
 	{
 		AstNode *astNode;
 		char *labelName = $1->ptNode->text;
@@ -222,7 +244,8 @@ stmnt
 		$$ = createNode(astNode, 
 				createPtNodeWithChildren("stmnt", 2, $1->ptNode, $2->ptNode));
 	}
-	| TOK_GOTO TOK_IDENTIFIER TOK_ENDEXPR
+	| 
+	TOK_GOTO TOK_IDENTIFIER TOK_ENDEXPR
 	{
 		char *labelName = $2->ptNode->text;
 		TLabel* label =  Context.GetLabel(labelName);
@@ -247,7 +270,7 @@ stmnt
 	|
 	read_stmt
 	|
-	assignment
+	assignment TOK_ENDEXPR
 	| 
 	TOK_BREAK TOK_ENDEXPR
 	{
@@ -277,12 +300,14 @@ stmnt
 		$$ = createNode(astNode, 
 				createPtNodeWithChildren("stmnt", 2, $1->ptNode, $2->ptNode));
 	}
-	| TOK_BREAK error
+	| 
+	TOK_BREAK error
 	{
 		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_SEPARATOR, @error), 
 				nullptr);
 	}
-	| TOK_CONTINUE TOK_ENDEXPR
+	| 
+	TOK_CONTINUE TOK_ENDEXPR
 	{
 		AstNode *astNode;
 		if(!Context.CanUseContinue())
@@ -306,7 +331,8 @@ stmnt
 		$$ = createNode(astNode, 
 				createPtNodeWithChildren("stmnt", 2, $1->ptNode, $2->ptNode));
 	}
-	| TOK_CONTINUE error
+	| 
+	TOK_CONTINUE error
 	{
 		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_SEPARATOR, @error), 
 				nullptr);
@@ -314,15 +340,15 @@ stmnt
 	;
 
 declaration_stmt:
-	type[decl] TOK_IDENTIFIER[id] TOK_ENDEXPR[end]
+	type[decl] TOK_IDENTIFIER[id]
 	{
 		Context.DeclVar($id->ptNode->text, $decl->astNode->GetResultType(), @id);
 
 		$$ = createNode(new DeclIDAstNode($decl->astNode->GetResultType()), 
-				createPtNodeWithChildren("stmnt", 3, $decl->ptNode, $id->ptNode, $end->ptNode));
+				createPtNodeWithChildren("stmnt", 2, $decl->ptNode, $id->ptNode));
 	}
 	| 
-	struct_def TOK_ENDEXPR[end]
+	struct_def
 	;
 
 struct_def: struct_head struct_body struct_tail
@@ -416,7 +442,7 @@ read_stmt:
 	;
 
 if_stmt :
-	TOK_IF[if] TOK_OPENPAR[open] expr[cond] TOK_CLOSEPAR[close] stmnt[if_true] %prec IF_WITHOUT_ELSE
+	TOK_IF[if] TOK_OPENPAR[open] expr[cond] TOK_CLOSEPAR[close] instruction_body[if_true] %prec IF_WITHOUT_ELSE
 	{
 		AssertOneOfTypes($cond, @cond, 1, BOOL_TYPE);
 
@@ -424,7 +450,7 @@ if_stmt :
 				createPtNodeWithChildren("stmnt", 5, $if->ptNode, $open->ptNode, $cond->ptNode, $close->ptNode, $if_true->ptNode));
 	}
 	|
-	TOK_IF[if] TOK_OPENPAR[open] expr[cond] TOK_CLOSEPAR[close] stmnt[if_true] TOK_ELSE[else] stmnt[if_false]
+	TOK_IF[if] TOK_OPENPAR[open] expr[cond] TOK_CLOSEPAR[close] instruction_body[if_true] TOK_ELSE[else] instruction_body[if_false]
 	{
 		AssertOneOfTypes($cond, @cond, 1, BOOL_TYPE);
 
@@ -441,7 +467,7 @@ if_stmt :
 	;
 
 loop_decl: // TODO: make error checks!
-	TOK_FOR_DECL[for_decl] loop_for_expr loop_body
+	TOK_FOR_DECL[for_decl] loop_for_expr instruction_body
 	{
 		LoopConditionAstNode *condition = dynamic_cast<LoopConditionAstNode *>($2->astNode);
 
@@ -449,7 +475,7 @@ loop_decl: // TODO: make error checks!
 				createPtNodeWithChildren("loop", 3, $for_decl->ptNode, $2->ptNode, $3->ptNode));
 	}
 	|
-	TOK_WHILE_DECL[loop] loop_while_expr loop_body
+	TOK_WHILE_DECL[loop] loop_while_expr instruction_body
 	{
 		LoopConditionAstNode *condition = dynamic_cast<LoopConditionAstNode *>($2->astNode);
 
@@ -457,13 +483,13 @@ loop_decl: // TODO: make error checks!
 				createPtNodeWithChildren("loop", 3, $loop->ptNode, $2->ptNode, $3->ptNode));
 	}
 	|
-	TOK_DO_DECL[do] loop_body TOK_WHILE_DECL[while]
+	TOK_DO_DECL[do] instruction_body TOK_WHILE_DECL[while]
 		loop_while_expr TOK_ENDEXPR[end]
 	{
 		LoopConditionAstNode *condition = dynamic_cast<LoopConditionAstNode *>($4->astNode);
 
 		$$ = createNode(new LoopAstNode(condition, $2->astNode, true), 
-				createPtNodeWithChildren("loop", 5, $do->ptNode, $loop_body->ptNode, $while->ptNode, $loop_while_expr->ptNode, $end->ptNode));
+				createPtNodeWithChildren("loop", 5, $do->ptNode, $instruction_body->ptNode, $while->ptNode, $loop_while_expr->ptNode, $end->ptNode));
 	}
 	;
 
@@ -483,8 +509,17 @@ loop_for_expr:
 	}
 	;
 
-loop_body:
-	stmnt_block;
+instruction_body:
+	stmnt_block
+	{
+		$$ = $1;
+	}
+	|
+	stmnt
+	{
+		$$ = $1;
+	}
+	;
 
 type:
 	type_name[t] array[array_decl]
@@ -518,7 +553,7 @@ type:
 
 			if ($$ == nullptr) // IF there were no errors...
 			{
-				$$ = createNode(new DeclIDAstNode(new ArrayType($t->astNode->GetResultType(), sizes)), 
+				$$ = createNode(new DeclIDAstNode(new ArrayType($t->astNode->GetResultType()->Clone(), sizes)), 
 						createPtNodeWithChildren("array decl", 2, $t->ptNode, $array_decl->ptNode));
 			}
 
@@ -599,7 +634,7 @@ expr :
 		AssertOneOfTypes($left, @left, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
 		AssertOneOfTypes($right, @right, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
 		
-		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode /*, new BoolType()*/), 
+		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode, new BoolType()), 
 				createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));
 	}
 	|
@@ -607,7 +642,7 @@ expr :
 	{
 		AssertOneOfTypes($right, @right, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
 
-		$$ = createNode(new OperatorAstNode($op->ptNode->text, $right->astNode /*, new BoolType()*/), 
+		$$ = createNode(new OperatorAstNode($op->ptNode->text, $right->astNode, nullptr, new BoolType()), 
 				createPtNodeWithChildren("expr", 2, $op->ptNode, $right->ptNode));
 	}
 	|
@@ -633,7 +668,7 @@ expr :
 		AssertOneOfTypes($left, @left, 4, BITS_TYPE, ROM_TYPE, INT_TYPE, FLOAT_TYPE);
 		AssertOneOfTypes($right, @right, 4, BITS_TYPE, ROM_TYPE, INT_TYPE, FLOAT_TYPE);
 
-		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode/*, new BoolType()*/), 
+		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode, new BoolType()), 
 				createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));
 	}
 	|
