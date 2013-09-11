@@ -354,7 +354,7 @@ public:
 	}
 
 	virtual int Print3AC(TACWriter* output);
-	virtual int PrintASTree(AstPrintInfo* output) { return 0; }
+	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
 
 	AstNode *GetExpr() { return dimension_expr; }
@@ -367,7 +367,7 @@ class VarAstNode: public AstNode
 	TVariable *varTableReference;
 public:
 	VarAstNode(bool isTemporary, TVariable *varTableReference): 
-	  AstNode((isTemporary ? TMP_ID_NODE : ID_NODE), varTableReference->GetType()) 
+	  AstNode((isTemporary ? TMP_ID_NODE : ID_NODE), varTableReference->GetType()->Clone()) 
 	{
 		this->varTableReference = varTableReference;
 	}
@@ -430,8 +430,8 @@ public:
 		}
 	}
 
-	virtual int Print3AC(TACWriter* output) { return 0; }
-	virtual int PrintASTree(AstPrintInfo* output) { return 0; }
+	virtual int Print3AC(TACWriter* output);
+	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
 };
 
@@ -527,7 +527,7 @@ class OperatorAstNode: public AstNode
 
 public:
 	OperatorAstNode(char *op_3ac_name, AstNode *left, AstNode *right = nullptr, BaseTypeInfo* resultType = nullptr): 
-		AstNode(OPER_NODE, (resultType == nullptr ? resultType : left->GetResultType()))
+		AstNode(OPER_NODE, (resultType != nullptr ? resultType : left->GetResultType()->Clone()))
 	{
 		this->left = left;
 		this->right = right;
@@ -536,13 +536,13 @@ public:
 	}
 
 	OperatorAstNode(char operation, AstNode *left, AstNode *right = nullptr, BaseTypeInfo* resultType = nullptr): 
-		AstNode(OPER_NODE, (resultType == nullptr ? resultType : left->GetResultType()))
+		AstNode(OPER_NODE, (resultType != nullptr ? resultType : left->GetResultType()->Clone()))
 	{
 		Init((opEnum)operation, left, right, resultType);
 	}
 		
 	OperatorAstNode(opEnum operation, AstNode *left, AstNode *right = nullptr, BaseTypeInfo* resultType = nullptr): 
-		AstNode(OPER_NODE, (resultType == nullptr ? resultType : left->GetResultType()))
+		AstNode(OPER_NODE, (resultType != nullptr ? resultType : left->GetResultType()->Clone()))
 	{
 		Init(operation, left, right, resultType);
 	}

@@ -9,23 +9,12 @@
 
 Node *addStmntToBlock(Node *block, const Node *stmnt)
 {
-    PtNode *ptNode = block->ptNode;
-    if (!ptNode->firstChild)
-    {
-        ptNode->firstChild = stmnt->ptNode;
-    }
-    else
-    {
-        ptNode = ptNode->firstChild;
-        while (ptNode->next) ptNode = ptNode->next;
-        ptNode->next = stmnt->ptNode;
-    }
+    block->ptNode->next = stmnt->ptNode;
 
-    StatementBlockAstNode *astNode = dynamic_cast<StatementBlockAstNode*>(block->astNode);
-	if (astNode != nullptr)
-	{
-		astNode->AddStatement(stmnt->astNode);
-	}
+	auto blockAstNode = new StatementBlockAstNode();
+	blockAstNode->AddStatement(block->astNode);
+	blockAstNode->AddStatement(stmnt->astNode);
+	block->astNode = blockAstNode;
     return block;
 }
 

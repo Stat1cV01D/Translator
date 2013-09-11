@@ -90,7 +90,7 @@ void print_3ac()
 	sprintf(FN, "_out.txt");
 	FILE *g_outputFile = fopen(FN, "w+");
 	
-	TACWriter CGInfo(g_outputFile, &Context);
+	TACWriter CGInfo(&Context, g_outputFile);
 	CGInfo.CodeGen(astTree);
 
 	fclose(g_outputFile);
@@ -102,7 +102,7 @@ void MakeTML()
 	sprintf(FN, "_out.tml");
 	FILE *g_OutputTmlFile = fopen(FN, "w+");
 
-	TMLWriter TmlWrite(g_OutputTmlFile, &Context);
+	TMLWriter TmlWrite(&Context, g_OutputTmlFile);
 	TmlWrite.Serialize(astTree);
 
 	TMLFillDataSegment(g_OutputTmlFile);
@@ -114,7 +114,7 @@ void MakeTML()
 void print_astTree()
 {
     printf("Abstract syntax tree:\n---------------------\n\n");
-    
+
 	AstPrintInfo PrintInfo(&Context);
 	PrintInfo.Print(astTree);
     printf("\n");

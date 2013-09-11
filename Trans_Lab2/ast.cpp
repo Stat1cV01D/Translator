@@ -15,7 +15,10 @@ int ConditionalAstNode::Print3AC(TACWriter* output)
 	output->CodeGen(cond);
 	// 2. check the result and process true_block (TODO [SV] 14.08.13 16:14: with possible optimization|elimination?)
 	output->CodeWriteFormat("\tiffalse\t$A\tL%d\n", labelNumber_false);
-	output->CodeGen(true_block);
+	if (this->true_block != nullptr)
+	{
+		output->CodeGen(true_block);
+	}
 
 	if (this->false_block != nullptr)
 	{
@@ -31,8 +34,12 @@ int ConditionalAstNode::PrintASTree(AstPrintInfo* output)
 	output->AstWriteLine("if_stmnt");
 	output->AstWriteLine("cond:");
 	output->Print(cond);
-	output->AstWriteLine("if_true:");
-	output->Print(true_block);
+	// TODO: think of optimisations here?
+	if (this->true_block != nullptr) // might be null if there are no statements (or declarations only)
+	{
+		output->AstWriteLine("if_true:");
+		output->Print(true_block);
+	}
 	if (this->false_block != nullptr)
 	{
 		output->AstWriteLine("else:");
@@ -155,7 +162,9 @@ int OperatorAstNode::Print3AC(TACWriter* output)
 int OperatorAstNode::PrintASTree(AstPrintInfo* output)
 {
 	//printing the type
-	output->AstWriteFormat("%s oper [%s]\n", this->GetResultType()->GetName(), this->GetOpName());
+	// NOTE: gotta make it to separate std::string local var! 
+	std::string typeName = this->GetResultType()->GetName(); 
+	output->AstWriteFormat("%s oper [%s]\n", typeName.c_str(), this->GetOpName());
 	output->Print(left);
 	if (right != nullptr)
 		output->Print(right);
@@ -432,8 +441,9 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 
 int VarAstNode::Print3AC(TACWriter* output)
 {
-	TVariable *var = this->GetTableReference();
-	output->CodeWriteFormat("\t$id%s", var->GetName().c_str());
+	//auto varName = this->GetTableReference()->GetName();
+	//output->CodeWriteFormat("\t$id%s", varName.c_str());
+	output->SetLastUsedValueName(std::string("$id")+this->GetTableReference()->GetName());
 	return 0;
 }
 int VarAstNode::PrintASTree(AstPrintInfo* output)
@@ -443,12 +453,14 @@ int VarAstNode::PrintASTree(AstPrintInfo* output)
 }
 int VarAstNode::Serialize(TMLWriter* _output)
 {
+	//_output->WriteTypedInstruction(LD_, this);
 	return 0;
 }
 
 int NumValueAstNode::Print3AC(TACWriter* output)
 {
-	output->CodeWriteFormat("\t$c%s", this->value.c_str());
+	//output->CodeWriteFormat("\t$c%s", this->value.c_str());
+	output->SetLastUsedValueName(std::string("$c")+this->value);
 	return 0;
 }
 int NumValueAstNode::PrintASTree(AstPrintInfo* output)
@@ -458,6 +470,7 @@ int NumValueAstNode::PrintASTree(AstPrintInfo* output)
 }
 int NumValueAstNode::Serialize(TMLWriter* _output)
 {
+	//_output->WriteTypedInstruction(LD_, this);
 	return 0;
 }
 
@@ -565,24 +578,33 @@ int LoopConditionAstNode::PrintASTree(AstPrintInfo* output)
 	return 0;
 }
 
+int DimensionAstNode::PrintASTree(AstPrintInfo* output)
+{
+	output->AstWriteFormat("[\n");
+	output->Print(this->GetExpr());
+	output->AstWriteFormat("]\n");
+
+	if (this->next_dimension->GetExpr() != nullptr) // means next dimension node is the terminating one
+		output->Print(this->next_dimension);
+	return 0;
+}
+
 int DimensionAstNode::Print3AC(TACWriter* output)
 {
-	if (this->next_dimension != nullptr)
+	if (this->next_dimension->GetExpr() != nullptr) // means next dimension node is the terminating one
 		output->CodeGen(this->next_dimension);
 
-	// ѕроинициализируем временную переменную
-	auto tempVarName = GenerateVariableName(std::string("$t"), output->GetContext()->GetNextTmpVarIndex());
-	//VarAstNode tempVarNode(true, tempVar);
-	//output->CodeGen(this->GetExpr());
-
+	output->CodeGen(this->GetExpr()); // Might be either 
+	auto valName = output->GetLastUsedValueName();
 	// NOTE: dimension values are generated into INT values!
-	output->CodeWriteFormat("\tPush\t%d\n", tempVarName);
+	output->CodeWriteFormat("\tPush\t%s\n", valName.c_str());
+	// ѕроинициализируем временную переменную
 
 	return 0;
 }
 int DimensionAstNode::Serialize(TMLWriter* output)
 {
-	if (this->next_dimension != nullptr)
+	if (this->next_dimension->GetExpr() != nullptr) // means next dimension node is the terminating one
 		output->Serialize(this->next_dimension);
 
 	// TODO: serialize result to TmpVar and then push 
@@ -594,25 +616,64 @@ int DimensionAstNode::Serialize(TMLWriter* output)
 	return 0;
 }
 
+int ArrayAddressAstNode::Print3AC(AstPrintInfo* output)
+{
+	// Push desired addresses for the dimensions
+	output->Print(this->dimensions);
+
+	auto SumTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType(), true);
+	VarAstNode SumTmpVarNode(true, SumTmpVar);
+
+	for (auto it = sizes.begin(); it != sizes.end(); it++)
+	{
+		output->Print(&SumTmpVarNode)
+		auto valName = output->GetLastUsedValueName();
+		// NOTE: dimension values are generated into INT values!
+		output->CodeWriteFormat("\tPop\t%s\n", valName.c_str());
+
+		NumValueAstNode DimSizeNode(*it);
+		OperatorAstNode Mul(OP_MULT, &SumTmpVarNode, &DimSizeNode);
+		output->Print(&Mul);
+		
+		OperatorAstNode Plus(OP_PLUS, nullptr, &SumTmpVarNode, SumTmpVarNode.GetResultType()->Clone());
+		output->Print(&Plus);
+	}
+
+	// SumTmpVarNode is the result var
+	OperatorAstNode ArrayItemOffset(OP_PLUS, this->var, &SumTmpVarNode);
+	output->WriteTypedInstruction(ST_, &SumTmpVarNode);
+
+	return 0;
+}
+
+int ArrayAddressAstNode::PrintASTree(AstPrintInfo* output)
+{
+	auto varName = this->var->GetTableReference()->GetName();
+	output->AstWriteFormat("%s\n", varName.c_str());
+	output->Print(this->dimensions);
+	output->AstWriteLine("");
+	return 0;
+}
+
 int ArrayAddressAstNode::Serialize(TMLWriter* output)
 {
 	// Push desired addresses for the dimensions
 	output->Serialize(this->dimensions);
 
 	auto *varType = dynamic_cast<ArrayType*>(var->GetTableReference()->GetType());
-	auto it_end = varType->GetSizes().end();
+	auto sizes = varType->GetSizes();
 
 	auto SumTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
 	VarAstNode SumTmpVarNode(true, SumTmpVar);
 
-	for (auto it = varType->GetSizes().begin(); it != it_end; it++)
+	for (auto it = sizes.begin(); it != sizes.end(); it++)
 	{
 		output->WriteInstruction(POP);
 		NumValueAstNode DimSizeNode(*it);
-		OperatorAstNode Mul(OP_MULT, nullptr, &DimSizeNode, DimSizeNode.GetResultType());
+		OperatorAstNode Mul(OP_MULT, nullptr, &DimSizeNode, DimSizeNode.GetResultType()->Clone());
 		output->Serialize(&Mul);
 		
-		OperatorAstNode Plus(OP_PLUS, nullptr, &SumTmpVarNode, SumTmpVarNode.GetResultType());
+		OperatorAstNode Plus(OP_PLUS, nullptr, &SumTmpVarNode, SumTmpVarNode.GetResultType()->Clone());
 		output->Serialize(&Plus);
 		output->WriteTypedInstruction(ST_, &SumTmpVarNode);
 	}

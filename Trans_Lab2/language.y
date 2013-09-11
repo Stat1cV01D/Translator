@@ -168,7 +168,7 @@ stmnt_list: stmnt
 	}
 	| stmnt_list stmnt
 	{
-		$$ = addStmntToBlock($2, $1);
+		$$ = addStmntToBlock($1, $2);
 	}
 	;
 
@@ -207,8 +207,7 @@ stmnt_block
 	}
 	;
 
-stmnt
-	: 
+stmnt: 
 	expr TOK_ENDEXPR[end]
 	{
 		$$ = createNode(new StatementAstNode($expr->astNode), 

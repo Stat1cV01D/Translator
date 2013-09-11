@@ -137,7 +137,7 @@ public:
 		return itemTypeRef->GetName()+std::string(" array")+dimensions;
 	}
 
-	std::vector<int> GetSizes() const { return sizes; }
+	std::vector<int>& GetSizes() { return sizes; }
 	
 	BaseTypeInfo *GetBaseType() { return itemTypeRef; }
 

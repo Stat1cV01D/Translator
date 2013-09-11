@@ -107,10 +107,13 @@ public:
 		return result;
 	}
 
-	TVariable *GenerateNewTmpVar(BaseTypeInfo *type)
+	TVariable *GenerateNewTmpVar(BaseTypeInfo *type, bool describeOnly = false)
 	{
 		TVariable *result = CreateVariable(type, GenerateVariableName(std::string("$t"), this->GetNextTmpVarIndex()));
-		result->StaticMalloc();
+		if (!describeOnly)
+		{
+			result->StaticMalloc();
+		}
 		g_tmpVarsTable->st_put(result->GetName(), result);
 		return result;
 	}
@@ -473,8 +476,10 @@ public:
 		this->m_output = copy.m_output;
 	}
 
-	AstWriter(FILE *output, ParserContext *context)
+	AstWriter(ParserContext *context, FILE *output)
 	{
+		if (output == nullptr)
+			output = stdout;
 		m_output = output;
 		m_CallLevel = 0;
 		this->context = context;
@@ -485,11 +490,15 @@ public:
 
 class TACWriter: public AstWriter
 {
+	std::string lastUsedValueName;
 public:
 
-	TACWriter(TACWriter &copy): AstWriter(copy) {}
+	TACWriter(TACWriter &copy)
+		: AstWriter(copy),
+		lastUsedValueName()
+	{}
 
-	TACWriter(FILE *out, ParserContext *context): AstWriter(out, context) {}
+	TACWriter(ParserContext *context, FILE *out = nullptr): AstWriter(context, out) {}
 
 	int CodeGen(AstNode* node)
 	{
@@ -520,6 +529,17 @@ public:
 	{
 		WriteLine(code);
 	}
+
+	// Used by Push 3AC command
+	void SetLastUsedValueName(std::string& name)
+	{
+		lastUsedValueName = name;
+	}
+
+	std::string& GetLastUsedValueName() 
+	{
+		return lastUsedValueName;
+	}
 };
 
 // The ASTree text representation class.
@@ -528,8 +548,7 @@ public:
 class AstPrintInfo: public AstWriter
 {
 public:
-	AstPrintInfo(ParserContext *context): AstWriter(stdin, context) {}
-	AstPrintInfo(FILE *in, ParserContext *context): AstWriter(in, context) {}
+	AstPrintInfo(ParserContext *context, FILE *in = nullptr): AstWriter(context, in) {}
 
 	int Print(AstNode *node)
 	{
@@ -545,7 +564,7 @@ public:
 		va_list args;
 		va_start(args, FormatString);
 		print_tab();
-		WriteFormat(FormatString, args);
+		WriteFormatVA(FormatString, args);
 	}
 
 	void AstWriteLine(const char *code)
@@ -604,8 +623,9 @@ protected:
 		}
 	}
 
-	MachineInstruction AddAddressingModeAndArgs(MachineInstruction instruction, AstNode *operand)
+	MachineInstruction AddAddressingModeAndArgs(const MachineInstruction _instruction, AstNode *operand)
 	{
+		auto instruction = _instruction;
 		switch(operand->GetASTType()) 
 		{
 		case CONST_NODE:
@@ -628,6 +648,8 @@ protected:
 				}
 			}
 			break;
+		case ID_NODE:
+		case TMP_ID_NODE:
 		case VARIABLE_NODE:
 		case TMP_VAR_NODE:
 			{
@@ -652,13 +674,14 @@ protected:
 			break;
 		default:
 			fprintf(stderr, "error: invalid nodetype in function %s\n", __FUNCTION__);
-			return instruction;
+			break;
 		}
+		return instruction;
 	}
 
 public:
-	TMLWriter(FILE *out, ParserContext *context)
-		: AstWriter(out, context)
+	TMLWriter(ParserContext *context, FILE *out = nullptr)
+		: AstWriter(context, out)
 	{
 	}
 
@@ -799,8 +822,7 @@ protected:
 	}
 
 public:
-	PtPrintInfo(ParserContext *context): AstWriter(stdin, context) {}
-	PtPrintInfo(FILE *in, ParserContext *context): AstWriter(in, context) {}
+	PtPrintInfo(ParserContext *context, FILE *in = nullptr): AstWriter(context, in) {}
 
 	int Print(PtNode *node)
 	{
