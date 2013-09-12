@@ -9,7 +9,7 @@ std::string GenerateLabelName(unsigned int number)
 {
 	char buf[10];
 	itoa(number, buf, 10);
-	std::string result("$C");
+	std::string result("$L");
 	return (result += std::string(buf));
 }
 

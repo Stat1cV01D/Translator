@@ -335,7 +335,7 @@ public:
 	TVariable *getVar(const char *name, int secure, DimensionAstNode *dimensions_list, YYLTYPE loc)
 	{
 		std::string nameWithNs = findName(std::string(name));
-		if (nameWithNs == "")
+		if (nameWithNs == std::string(""))
 		{
 			print_error(strcatn(3, "Identifier \"", name, "\" doesn't exist in this context."), loc);
 			return NULL;
@@ -503,9 +503,6 @@ public:
 	int CodeGen(AstNode* node)
 	{
 		m_CallLevel++;
-		// TODO: These should exclude "call from call" numbers used!
-		//result.FirstLabelNumber = GetLastUsedLabelNumber();
-		//result.FirstTmpVarIndex = GetLastUsedTmpVarIndex();
 		auto result = node->Print3AC(this);
 		m_CallLevel--;
 

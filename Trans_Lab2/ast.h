@@ -73,6 +73,13 @@ public:
 	virtual int Serialize(TMLWriter* output) = 0;
 };
 
+class IValueHolderNode
+{
+public:
+	virtual std::string GetValueHolderName() = 0;
+	virtual ~IValueHolderNode() {}
+};
+
 class StatementAstNode: public AstNode
 {
 	AstNode* stmnt;
@@ -241,7 +248,7 @@ public:
 	}
 };
 
-class NumValueAstNode: public AstNode
+class NumValueAstNode: public AstNode, public IValueHolderNode
 {
 	bool isConstant;
 	std::string value; //string because of ROM type which is to be converted
@@ -338,6 +345,10 @@ public:
 	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
 
+	virtual std::string GetValueHolderName()
+	{
+		return std::string("$c")+this->ToString();
+	}
 };
 
 class DimensionAstNode: public AstNode
@@ -362,7 +373,7 @@ public:
 	void SetNextDim(DimensionAstNode *next_dimension) { this->next_dimension = next_dimension; }
 };
 
-class VarAstNode: public AstNode
+class VarAstNode: public AstNode, public IValueHolderNode
 {
 	TVariable *varTableReference;
 public:
@@ -376,9 +387,16 @@ public:
 	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* _output);
 
+	virtual std::string GetValueHolderName()
+	{
+		if (this->GetASTType() == TMP_ID_NODE)
+			return this->GetTableReference()->GetName();
+		else
+			return std::string("$id")+this->GetTableReference()->GetName();
+	}
 };
 
-class ArrayAddressAstNode: public AstNode
+class ArrayAddressAstNode: public AstNode, public IValueHolderNode
 {
 	VarAstNode *var;
 	DimensionAstNode *dimensions;
@@ -433,9 +451,14 @@ public:
 	virtual int Print3AC(TACWriter* output);
 	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
+
+	virtual std::string GetValueHolderName()
+	{
+		return this->var->GetValueHolderName();
+	}
 };
 
-class StructAddressAstNode: public AstNode
+class StructAddressAstNode: public AstNode, public IValueHolderNode
 {
 	VarAstNode *Struct;
 	TVariable *Field;
@@ -454,6 +477,7 @@ public:
 
 	TVariable *GetStruct() { return Struct->GetTableReference(); }
 	TVariable *GetField() { return Field; }
+
 	virtual int Print3AC(TACWriter* output)
 	{
 		//TODO [SV] 16.08.13 18:19: complete here!
@@ -461,6 +485,11 @@ public:
 	}
 	virtual int PrintASTree(AstPrintInfo* output) { return 0; }
 	virtual int Serialize(TMLWriter* output);
+
+	virtual std::string GetValueHolderName()
+	{
+		return GetStruct()->GetName()+std::string(".")+GetField()->GetName();
+	}
 };
 
 class DeclIDAstNode: public AstNode
@@ -509,16 +538,19 @@ class OperatorAstNode: public AstNode
 	// The resulting temporary variable index. Used by primary AST gen algo, NOT by 3ac AST gen.
 	int tmp_index; 
 
-	// the left node (assignee)
+	// the left node
 	AstNode *left;
-	// the right node (assigner)
+	// the right node
 	AstNode *right;
+	// the result node
+	AstNode *result;
 
 	/// <summary> General constructor handler because as of VS10 there's no support for C++11 delegated constructors </summary>
-	void Init(opEnum operation, AstNode *left, AstNode *right = nullptr, BaseTypeInfo* resultType = nullptr)
+	void Init(opEnum operation, AstNode *left, AstNode *right = nullptr, AstNode* result = nullptr)
 	{
 		this->left = left;
 		this->right = right;
+		this->result = result;
 		this->operation = operation;
 		this->op_3ac_name = std::string(Get3acOperatorText(operation));
 	}
@@ -526,25 +558,26 @@ class OperatorAstNode: public AstNode
 	int SerializeProcessor(TMLWriter* output);
 
 public:
-	OperatorAstNode(char *op_3ac_name, AstNode *left, AstNode *right = nullptr, BaseTypeInfo* resultType = nullptr): 
-		AstNode(OPER_NODE, (resultType != nullptr ? resultType : left->GetResultType()->Clone()))
+	OperatorAstNode(char *op_3ac_name, AstNode *left, AstNode *right = nullptr, AstNode* result = nullptr): 
+	  AstNode(OPER_NODE, (result != nullptr ? result->GetResultType()->Clone() : left->GetResultType()->Clone()))
 	{
 		this->left = left;
 		this->right = right;
+		this->result = result;
 		this->op_3ac_name = std::string(op_3ac_name);
 		this->operation = Get3acOperatorCode(op_3ac_name);
 	}
 
-	OperatorAstNode(char operation, AstNode *left, AstNode *right = nullptr, BaseTypeInfo* resultType = nullptr): 
-		AstNode(OPER_NODE, (resultType != nullptr ? resultType : left->GetResultType()->Clone()))
+	OperatorAstNode(char operation, AstNode *left, AstNode *right = nullptr, AstNode* result = nullptr): 
+		AstNode(OPER_NODE, (result != nullptr ?  result->GetResultType()->Clone() : left->GetResultType()->Clone()))
 	{
-		Init((opEnum)operation, left, right, resultType);
+		Init((opEnum)operation, left, right, result);
 	}
 		
-	OperatorAstNode(opEnum operation, AstNode *left, AstNode *right = nullptr, BaseTypeInfo* resultType = nullptr): 
-		AstNode(OPER_NODE, (resultType != nullptr ? resultType : left->GetResultType()->Clone()))
+	OperatorAstNode(opEnum operation, AstNode *left, AstNode *right = nullptr, AstNode* result = nullptr): 
+		AstNode(OPER_NODE, (result != nullptr ?  result->GetResultType()->Clone() : left->GetResultType()->Clone()))
 	{
-		Init(operation, left, right, resultType);
+		Init(operation, left, right, result);
 	}
 
 	virtual int Print3AC(TACWriter* output);
@@ -555,6 +588,7 @@ public:
 	const char* GetOpName() { return op_3ac_name.c_str(); }
 	AstNode *GetLeftOperand() { return left; }
 	AstNode *GetRightOperand() { return right; }
+	AstNode *GetResult() { return result; }
 };
 
 class SwitchAstNode: public AstNode
