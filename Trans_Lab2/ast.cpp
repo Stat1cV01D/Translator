@@ -11,10 +11,11 @@ int ConditionalAstNode::Print3AC(TACWriter* output)
 	if (this->false_block != nullptr)
 		labelNumber_end = output->GetContext()->GetNextLabelNumber();
 
-	// 1. generate the code for condition, return result to A
+	// 1. generate the code for condition, return result
 	output->CodeGen(cond);
+	auto resultVarName = output->GetLastUsedValueName();
 	// 2. check the result and process true_block (TODO [SV] 14.08.13 16:14: with possible optimization|elimination?)
-	output->CodeWriteFormat("\tiffalse\t$A\tL%d\n", labelNumber_false);
+	output->CodeWriteFormat("\tiffalse\t%s\tL%d\n", resultVarName.c_str(), labelNumber_false);
 	if (this->true_block != nullptr)
 	{
 		output->CodeGen(true_block);
@@ -114,22 +115,34 @@ int OperatorAstNode::Print3AC(TACWriter* output)
 	case OP_STRUCT_ITEM:
 		break;*/
 	case OP_ASSIGN:
-		output->CodeGen(left);
-		output->CodeWriteFormat("\t%s\t", this->op_3ac_name.c_str());
-		output->CodeGen(right);
-		output->CodeWrite("\n");
+		{
+			output->CodeGen(left);
+			auto leftVarName = output->GetLastUsedValueName();
+			output->CodeWriteFormat("\t%s", leftVarName.c_str());
+		
+			output->CodeWriteFormat("\t%s", this->op_3ac_name.c_str());
+		
+			output->CodeGen(right);
+			auto rightVarName = output->GetLastUsedValueName();
+			output->CodeWriteFormat("\t%s\n", rightVarName.c_str());
+
+			output->SetLastUsedValueName(leftVarName);
+		}
 		break;
 	case OP_UMIN:
 	case OP_NOT:
 		{
-			auto resultVarName = dynamic_cast<IValueHolderNode*>(result)->GetValueHolderName();
-			output->CodeWriteFormat("\t%s\t=", resultVarName.c_str());
 			if (left != nullptr)
 			{
 				output->CodeGen(left);
 			}
 			auto leftVarName = output->GetLastUsedValueName();
-			output->CodeWriteFormat("\t%s\t%s\n", this->op_3ac_name.c_str(), leftVarName.c_str());
+			
+			auto resultVarName = dynamic_cast<IValueHolderNode*>(result)->GetValueHolderName();
+			output->CodeWriteFormat("\t%s\t=\t%s\t%s\n",
+				resultVarName.c_str(),
+				this->op_3ac_name.c_str(),
+				leftVarName.c_str());
 			
 			output->SetLastUsedValueName(resultVarName);
 		}
@@ -148,18 +161,21 @@ int OperatorAstNode::Print3AC(TACWriter* output)
 	case OP_SMALLER:
 	case OP_SMALLER_OR_EQ:
 		{
-			auto resultVarName = dynamic_cast<IValueHolderNode*>(result)->GetValueHolderName();
-			output->CodeWriteFormat("\t%s\t=", resultVarName.c_str());
 			if (left != nullptr)
 			{
 				output->CodeGen(left);
 			}
 			auto leftVarName = output->GetLastUsedValueName();
-			output->CodeWriteFormat("\t%s\t%s", leftVarName.c_str(), this->op_3ac_name.c_str());
 			
 			output->CodeGen(right);
 			auto rightVarName = output->GetLastUsedValueName();
-			output->CodeWriteFormat("\t%s\n", rightVarName.c_str());
+			
+			auto resultVarName = dynamic_cast<IValueHolderNode*>(result)->GetValueHolderName();
+			output->CodeWriteFormat("\t%s\t=\t%s\t%s\t%s\n", 
+				resultVarName.c_str(), 
+				leftVarName.c_str(), 
+				this->op_3ac_name.c_str(),
+				rightVarName.c_str());
 			
 			output->SetLastUsedValueName(resultVarName);
 		}

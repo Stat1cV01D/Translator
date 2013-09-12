@@ -2314,7 +2314,7 @@ yyreduce:
     {
 		AssertOneOfTypes((yyvsp[(2) - (2)]._node), (yylsp[(2) - (2)]), 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
 
-		(yyval._node) = createNode(new OperatorAstNode((yyvsp[(1) - (2)]._node)->ptNode->text, (yyvsp[(2) - (2)]._node)->astNode), 
+		(yyval._node) = createNode(new OperatorAstNode((yyvsp[(1) - (2)]._node)->ptNode->text, (yyvsp[(2) - (2)]._node)->astNode, new VarAstNode(true, Context.GenerateNewTmpVar((yyvsp[(2) - (2)]._node)->astNode->GetResultType()->Clone()))), 
 				createPtNodeWithChildren("expr", 2, (yyvsp[(1) - (2)]._node)->ptNode, (yyvsp[(2) - (2)]._node)->ptNode));
 	}
     break;
@@ -2325,7 +2325,7 @@ yyreduce:
 		AssertOneOfTypes((yyvsp[(1) - (3)]._node), (yylsp[(1) - (3)]), 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
 		AssertOneOfTypes((yyvsp[(3) - (3)]._node), (yylsp[(3) - (3)]), 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
 
-		(yyval._node) = createNode(new OperatorAstNode((yyvsp[(2) - (3)]._node)->ptNode->text, (yyvsp[(1) - (3)]._node)->astNode, (yyvsp[(3) - (3)]._node)->astNode), 
+		(yyval._node) = createNode(new OperatorAstNode((yyvsp[(2) - (3)]._node)->ptNode->text, (yyvsp[(1) - (3)]._node)->astNode, (yyvsp[(3) - (3)]._node)->astNode, new VarAstNode(true, Context.GenerateNewTmpVar((yyvsp[(3) - (3)]._node)->astNode->GetResultType()->Clone()))), 
 				createPtNodeWithChildren("expr", 3, (yyvsp[(1) - (3)]._node)->ptNode, (yyvsp[(2) - (3)]._node)->ptNode, (yyvsp[(3) - (3)]._node)->ptNode));
 	}
     break;

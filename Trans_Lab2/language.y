@@ -649,7 +649,7 @@ expr :
 	{
 		AssertOneOfTypes($right, @right, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
 
-		$$ = createNode(new OperatorAstNode($op->ptNode->text, $right->astNode), 
+		$$ = createNode(new OperatorAstNode($op->ptNode->text, $right->astNode, new VarAstNode(true, Context.GenerateNewTmpVar($right->astNode->GetResultType()->Clone()))), 
 				createPtNodeWithChildren("expr", 2, $op->ptNode, $right->ptNode));
 	}
 	|
@@ -658,7 +658,7 @@ expr :
 		AssertOneOfTypes($left, @left, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
 		AssertOneOfTypes($right, @right, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
 
-		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode), 
+		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode, new VarAstNode(true, Context.GenerateNewTmpVar($right->astNode->GetResultType()->Clone()))), 
 				createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));
 	}
 	|
