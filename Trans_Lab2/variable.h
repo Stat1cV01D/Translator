@@ -77,6 +77,9 @@ public:
 	}
 };
 
+std::string GenerateVariableName(std::string& prefix, unsigned int number);
+TVariable* CreateVariable(BaseTypeInfo *typeTableRef, std::string& name);
+
 class StructType: public BaseTypeInfo
 {
 protected:
@@ -93,9 +96,11 @@ public:
 
 	virtual enumTypes getID() { return enumTypes::STRUCT_TYPE; } 
 
-	void AddField(TVariable *field)
+	void AddField(BaseTypeInfo *type, char *name)
 	{
+		TVariable *field = CreateVariable(type, std::string(name));
 		fieldList.emplace_back(field);
+		field->StaticMalloc();
 	}
 
 	TVariable *GetField(std::string& fieldName)
@@ -159,9 +164,5 @@ public:
 	}
 	virtual BaseTypeInfo* Clone() { return new UnionType(*this); }
 };
-
-std::string GenerateVariableName(std::string& prefix, unsigned int number);
-
-TVariable* CreateVariable(BaseTypeInfo *typeTableRef, std::string& name);
 
 #endif

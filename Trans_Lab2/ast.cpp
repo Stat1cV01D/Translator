@@ -497,7 +497,9 @@ int VarAstNode::Print3AC(TACWriter* output)
 }
 int VarAstNode::PrintASTree(AstPrintInfo* output)
 {
-	output->AstWriteFormat("%s identifier %s\n", GetResultType()->GetName().c_str(), GetTableReference()->GetName().c_str());
+	auto typeName = GetResultType()->GetName();
+	auto varName = GetTableReference()->GetName();
+	output->AstWriteFormat("%s identifier %s\n", typeName.c_str(), varName.c_str());
 	return 0;
 }
 int VarAstNode::Serialize(TMLWriter* _output)
@@ -742,10 +744,24 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 
 	// SumTmpVarNode is the result var
 	OperatorAstNode ArrayItemOffset(OP_PLUS, &SumTmpVarNode, this->var, &SumTmpVarNode);
-	
+	output->Serialize(&ArrayItemOffset);
+
 	return 0;
 }
 
+int StructAddressAstNode::Print3AC(TACWriter* output)
+{
+	output->SetLastUsedValueName(this->GetValueHolderName());
+	return 0;
+}
+int StructAddressAstNode::PrintASTree(AstPrintInfo* output)
+{
+	auto typeName = GetResultType()->GetName();
+	auto structName = GetStruct()->GetName();
+	auto fieldName = GetField()->GetName();
+	output->AstWriteFormat("%s identifier %s.%s\n", typeName.c_str(), structName.c_str(), fieldName.c_str());
+	return 0;
+}
 int StructAddressAstNode::Serialize(TMLWriter* output)
 {
 	NumValueAstNode VarOffsetNode(GetStruct()->GetMemoryOffset());
@@ -757,6 +773,6 @@ int StructAddressAstNode::Serialize(TMLWriter* output)
 
 	// SumTmpVarNode is the result var
 	OperatorAstNode ArrayItemOffset(OP_PLUS, &VarOffsetNode, &FieldOffsetNode, &SumTmpVarNode);
-	
+	output->Serialize(&ArrayItemOffset);
 	return 0;
 }

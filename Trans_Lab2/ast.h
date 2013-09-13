@@ -478,12 +478,8 @@ public:
 	TVariable *GetStruct() { return Struct->GetTableReference(); }
 	TVariable *GetField() { return Field; }
 
-	virtual int Print3AC(TACWriter* output)
-	{
-		//TODO [SV] 16.08.13 18:19: complete here!
-		return 0;
-	}
-	virtual int PrintASTree(AstPrintInfo* output) { return 0; }
+	virtual int Print3AC(TACWriter* output);
+	virtual int PrintASTree(AstPrintInfo* output); 
 	virtual int Serialize(TMLWriter* output);
 
 	virtual std::string GetValueHolderName()

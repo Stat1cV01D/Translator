@@ -109,7 +109,7 @@ struct Node;
 %type <_node> if_stmt loop_decl switch_stmt print_stmt read_stmt assignment struct_def struct_head struct_body struct_tail
 %type <_node> loop_for_expr instruction_body loop_while_expr type array type_name left_assign_expr num_const
 %type <_node> switch_head case_list default switch_tail case_stmt case_head case_body
-%type <_node> default_head default_body 
+%type <_node> default_head 
 
 %code top
 {
@@ -260,16 +260,34 @@ stmnt:
 	}
 	|
 	if_stmt
+	{
+		$$ = $1;
+	}
 	|
 	loop_decl
+	{
+		$$ = $1;
+	}
 	| 
 	switch_stmt
+	{
+		$$ = $1;
+	}
 	|
 	print_stmt
+	{
+		$$ = $1;
+	}
 	|
 	read_stmt
+	{
+		$$ = $1;
+	}
 	|
 	assignment TOK_ENDEXPR
+	{
+		$$ = $1;
+	}
 	| 
 	TOK_BREAK TOK_ENDEXPR
 	{
@@ -341,13 +359,45 @@ stmnt:
 declaration_stmt:
 	type[decl] TOK_IDENTIFIER[id]
 	{
-		Context.DeclVar($id->ptNode->text, $decl->astNode->GetResultType(), @id);
-
-		$$ = createNode(new DeclIDAstNode($decl->astNode->GetResultType()), 
-				createPtNodeWithChildren("stmnt", 2, $decl->ptNode, $id->ptNode));
+		char *typeName = $id->ptNode->text;
+		$$ = nullptr;
+		if(Context.OnUserTypeDefinition())
+		{
+			//if(!Context.IsBaseType(typeName))
+			//{
+			//	$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, USER_TYPE_STRUCT_FIELD, @id),
+			//			nullptr);
+			//}
+			//else
+			{
+				auto userType = dynamic_cast<StructType*>(Context.TopUserType());
+				if(userType->IsFieldDefined(std::string(typeName)))
+				{
+					$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, STRUCT_FIELD_REDEFINITION, @id),
+							nullptr);
+				}
+				else
+				{
+					userType->AddField($decl->astNode->GetResultType()->Clone(), typeName);
+				}
+			}
+		}
+		else
+		{
+			Context.DeclVar(typeName, $decl->astNode->GetResultType()->Clone(), @id);
+		}
+		
+		if ($$ == nullptr)
+		{
+			$$ = createNode(new DeclIDAstNode($decl->astNode->GetResultType()->Clone()), 
+					createPtNodeWithChildren("stmnt", 2, $decl->ptNode, $id->ptNode));
+		}
 	}
 	| 
 	struct_def
+	{
+		$$ = $1;
+	}
 	;
 
 struct_def: struct_head struct_body struct_tail
@@ -608,6 +658,9 @@ left_assign_expr
 	}
 	|
 	struct_item
+	{
+		$$ = $1;
+	}
 	;
 
 assignment:
@@ -622,6 +675,9 @@ assignment:
 
 expr :
 	identifier
+	{
+		$$ = $1;
+	}
 	|
 	num_const[num]
 	{
@@ -769,11 +825,10 @@ identifier:
 		AstNode *astNode;
 		if (val)
 		{
+			astNode = new VarAstNode(false, val);
 			// TODO [SV] 15.08.13 12:18: possible checks for array\non-array type equality
 			if (dimNode->GetExpr() != nullptr)
-				astNode = new ArrayAddressAstNode(new VarAstNode(false, val), dimNode);
-			else
-				astNode = new VarAstNode(false, val);
+				astNode = new ArrayAddressAstNode(static_cast<VarAstNode*>(astNode), dimNode);				
 		}
 		else
 		{
@@ -891,11 +946,7 @@ case_head: TOK_CASE expr TOK_DOUBLEDOT	/* <s3> */
 		
 	}
 	;
-case_body: stmnt
-	{
-		$$ = $1;
-	}
-	| stmnt_block
+case_body: instruction_body
 	{
 		$$ = $1;
 	}
@@ -904,7 +955,7 @@ case_body: stmnt
 		$$ = $1;
 	}
 	;
-default: default_head default_body
+default: default_head instruction_body
 	{
 		$$ = createNode(new OperatorAstNode(OT_DEFAULT, $2->astNode),
 				createPtNodeWithChildren("default", 2, $1->ptNode, $2->ptNode));
@@ -919,15 +970,6 @@ default_head: TOK_DEFAULT TOK_DOUBLEDOT	/* <s4> */
 
 		$$ = createNode(nullptr,
 				createPtNodeWithChildren("default_head", 2, $1->ptNode, $2->ptNode));
-	}
-	;
-default_body: stmnt
-	{
-		$$ = $1;
-	}
-	| stmnt_block
-	{
-		$$ = $1;
 	}
 	;
 

@@ -138,9 +138,9 @@ public:
 	void AddUserTypeToTable(BaseTypeInfo *type)
 	{
 		StructType *Struct = dynamic_cast<StructType *>(type);
-		if (NULL != Struct)
+		if (nullptr != Struct)
 		{
-			g_TypeTable->st_set(Struct->GetTypeName(), type);
+			g_TypeTable->st_put(Struct->GetTypeName(), type);
 		}
 	}
 
@@ -157,13 +157,17 @@ public:
 
 	StructType *GetUserType(char *name)
 	{
-		return dynamic_cast<StructType*>(g_TypeTable->st_get(std::string(name)));
+		auto typeName = std::string(name);
+		if (g_TypeTable->st_exist(typeName))
+			return dynamic_cast<StructType*>(g_TypeTable->st_get(typeName));
+		else
+			return nullptr;
 	}
 
 	TLabel *MakeLabel(char *name)
 	{
 		auto result = CreateLabel(std::string(name));
-		g_labelTable->st_set(result->GetName(), result);
+		g_labelTable->st_put(result->GetName(), result);
 		return result;
 	}
 
@@ -293,13 +297,18 @@ public:
 	BaseTypeInfo *PopUserType()
 	{
 		auto result = TopUserType();
-		g_userTypeStack.erase(g_userTypeStack.end());
+		g_userTypeStack.erase(--g_userTypeStack.end());
 		return result;
 	}
 
 	BaseTypeInfo *TopUserType()
 	{
-		return *(g_userTypeStack.end());
+		if (g_userTypeStack.size() == 0)
+			return nullptr;
+		else
+		{
+			return g_userTypeStack.back();
+		}
 	}
 
 	void DeclVar(const char *name, BaseTypeInfo *type, YYLTYPE loc)
@@ -343,7 +352,7 @@ public:
 		TVariable *var = g_VariableTable->st_get(nameWithNs);
 	
 		//check array dimensions addressing (ignore if dimensions_list is NULL)
-		if (dimensions_list)
+		if (dimensions_list != nullptr && dimensions_list->GetExpr() != nullptr)
 		{
 			int *dimensionSizes = NULL;
 			int numDimensions = GetDimensionInfo(dimensions_list, &dimensionSizes);
