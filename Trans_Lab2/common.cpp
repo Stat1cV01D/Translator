@@ -9,7 +9,7 @@ extern char* yytext;
 
 Node *createNode(AstNode *astNode, PtNode *ptNode)
 {
-    Node *node = (Node *)malloc(sizeof(Node));
+    Node *node = new Node;
     node->astNode = astNode;
     node->ptNode = ptNode;
     return node;

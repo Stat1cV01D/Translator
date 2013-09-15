@@ -3,19 +3,22 @@
 #include "ast.h"
 #include "AstUtils.h"
 #include "tml-generator.h"
+#include "Operators.h"
 
 int ConditionalAstNode::Print3AC(TACWriter* output)
 {
-	int labelNumber_false = output->GetContext()->GetNextLabelNumber();
-	int labelNumber_end = labelNumber_false;
+	auto labelNumber_false = output->GetContext()->GenerateNewLabel();
+	auto labelNumber_end = labelNumber_false;
 	if (this->false_block != nullptr)
-		labelNumber_end = output->GetContext()->GetNextLabelNumber();
+		labelNumber_end = output->GetContext()->GenerateNewLabel();
 
-	// 1. generate the code for condition, return result
-	output->CodeGen(cond);
-	auto resultVarName = output->GetLastUsedValueName();
-	// 2. check the result and process true_block (TODO [SV] 14.08.13 16:14: with possible optimization|elimination?)
-	output->CodeWriteFormat("\tiffalse\t%s\tL%d\n", resultVarName.c_str(), labelNumber_false);
+	LabelAstNode endLabelAstNode(labelNumber_end);
+	LabelAstNode falseAstNode(labelNumber_false);
+
+	// 1. check the result and process true_block (TODO [SV] 14.08.13 16:14: with possible optimization|elimination?)
+	OperatorAstNode op(OP_IFFALSE, cond, &falseAstNode);
+	output->CodeGen(&op);
+
 	if (this->true_block != nullptr)
 	{
 		output->CodeGen(true_block);
@@ -23,11 +26,13 @@ int ConditionalAstNode::Print3AC(TACWriter* output)
 
 	if (this->false_block != nullptr)
 	{
-		output->CodeWriteFormat("\tgoto\t$L%d\n", labelNumber_end); // for the iftrue block to end
+		OperatorAstNode op(OP_GOTO, &endLabelAstNode);
+		output->CodeGen(&falseAstNode);
+		output->CodeGen(&op); // for the iftrue block to end
 		output->CodeGen(false_block);
 	}
 
-	output->CodeWriteFormat("$L%d:\n", labelNumber_end);
+	output->CodeGen(&endLabelAstNode);
 	return 0;
 }
 int ConditionalAstNode::PrintASTree(AstPrintInfo* output)
@@ -55,18 +60,20 @@ int ConditionalAstNode::Serialize(TMLWriter* output)
 	if (this->false_block != nullptr)
 		labelNumber_end = output->GetContext()->GenerateNewLabel();
 
-	// 1. generate the code for condition, return result to A
-	output->Serialize(cond);
-	// 2. check the result and process true_block (TODO [SV] 14.08.13 16:14: with possible optimization|elimination?)
-	OperatorAstNode op(OP_IFFALSE, new LabelAstNode(labelNumber_end));
+	LabelAstNode endLabelAstNode(labelNumber_end);
+	LabelAstNode falseLabelAstNode(labelNumber_false);
+
+	// 1. check the result and process true_block (TODO [SV] 14.08.13 16:14: with possible optimization|elimination?)
+	OperatorAstNode op(OP_IFFALSE, cond, &falseLabelAstNode);
 	output->Serialize(&op);
 	output->Serialize(true_block);
 
 	if (this->false_block != nullptr)
 	{
-		OperatorAstNode op_goto(OP_GOTO, new LabelAstNode(labelNumber_end));
+		OperatorAstNode op_goto(OP_GOTO, &endLabelAstNode);
 		output->Serialize(&op_goto);
-
+		
+		output->Serialize(&falseLabelAstNode);
 		output->Serialize(false_block);
 	}
 
@@ -118,13 +125,14 @@ int OperatorAstNode::Print3AC(TACWriter* output)
 		{
 			output->CodeGen(left);
 			auto leftVarName = output->GetLastUsedValueName();
-			output->CodeWriteFormat("\t%s", leftVarName.c_str());
-		
-			output->CodeWriteFormat("\t%s", this->op_3ac_name.c_str());
-		
+			
 			output->CodeGen(right);
 			auto rightVarName = output->GetLastUsedValueName();
-			output->CodeWriteFormat("\t%s\n", rightVarName.c_str());
+			
+			output->CodeWriteFormat("\t%s\t%s\t%s\n", 
+				leftVarName.c_str(), 
+				this->op_3ac_name.c_str(),
+				rightVarName.c_str());
 
 			output->SetLastUsedValueName(leftVarName);
 		}
@@ -192,12 +200,58 @@ int OperatorAstNode::Print3AC(TACWriter* output)
 			}
 			else
 			{
-				throw std::string("Error: GOTO node invalid!");
+				throw std::string("Error: GOTO node invalid!\n");
 			}
 		}
 		break;
+	case OP_INPUT:
+		{
+			if (left != nullptr)
+			{
+				output->CodeGen(left);
+			}
+			auto leftVarName = output->GetLastUsedValueName();
+			output->CodeWriteFormat("\tSCAN\t%s\n", leftVarName.c_str());
+		}
+		break;
+	case OP_OUTPUT:
+		{
+			if (left != nullptr)
+			{
+				output->CodeGen(left);
+			}
+			auto leftVarName = output->GetLastUsedValueName();
+			output->CodeWriteFormat("\tPRINT\t%s\n", leftVarName.c_str());
+		}
+		break;
+	case OP_IFTRUE:
+	case OP_IFFALSE:
+		{
+			output->CodeGen(left);
+			auto resultVarName = output->GetLastUsedValueName();
+			auto labelName = dynamic_cast<LabelAstNode*>(right)->GetLabel()->GetName();
+
+			switch(this->GetOpID())
+			{
+			case OP_IFFALSE:
+				output->CodeWriteFormat("\tiffalse\t%s\t%s\n", resultVarName.c_str(), labelName.c_str());
+				break;
+			case OP_IFTRUE:
+				output->CodeWriteFormat("\tiftrue\t%s\t%s\n", resultVarName.c_str(), labelName.c_str());
+				break;
+			}
+		}
+		break;
+	case OP_CASE:
+	case OP_LIST: // case list
+	case OP_DEFAULT:
+		{
+			output->CodeGen(left);
+			output->CodeGen(right);	
+		}
+		break;
 	default:
-		fprintf(stderr, "error: invalid 3ac operator code");
+		fprintf(stderr, "error: invalid 3ac operator code in %s\n", __FUNCTION__);
 		break;
 	}
 
@@ -220,16 +274,21 @@ int OperatorAstNode::Serialize(TMLWriter *output)
 	{
 		switch (operation)
 		{
-		case OP_GOTO:
-		case OP_BREAK: // The OP_GOTO synonym
-		case OP_CONTINUE: // The OP_GOTO synonym
-
-		case OP_INPUT:
-		case OP_OUTPUT:
-		case OP_SAVE:
-		case OP_LOAD:
-			break;
-		default:
+		case OP_PLUS:
+		case OP_MINUS:
+		case OP_MULT:
+		case OP_DIV:
+		case OP_UMIN:
+		case OP_NOT:
+		case OP_AND:
+		case OP_OR:
+		case OP_XOR:
+		case OP_EQ:
+		case OP_NOT_EQ:
+		case OP_LARGER:
+		case OP_SMALLER:
+		case OP_LARGER_OR_EQ:
+		case OP_SMALLER_OR_EQ:
 			output->WriteTypedInstruction(LD_, left);			// LD left
 		}
 	}
@@ -264,19 +323,9 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 	case OP_NOT:
 		{
 			TLabel *L1, *L2;
-			BaseTypeInfo *type;
-			switch(right->GetResultType()->getID())
-			{
-			case INT_TYPE:
-				type = new IntType();
-				break;
-			case FLOAT_TYPE:
-				type = new FloatType();
-				break;
-			}
 
-			NumValueAstNode trueNode(TML_TRUE, type), 
-							falseNode(TML_FALSE, type);
+			NumValueAstNode trueNode(TML_TRUE, right->GetResultType()->Clone()), 
+				falseNode(TML_FALSE, right->GetResultType()->Clone());
 
 			L1 = output->GetContext()->GenerateNewLabel();
 			L2 = output->GetContext()->GenerateNewLabel();
@@ -296,19 +345,9 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 	case OP_OR:
 		{
 			TLabel *L1, *L2;
-			BaseTypeInfo *type;
-			switch(right->GetResultType()->getID())
-			{
-			case INT_TYPE:
-				type = new IntType();
-				break;
-			case FLOAT_TYPE:
-				type = new FloatType();
-				break;
-			}
 
-			NumValueAstNode trueNode(TML_TRUE, type), 
-							falseNode(TML_FALSE, type);
+			NumValueAstNode trueNode(TML_TRUE, right->GetResultType()->Clone()), 
+				falseNode(TML_FALSE, right->GetResultType()->Clone());
 
 			L1 = output->GetContext()->GenerateNewLabel();
 			L2 = output->GetContext()->GenerateNewLabel();
@@ -369,19 +408,8 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 		{
 			TLabel *L1, *L2;
 
-			BaseTypeInfo *type;
-			switch(right->GetResultType()->getID())
-			{
-			case INT_TYPE:
-				type = new IntType();
-				break;
-			case FLOAT_TYPE:
-				type = new FloatType();
-				break;
-			}
-
-			NumValueAstNode trueNode(TML_TRUE, type), 
-							falseNode(TML_FALSE, type);
+			NumValueAstNode trueNode(TML_TRUE, right->GetResultType()->Clone()), 
+							falseNode(TML_FALSE, right->GetResultType()->Clone());
 
 			L1 = output->GetContext()->GenerateNewLabel();
 			L2 = output->GetContext()->GenerateNewLabel();
@@ -421,34 +449,36 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 		break;
 	case OP_INPUT:
 		{
-			// Операция ввода
-			output->WriteTypedInstruction(IN_, left);
-			// Операция сохранения
+			// Input (variable only!)
+			output->WriteTypedInstruction(IN_, left); 
 			output->WriteTypedInstruction(ST_, left);
 		}
 		break;
 	case OP_OUTPUT:
 		{
-			// Операция загрузки
-			//output->WriteTypedInstruction(LD_, left);
-			// Операция вывода
-			output->WriteTypedInstruction(OUT_, left);
+			//NOTE: output's left can be an expression, var or num value
+			output->Serialize(left);
+
+			output->WriteTypedInstruction(OUT_, output->GetLastOperationResult());
 		}
 		break;
 	case OP_SAVE:
 		{
+			// Input (variable only!)
 			output->WriteTypedInstruction(ST_, left);
 		}
 		break;
 	case OP_LOAD:
 		{
+			// Input (variable only!)
 			output->WriteTypedInstruction(LD_, left);
 		}
 		break;
 	case OP_IFTRUE:
 	case OP_IFFALSE:
 		{
-			// Операция сравнения аккумулятора с нулем
+			output->Serialize(left);
+
 			output->WriteTypedInstruction(TST_, left);
 			switch(op)
 			{
@@ -482,10 +512,23 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 			}
 		}
 		break;
+	case OP_CASE:
+	case OP_LIST:
+	case OP_DEFAULT:
+		{
+			output->Serialize(left);
+			output->Serialize(right);	
+		}
+		break;
 	}
 
 	if (result != nullptr) // NOOTE: for arithmetic and logical operations only! 
+	{
 		output->WriteTypedInstruction(ST_, result);
+		output->SetResult(result);
+	}
+
+	return 0;
 }
 
 int VarAstNode::Print3AC(TACWriter* output)
@@ -502,9 +545,9 @@ int VarAstNode::PrintASTree(AstPrintInfo* output)
 	output->AstWriteFormat("%s identifier %s\n", typeName.c_str(), varName.c_str());
 	return 0;
 }
-int VarAstNode::Serialize(TMLWriter* _output)
+int VarAstNode::Serialize(TMLWriter* output)
 {
-	//_output->WriteTypedInstruction(LD_, this);
+	output->SetResult(this);
 	return 0;
 }
 
@@ -519,9 +562,9 @@ int NumValueAstNode::PrintASTree(AstPrintInfo* output)
 	output->AstWriteFormat("const %s %s\n", GetResultType()->GetName().c_str(), value.c_str());
 	return 0;
 }
-int NumValueAstNode::Serialize(TMLWriter* _output)
+int NumValueAstNode::Serialize(TMLWriter* output)
 {
-	//_output->WriteTypedInstruction(LD_, this);
+	output->SetResult(this);
 	return 0;
 }
 
@@ -534,9 +577,9 @@ int LoopAstNode::Print3AC(TACWriter* output)
 		output->CodeGen(this->cond->GetInit_expr());
 	}
 
-	auto labelNumber_start = output->GetContext()->GenerateNewLabel();
-	auto labelNumber_loop = output->GetContext()->GenerateNewLabel();
-	auto labelNumber_end = output->GetContext()->GenerateNewLabel();
+	LabelAstNode labelNumber_start(output->GetContext()->GenerateNewLabel());
+	LabelAstNode labelNumber_loop(this->entranceLabel);
+	LabelAstNode labelNumber_end(this->outLabel);
 	
 	// We'll write the post expression first (before the start)
 	// because when using "continue" operator
@@ -545,50 +588,46 @@ int LoopAstNode::Print3AC(TACWriter* output)
 	{
 		// first time it passes straight to start
 		// but as loop iterates it will return to labelNumber_loop, not labelNumber_start
-		output->CodeWriteFormat("\tgoto\t%s\n", labelNumber_start->GetName());
-		output->CodeWriteFormat("%s:\n", labelNumber_loop->GetName());
+		OperatorAstNode opGoto(OP_GOTO, &labelNumber_start);
+		output->CodeGen(&opGoto);
+
+		output->CodeGen(&labelNumber_loop);
 		output->CodeGen(this->cond->GetPost_expr());
-		output->CodeWriteFormat("%s:\n", labelNumber_start->GetName());
+		output->CodeGen(&labelNumber_start);
 	}
 	else
 	{
-		output->CodeWriteFormat("%s:\n", labelNumber_loop->GetName());
+		output->CodeGen(&labelNumber_loop);
 	}
 	
 	// The continuation condition
 	if (this->cond->GetB_expr() != nullptr && !this->post_check)
 	{
-		output->CodeGen(this->cond->GetB_expr());
-		// Assuming last used TmpVar index contains the result
-		output->CodeWriteFormat("\tiffalse\t$t%d\t%s\n", output->GetContext()->GetLastUsedTmpVarIndex(), labelNumber_end->GetName());
+		OperatorAstNode op(OP_IFFALSE, this->cond->GetB_expr(), &labelNumber_end);
+		output->CodeGen(&op);
 	}
 
 	// The loop body
 	if (this->block != nullptr)
 	{
-		//LoopCodeGenInfo LoopCGI(*output, labelNumber_loop, labelNumber_end);
-		// TODO: Make Push to operator stack!
-		//LoopCGI.CodeGen(this->block);
-		TSimpleOperator op(OT_FOR, labelNumber_loop, labelNumber_end);
-		output->GetContext()->OperatorStackPush(&op);
- 		output->CodeGen(this->block);
-		output->GetContext()->OperatorStackPop();
+		output->CodeGen(this->block);
 	}
 
 	// The continuation condition post check (for do{}while() loops)
 	if (this->cond->GetB_expr() != nullptr && this->post_check)
 	{
-		output->CodeGen(this->cond->GetB_expr());
-		// Assuming last used TmpVar index contains the result
-		output->CodeWriteFormat("\tiftrue\t$t%d\t%s\n", output->GetContext()->GetLastUsedTmpVarIndex(), labelNumber_loop->GetName());
+		OperatorAstNode op(OP_IFTRUE, this->cond->GetB_expr(), &labelNumber_loop);
+		output->CodeGen(&op);
 	}
 	else
 	{
-		output->CodeWriteFormat("\tgoto\t%s\n", labelNumber_loop->GetName());
+		OperatorAstNode op(OP_GOTO,  &labelNumber_loop);
+		output->CodeGen(&op);
 	}
-	output->CodeWriteFormat("%s:\n", labelNumber_end->GetName());
+	output->CodeGen(&labelNumber_end);
 	return 0;
 }
+
 int LoopAstNode::PrintASTree(AstPrintInfo* output)
 {
 	output->AstWriteFormat("%sloop\n", (post_check ? "post-test " : ""));
@@ -603,6 +642,61 @@ int LoopAstNode::PrintASTree(AstPrintInfo* output)
 }
 int LoopAstNode::Serialize(TMLWriter* output)
 {
+	// decl
+	if (this->cond->GetInit_expr() != nullptr)
+	{
+		// Generate initial expression code
+		output->Serialize(this->cond->GetInit_expr());
+	}
+
+	LabelAstNode labelNumber_start(output->GetContext()->GenerateNewLabel());
+	LabelAstNode labelNumber_loop(this->entranceLabel);
+	LabelAstNode labelNumber_end(this->outLabel);
+
+	// We'll write the post expression first (before the start)
+	// because when using "continue" operator
+	// this way generates less jumps
+	if (this->cond->GetPost_expr() != nullptr)
+	{
+		// first time it passes straight to start
+		// but as loop iterates it will return to labelNumber_loop, not labelNumber_start
+		OperatorAstNode opGoto(OP_GOTO, &labelNumber_start);
+		output->Serialize(&opGoto);
+
+		output->Serialize(&labelNumber_loop);
+		output->Serialize(this->cond->GetPost_expr());
+		output->Serialize(&labelNumber_start);
+	}
+	else
+	{
+		output->Serialize(&labelNumber_loop);
+	}
+
+	// The continuation condition
+	if (this->cond->GetB_expr() != nullptr && !this->post_check)
+	{
+		OperatorAstNode op(OP_IFFALSE, this->cond->GetB_expr(), &labelNumber_end);
+		output->Serialize(&op);
+	}
+
+	// The loop body
+	if (this->block != nullptr)
+	{
+		output->Serialize(this->block);
+	}
+
+	// The continuation condition post check (for do{}while() loops)
+	if (this->cond->GetB_expr() != nullptr && this->post_check)
+	{
+		OperatorAstNode op(OP_IFTRUE, this->cond->GetB_expr(), &labelNumber_loop);
+		output->Serialize(&op);
+	}
+	else
+	{
+		OperatorAstNode op(OP_GOTO, &labelNumber_loop);
+		output->Serialize(&op);
+	}
+	output->Serialize(&labelNumber_end);
 	return 0;
 }
 
@@ -721,7 +815,7 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 	auto sizes = varType->GetSizes();
 
 	auto SumTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
-	VarAstNode SumTmpVarNode(true, SumTmpVar);
+	VarAstNode* SumTmpVarNode = new VarAstNode(true, SumTmpVar);
 
 	auto MulTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
 	VarAstNode MulTmpVarNode(true, MulTmpVar);
@@ -738,14 +832,17 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 
 		// A = SumTmpVar + MulTmpVar
 		// SumTmpVar = A
-		OperatorAstNode Plus(OP_PLUS, &SumTmpVarNode, &MulTmpVarNode, &SumTmpVarNode);
+		OperatorAstNode Plus(OP_PLUS, SumTmpVarNode, &MulTmpVarNode, SumTmpVarNode);
 		output->Serialize(&Plus);
 	}
 
+	NumValueAstNode varOffset(this->var->GetTableReference()->GetMemoryOffset());
+
 	// SumTmpVarNode is the result var
-	OperatorAstNode ArrayItemOffset(OP_PLUS, &SumTmpVarNode, this->var, &SumTmpVarNode);
+	OperatorAstNode ArrayItemOffset(OP_PLUS, SumTmpVarNode, &varOffset, SumTmpVarNode);
 	output->Serialize(&ArrayItemOffset);
 
+	output->SetResult(SumTmpVarNode);
 	return 0;
 }
 
@@ -769,10 +866,97 @@ int StructAddressAstNode::Serialize(TMLWriter* output)
 	NumValueAstNode FieldOffsetNode((int)dynamic_cast<StructType*>(GetStruct()->GetType())->Offset(fieldName));
 
 	auto SumTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
-	VarAstNode SumTmpVarNode(true, SumTmpVar);
+	VarAstNode *SumTmpVarNode = new VarAstNode(true, SumTmpVar);
 
 	// SumTmpVarNode is the result var
-	OperatorAstNode ArrayItemOffset(OP_PLUS, &VarOffsetNode, &FieldOffsetNode, &SumTmpVarNode);
+	OperatorAstNode ArrayItemOffset(OP_PLUS, &VarOffsetNode, &FieldOffsetNode, SumTmpVarNode);
 	output->Serialize(&ArrayItemOffset);
+
+	output->SetResult(SumTmpVarNode);
+	return 0;
+}
+
+int LabelAstNode::Print3AC(TACWriter* output) 
+{
+	auto labelName = GetLabel()->GetName();
+	output->CodeWriteFormat("%s:\n", labelName.c_str()); 
+	return 0;
+}
+int LabelAstNode::Serialize(TMLWriter* output) 
+{ 
+	output->BindLabelToNextWrittenInstruction(this->GetLabel()); 
+	return 0;
+}
+
+int SwitchAstNode::Print3AC(TACWriter* output)
+{
+	this->opData->ProcessCaseList(
+		[this, output](TCaseOperator *caseOp) -> bool 
+	{
+		VarAstNode tmpVar(true, output->GetContext()->GenerateNewTmpVar(this->key->GetResultType()->Clone(), true));
+		LabelAstNode caseLabel(caseOp->GetLabel());
+		OperatorAstNode opEq(OP_EQ, this->key, caseOp->GetKey(), &tmpVar);
+		OperatorAstNode opJmp(OP_IFTRUE, &tmpVar, &caseLabel);
+		output->CodeGen(&opEq);
+		output->CodeGen(&opJmp);
+		return true;
+	}
+	);
+
+	if (this->case_default != nullptr)
+	{
+		LabelAstNode caseLabel(this->opData->GetDefaultOp()->GetLabel());
+		OperatorAstNode opJmp(OP_GOTO, &caseLabel);
+		output->CodeGen(&opJmp);
+	}
+
+	output->CodeGen(this->case_list);
+	
+	if (this->case_default != nullptr)
+	{
+		output->CodeGen(this->case_default);
+	}
+
+	LabelAstNode caseEndLabel(this->opData->GetEndLabel());
+	output->CodeGen(&caseEndLabel);
+
+	return 0;
+}
+int SwitchAstNode::PrintASTree(AstPrintInfo* output)
+{
+	return 0;
+}
+int SwitchAstNode::Serialize(TMLWriter* output)
+{
+	this->opData->ProcessCaseList(
+		[this, output](TCaseOperator *caseOp) -> bool 
+	{
+		VarAstNode tmpVar(true, output->GetContext()->GenerateNewTmpVar(this->key->GetResultType()->Clone()));
+		LabelAstNode caseLabel(caseOp->GetLabel());
+		OperatorAstNode opEq(OP_EQ, this->key, caseOp->GetKey(), &tmpVar);
+		OperatorAstNode opJmp(OP_IFTRUE, &tmpVar, &caseLabel);
+		output->Serialize(&opEq);
+		output->Serialize(&opJmp);
+		return true;
+	}
+	);
+
+	if (this->case_default != nullptr)
+	{
+		LabelAstNode caseLabel(this->opData->GetDefaultOp()->GetLabel());
+		OperatorAstNode opJmp(OP_GOTO, &caseLabel);
+		output->Serialize(&opJmp);
+	}
+
+	output->Serialize(this->case_list);
+
+	if (this->case_default != nullptr)
+	{
+		output->Serialize(this->case_default);
+	}
+
+	LabelAstNode caseEndLabel(this->opData->GetEndLabel());
+	output->Serialize(&caseEndLabel);
+
 	return 0;
 }

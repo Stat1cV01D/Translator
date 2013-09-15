@@ -19,9 +19,6 @@
 #include "tml.h"
 #include <string>
 
-extern unsigned int g_lastInstructionIndex;
-extern unsigned short g_wordsCount;
-
 class TJumpIndex
 {
 	unsigned int index;

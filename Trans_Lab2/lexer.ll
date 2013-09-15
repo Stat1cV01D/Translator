@@ -31,6 +31,7 @@ le					<=
 ge					>=
 end_expr			;
 dot					\.
+comma				\,
 doubledot			\:
 open_par 			\(
 close_par 			\)
@@ -43,10 +44,15 @@ else				else
 
 rom_const			(M{0,3})(D?C{0,3}|C[DM])([L]?X{0,3}|X[LC])([V]?I{0,3}|I[VX])
 
-b_logical_op		and|or|xor
-u_logical_op		not
-u_arithmetical_op	{add}|{sub}
-arithmetical_op		{add}|{sub}|{mul}|{div}|{mod}
+b_and				and
+b_or				or
+b_xor				xor
+b_not				not
+ar_plus				{add}
+ar_minus			{sub}
+ar_mul				{mul}
+ar_div				{div}
+ar_mod				{mod}
 comp_op				{gt}|{lt}|{eq}|{ge}|{le}|{ne}
 assign_op			{assign}
 punctuator			{end_expr}|{open_par}|{close_par}|{open_br}|{close_br}
@@ -86,14 +92,21 @@ do_decl				do
 {rom_const}			{ REACTION(rom_const,		TOK_ROM_CONST) }
 {float_const}		{ REACTION(float_const,		TOK_FLOAT_CONST) }
 
+{b_and}				{ REACTION(b_and,			TOK_B_AND) }
+{b_or}				{ REACTION(b_or,			TOK_B_OR) }
+{b_xor}				{ REACTION(b_xor,			TOK_B_XOR) }
+{b_not}				{ REACTION(b_not,			TOK_B_NOT) }
+{ar_plus}			{ REACTION(ar_plus,			TOK_AR_PLUS) }
+{ar_minus}			{ REACTION(ar_minus,		TOK_AR_MINUS) }
+{ar_mul}			{ REACTION(ar_mul,			TOK_AR_MUL) }
+{ar_div}			{ REACTION(ar_div,			TOK_AR_DIV) }
+{ar_mod}			{ REACTION(ar_mod,			TOK_AR_MOD) }
+
 {doubledot}			{ REACTION(dot,				TOK_DOUBLEDOT) }
 {dot}				{ REACTION(dot,				TOK_DOT) }
-{u_arithmetical_op}	{ REACTION(u_arithmetical_op,TOK_U_ARITHMETICAL_OP) }
-{arithmetical_op}	{ REACTION(arihmetical_op,	TOK_ARITHMETICAL_OP) }
+{comma}				{ REACTION(dot,				TOK_COMMA) }
 {comp_op}			{ REACTION(comp_op,			TOK_COMP_OP) }
 {assign_op}			{ REACTION(assign_op,		TOK_ASSIGN_OP) }
-{b_logical_op}		{ REACTION(b_logical_op,	TOK_B_LOGICAL_OP) }
-{u_logical_op}		{ REACTION(u_logical_op,	TOK_U_LOGICAL_OP) }
 {end_expr}			{ REACTION(end_expr,		TOK_ENDEXPR) }
 {open_par}			{ REACTION(open_par,		TOK_OPENPAR) }
 {close_par}			{ REACTION(close_par,		TOK_CLOSEPAR) }

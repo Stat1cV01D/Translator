@@ -100,14 +100,18 @@ void MakeTML()
 {
 	char FN[MAX_PATH];
 	sprintf(FN, "_out.tml");
-	FILE *g_OutputTmlFile = fopen(FN, "w+");
+	FILE *g_OutputTmlFile = fopen(FN, "w+b");
 
-	TMLWriter TmlWrite(&Context, g_OutputTmlFile);
-	TmlWrite.Serialize(astTree);
-
-	TMLFillDataSegment(g_OutputTmlFile);
-	TmlWrite.AfterProcess();
-
+	try
+	{
+		TMLWriter TmlWrite(&Context, g_OutputTmlFile);
+		TmlWrite.Serialize(astTree);
+		TmlWrite.AfterProcess();
+	}
+	catch (std::string e)
+	{
+		fprintf(stderr, "Error: %s\n", e.c_str());
+	}
 	fclose(g_OutputTmlFile);
 }
 

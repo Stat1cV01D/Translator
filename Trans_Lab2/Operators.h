@@ -54,8 +54,15 @@ public:
 
 class TDefaultOperator: public TOperator
 {
-private:
+protected:
 	TLabel *label;				// ћетка дл€ перехода к этому оператору
+	
+	TDefaultOperator(enumOperatorType type, TLabel *label)
+		: TOperator(type) 
+	{
+		this->label = label;
+	}
+
 public:
 	TDefaultOperator(TLabel *label)
 		: TOperator(OT_DEFAULT) 
@@ -67,26 +74,19 @@ public:
 	TLabel *GetLabel() { return label; }
 };
 
-class TSwitchOperator;
-
-class TCaseOperator: public TOperator
+class TCaseOperator: public TDefaultOperator
 {
 private:
-	TLabel *label;				// ћетка дл€ перехода к этому оператору
 	AstNode *keyVal;				// ”казатель на узел ast-дерева, в котором хранитс€ значение ключа
-	TSwitchOperator *switchOp;		// ”казатель на оператор, к которому он относитс€
 public:
-	TCaseOperator(AstNode *keyVal, TLabel *label, TSwitchOperator *switchOp): TOperator(OT_CASE)
+	TCaseOperator(AstNode *keyVal, TLabel *label): TDefaultOperator(OT_CASE, label)
 	{
 		this->keyVal = keyVal;
-		this->label = label;
-		this->switchOp = switchOp;
 	}
 
 	virtual ~TCaseOperator() {}
 
 	AstNode *GetKey() { return keyVal; }
-	TLabel *GetLabel() { return label; }
 };
 
 class TSwitchOperator: public TOperator
@@ -96,7 +96,7 @@ private:
 	TLabel *endLabel;			// метка выхода
 	AstNode *key;					// ключ
 	std::vector<TCaseOperator *> caseList;			// список операторов case
-	TDefaultOperator *defOp;		// оператор default
+	TDefaultOperator *defOp;
 public:
 	typedef std::tr1::function<bool (TCaseOperator *)> CallbackFunc;
 
@@ -130,6 +130,11 @@ public:
 		for (auto it = caseList.begin(); it != caseList.end(); it++)
 			if (!func((*it)))
 				break;
+	}
+
+	TDefaultOperator *GetDefaultOp() const
+	{
+		return defOp;
 	}
 
 	TLabel *GetEndLabel() { return endLabel; }

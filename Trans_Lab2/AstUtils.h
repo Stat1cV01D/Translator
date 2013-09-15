@@ -12,12 +12,17 @@
 
 class AstNode;
 class OperatorStack;
+class TMLWriter;
+class AstPrintInfo;
+class AstWriter;
+class TACWriter;
 
 // Holds all the data required for 
 // programming language and TAC parsing
 class ParserContext
 {
 protected:
+	AstWriter *owner;
 	int m_LastLabelNumber;
 	int m_LastTmpIndex;
 
@@ -35,8 +40,6 @@ public:
 	ParserContext()
 		: OpStack()
 	{
-		g_lastInstructionIndex = 0;
-
 		auto HashFunction = [=] (std::string& arg) -> int // Hash function here
 		{
 			uint32_t sum = 0;
@@ -107,10 +110,10 @@ public:
 		return result;
 	}
 
-	TVariable *GenerateNewTmpVar(BaseTypeInfo *type, bool describeOnly = false)
+	TVariable *GenerateNewTmpVar(BaseTypeInfo *type, bool isDescribed = false)
 	{
 		TVariable *result = CreateVariable(type, GenerateVariableName(std::string("$t"), this->GetNextTmpVarIndex()));
-		if (!describeOnly)
+		if (!isDescribed) // means we are generating code now.
 		{
 			result->StaticMalloc();
 		}
@@ -306,9 +309,7 @@ public:
 		if (g_userTypeStack.size() == 0)
 			return nullptr;
 		else
-		{
 			return g_userTypeStack.back();
-		}
 	}
 
 	void DeclVar(const char *name, BaseTypeInfo *type, YYLTYPE loc)
@@ -494,6 +495,8 @@ public:
 		this->context = context;
 	}
 
+	virtual ~AstWriter() {}
+
 	ParserContext *GetContext() const { return context; }
 };
 
@@ -508,6 +511,8 @@ public:
 	{}
 
 	TACWriter(ParserContext *context, FILE *out = nullptr): AstWriter(context, out) {}
+	
+	virtual ~TACWriter() {}
 
 	int CodeGen(AstNode* node)
 	{
@@ -555,6 +560,7 @@ class AstPrintInfo: public AstWriter
 {
 public:
 	AstPrintInfo(ParserContext *context, FILE *in = nullptr): AstWriter(context, in) {}
+	virtual ~AstPrintInfo() {}
 
 	int Print(AstNode *node)
 	{
@@ -587,7 +593,7 @@ class TMLWriter: public AstWriter
 {
 private:
 	int g_lastInstructionIndex;
-
+	AstNode *lastOpResultNode;
 protected:	
 
 	/// <summary>
@@ -616,6 +622,7 @@ protected:
 		switch(typeId)
 		{
 		case INT_TYPE:
+		case ROM_TYPE: // NOTE: roman types are converted to int automatically during compilation
 			return (I_START + offset);
 		case FLOAT_TYPE:
 			return (F_START + offset);
@@ -624,7 +631,7 @@ protected:
 		case LONGDOUBLE_TYPE:
 			return (LD_START + offset);
 		default:
-			fprintf(stderr, "error: unknown type\n");
+			fprintf(stderr, "error: unknown type for command\n");
 			return HALT;
 		}
 	}
@@ -636,6 +643,9 @@ protected:
 		{
 		case CONST_NODE:
 			{
+				this->Serialize(operand);
+				operand = this->GetLastOperationResult();
+
 				instruction.AddrMode = DIRECT_MODE;
 				switch(operand->GetResultType()->getID())
 				{
@@ -659,23 +669,27 @@ protected:
 		case VARIABLE_NODE:
 		case TMP_VAR_NODE:
 			{
+				this->Serialize(operand);
+				operand = this->GetLastOperationResult();
+
 				uint32_t index;
 				instruction.AddrMode = ABSOLUTE_MODE;
 				index = dynamic_cast<VarAstNode*>(operand)->GetTableReference()->GetMemoryOffset();
-				memcpy(&instruction.Args, &index, sizeof(unsigned short));
+				memcpy(&instruction.Args, &index, sizeof(uint32_t));
 			}
 			break;
 		case ARRAY_ITEM_NODE:
-		case STRUCT_TYPE:
+		case STRUCT_ITEM_NODE:
 		case UNION_TYPE:
 			{
 				instruction.AddrMode = INDIRECT_MODE;
 
 				// serialize the variable offset to the last used temporary variable
 				this->Serialize(operand);
+				operand = this->GetLastOperationResult();
 
-				uint32_t index = GetContext()->GetLastUsedTmpVar()->GetMemoryOffset(); // The result tmp var with the pointer (offset) to the var
-				memcpy(&instruction.Args, &index, sizeof(unsigned short));
+				uint32_t index = dynamic_cast<VarAstNode*>(operand)->GetTableReference()->GetMemoryOffset(); // The result tmp var with the pointer (offset) to the var
+				memcpy(&instruction.Args, &index, sizeof(uint32_t));
 			}
 			break;
 		default:
@@ -685,10 +699,32 @@ protected:
 		return instruction;
 	}
 
+	void TMLWriteHeader()
+	{
+		TMLHeader header;
+		memcpy(&header.signature, g_MandatoryHeaderPart, sizeof(g_MandatoryHeaderPart));
+		header.codeSegmentSize = (uint16_t)(g_lastInstructionIndex*sizeof(MachineInstruction));
+		header.dataSegmentSize = (uint16_t)(TVariable::GetWordsCount() * sizeof (TMemoryCell));
+
+		FileSeek(0, SEEK_SET);
+		BinaryWrite(&header, sizeof(header));
+	}
+
+	void TMLFillDataSegment()
+	{
+		unsigned char zeroByte[256] = {0};
+		uint16_t codeSegmentSize = (uint16_t)(g_lastInstructionIndex * sizeof(MachineInstruction));
+		uint32_t offset = sizeof(TMLHeader) + (uint16_t)codeSegmentSize;
+		FileSeek(sizeof(TMLHeader), SEEK_SET);
+		BinaryWrite(&zeroByte[0], TVariable::GetWordsCount() * sizeof(TMemoryCell));
+	}
+
 public:
 	TMLWriter(ParserContext *context, FILE *out = nullptr)
 		: AstWriter(context, out)
 	{
+		TMLWriteHeader();
+		g_lastInstructionIndex = 0;
 	}
 
 	virtual ~TMLWriter()
@@ -773,8 +809,19 @@ public:
 		label->InitLabel(GetLastWrittenInstructionIndex() + 1);
 	}
 
+	void SetResult(AstNode *resultNode)
+	{
+		lastOpResultNode = resultNode;
+	}
+
+	AstNode *GetLastOperationResult()
+	{
+		return lastOpResultNode;
+	}
+
 	void AfterProcess()
 	{
+		// Rewrite the header and the data segment with updated info and data
 		GetContext()->ProcessLabelTable(
 			[=] (TLabel*& label) -> bool
 		{
@@ -797,13 +844,12 @@ public:
 			return true;
 		}
 		);
-		auto codeSegmentSize = (unsigned short)(g_lastInstructionIndex*sizeof(MachineInstruction));
-		auto dataSegmentSize = (unsigned short)(g_wordsCount * sizeof (TMemoryCell));
+		//auto codeSegmentSize = (unsigned short)(g_lastInstructionIndex * sizeof(MachineInstruction));
+		//auto dataSegmentSize = (unsigned short)(TVariable::GetWordsCount() * sizeof (TMemoryCell));
 		
 		// Write segment sizes
-		this->FileSeek(sizeof(g_MandatoryHeaderPart)-1, SEEK_SET); // Changed by A.K.
-		this->BinaryWrite(&codeSegmentSize, sizeof(codeSegmentSize));
-		this->BinaryWrite(&dataSegmentSize, sizeof(dataSegmentSize));
+		TMLWriteHeader();
+		TMLFillDataSegment();
 	}
 };
 
@@ -829,6 +875,7 @@ protected:
 
 public:
 	PtPrintInfo(ParserContext *context, FILE *in = nullptr): AstWriter(context, in) {}
+	virtual ~PtPrintInfo() {}
 
 	int Print(PtNode *node)
 	{

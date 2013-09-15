@@ -1,0 +1,533 @@
+%require "2.5"
+%defines
+%locations
+%verbose
+%debug
+
+%code top
+{
+#include <stddef.h>
+#include <string.h>
+#include "parser.h"
+#include "AstUtils.h"
+#include "resources.h"
+#include "ast.h"
+#include "pt.h"
+#pragma warning(disable : 4003)
+#pragma warning(disable : 4005)
+
+void yyerror(const char *message);
+#define YYDEBUG 1
+}
+
+%code requires
+{
+#include "parser.h"
+#include "common.h"
+struct Node;
+}
+
+%union {
+	Node *_node;
+	AstNode *_AstNode;
+}
+
+%token <_node> TOK_IDENTIFIER
+
+%token <_node> TOK_B_AND
+%token <_node> TOK_B_OR
+%token <_node> TOK_B_XOR
+%token <_node> TOK_B_NOT
+%token <_node> TOK_AR_PLUS
+%token <_node> TOK_AR_MINUS
+%token <_node> TOK_AR_MUL
+%token <_node> TOK_AR_DIV
+%token <_node> TOK_AR_MOD
+
+%token <_node> TOK_ASSIGN_OP
+%token <_node> TOK_COMP_OP
+%token <_node> TOK_IF
+%token <_node> TOK_ELSE
+%token <_node> TOK_ENDEXPR
+%token <_node> TOK_OPENPAR
+%token <_node> TOK_CLOSEPAR
+%token <_node> TOK_OPENBR
+%token <_node> TOK_CLOSEBR
+%token <_node> TOK_OPENSQ
+%token <_node> TOK_CLOSESQ
+%token <_node> TOK_DOT
+%token <_node> TOK_DOUBLEDOT
+
+%token <_node> TOK_ROM_DECL
+%token <_node> TOK_INT_DECL
+%token <_node> TOK_FLOAT_DECL
+
+%token <_node> TOK_FOR_DECL
+%token <_node> TOK_WHILE_DECL
+%token <_node> TOK_DO_DECL
+
+%token <_node> TOK_ROM_CONST
+%token <_node> TOK_INT_CONST
+%token <_node> TOK_FLOAT_CONST
+
+%token <_node> TOK_PRINT
+%token <_node> TOK_READ
+%token <_node> TOK_BREAK
+%token <_node> TOK_CONTINUE
+%token <_node> TOK_GOTO
+%token <_node> TOK_STRUCT
+%token <_node> TOK_UNION
+%token <_node> TOK_SWITCH
+%token <_node> TOK_CASE
+%token <_node> TOK_DEFAULT
+
+%nonassoc EXPR_ERROR
+%nonassoc STMNT_BLOCK_ERROR
+
+%nonassoc IF_WITHOUT_ELSE
+%nonassoc TOK_ELSE
+
+%right TOK_ASSIGN_OP
+%left TOK_COMP_OP
+%left TOK_AR_MOD
+%left TOK_AR_MINUS TOK_AR_PLUS TOK_B_OR TOK_B_XOR
+%left TOK_AR_MUL TOK_AR_DIV TOK_B_AND
+%left UMINUS NOTX
+%left TOK_DOT
+
+%code top
+{
+AstNode *astTree;
+PtNode *ptTree;
+ParserContext Context;
+}
+
+%{
+Node* CreateExpressionNode(Node *op, bool isBooleanOp, Node *left, Node *right, const YYLTYPE left_loc, const YYLTYPE right_loc)
+{
+	BaseTypeInfo *type = (isBooleanOp ? new BoolType() : left->astNode->GetResultType()->Clone());
+	AstNode *rightOpAst = (right != nullptr ? right->astNode : nullptr);
+	PtNode *ptNode;
+
+ 	AssertOneOfTypes(left, left_loc, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
+	if (right != nullptr)
+	{
+		AssertOneOfTypes(right, right_loc, 4, BITS_TYPE, INT_TYPE, FLOAT_TYPE, ROM_TYPE);
+		ptNode = createPtNodeWithChildren("expr", 3, left->ptNode, op->ptNode, right->ptNode);
+	}
+	else
+	{
+		ptNode = createPtNodeWithChildren("expr", 2, op->ptNode, left->ptNode);
+	}
+
+	return createNode(new OperatorAstNode(op->ptNode->text, left->astNode, rightOpAst, new VarAstNode(true, Context.GenerateNewTmpVar(type))), 
+				ptNode);
+}
+%}
+
+
+%%
+
+start: translation_unit
+	{
+		$$ = $1;
+	}
+
+primary_expression
+	: TOK_IDENTIFIER
+	{
+
+	}
+	| constant
+	| string
+	| '(' expression ')'
+	;
+
+constant
+	: TOK_INT_CONST		/* includes character_constant */
+	| TOK_FLOAT_CONST
+	| TOK_ROM_CONST
+	//| ENUMERATION_CONSTANT	/* after it has been defined as such */
+	;
+
+enumeration_constant		/* before it has been defined as such */
+	: IDENTIFIER
+	;
+
+string
+	: STRING_LITERAL
+	| FUNC_NAME
+	;
+
+postfix_expression
+	: primary_expression
+	| postfix_expression '[' expression ']'
+	| postfix_expression '(' ')'
+	| postfix_expression '(' argument_expression_list ')'
+	| postfix_expression '.' IDENTIFIER
+	//| postfix_expression PTR_OP IDENTIFIER
+	//| postfix_expression INC_OP
+	//| postfix_expression DEC_OP
+	| '(' type_name ')' '{' initializer_list '}'
+	| '(' type_name ')' '{' initializer_list ',' '}'
+	;
+
+argument_expression_list
+	: assignment_expression
+	| argument_expression_list ',' assignment_expression
+	;
+
+unary_expression
+	: postfix_expression
+	//| INC_OP unary_expression
+	//| DEC_OP unary_expression
+	| unary_operator cast_expression
+	//| SIZEOF unary_expression
+	//| SIZEOF '(' type_name ')'
+	;
+
+unary_operator
+	: TOK_B_AND
+	| TOK_AR_MUL
+	| TOK_AR_PLUS
+	| TOK_AR_MINUS
+	//| '~'
+	| TOK_B_NOT
+	;
+
+cast_expression
+	: unary_expression
+	| '(' type_name ')' cast_expression
+	;
+
+multiplicative_expression
+	: cast_expression
+	| multiplicative_expression TOK_AR_MUL cast_expression
+	| multiplicative_expression TOK_AR_DIV cast_expression
+	| multiplicative_expression TOK_AR_MOD cast_expression
+	;
+
+additive_expression
+	: multiplicative_expression
+	| additive_expression TOK_AR_PLUS multiplicative_expression
+	| additive_expression TOK_AR_MINUS multiplicative_expression
+	;
+
+shift_expression
+	: additive_expression
+	//| shift_expression LEFT_OP additive_expression
+	//| shift_expression RIGHT_OP additive_expression
+	;
+
+relational_expression
+	: shift_expression
+	| relational_expression TOK_COMP_OP shift_expression
+	;
+
+equality_expression
+	: relational_expression
+	//| equality_expression EQ_OP relational_expression
+	//| equality_expression NE_OP relational_expression
+	;
+
+and_expression
+	: equality_expression
+	//| and_expression '&' equality_expression
+	;
+
+exclusive_or_expression
+	: and_expression
+	//| exclusive_or_expression '^' and_expression
+	;
+
+inclusive_or_expression
+	: exclusive_or_expression
+	//| inclusive_or_expression '|' exclusive_or_expression
+	;
+
+logical_and_expression
+	: inclusive_or_expression
+	| logical_and_expression TOK_B_AND inclusive_or_expression
+	;
+
+logical_or_expression
+	: logical_and_expression
+	| logical_or_expression TOK_B_OR logical_and_expression
+	;
+
+conditional_expression
+	: logical_or_expression
+	| logical_or_expression '?' expression ':' conditional_expression
+	;
+
+assignment_expression
+	: conditional_expression
+	| unary_expression assignment_operator assignment_expression
+	;
+
+assignment_operator
+	: '='
+	/*| MUL_ASSIGN
+	| DIV_ASSIGN
+	| MOD_ASSIGN
+	| ADD_ASSIGN
+	| SUB_ASSIGN
+	| LEFT_ASSIGN
+	| RIGHT_ASSIGN
+	| AND_ASSIGN
+	| XOR_ASSIGN
+	| OR_ASSIGN*/
+	;
+
+expression
+	: assignment_expression
+	| expression ',' assignment_expression
+	;
+
+constant_expression
+	: conditional_expression	/* with constraints */
+	;
+
+declaration
+	: declaration_specifiers ';'
+	| declaration_specifiers init_declarator_list ';'
+	//| static_assert_declaration
+	;
+
+declaration_specifiers
+	:  type_specifier declaration_specifiers
+	| type_specifier
+	| function_specifier declaration_specifiers
+	| function_specifier
+	;
+
+init_declarator_list
+	: init_declarator
+	| init_declarator_list ',' init_declarator
+	;
+
+init_declarator
+	: declarator '=' initializer
+	| declarator
+	;
+
+type_specifier
+	: VOID
+	| TOK_ROM_DECL
+	//| SHORT
+	| TOK_INT_DECL
+	//| LONG
+	| TOK_FLOAT_DECL
+
+	| struct_or_union_specifier
+	//| enum_specifier
+	//| TYPEDEF_NAME		/* after it has been defined as such */
+	;
+
+struct_or_union_specifier
+	: struct_or_union '{' struct_declaration_list '}'
+	| struct_or_union TOK_IDENTIFIER '{' struct_declaration_list '}'
+	| struct_or_union TOK_IDENTIFIER
+	;
+
+struct_or_union
+	: TOK_STRUCT
+	| TOK_UNION
+	;
+
+struct_declaration_list
+	: struct_declaration
+	| struct_declaration_list struct_declaration
+	;
+
+struct_declaration
+	: specifier_qualifier_list ';'	/* for anonymous struct/union */
+	| specifier_qualifier_list struct_declarator_list ';'
+	;
+
+specifier_qualifier_list
+	: type_specifier specifier_qualifier_list
+	| type_specifier
+	;
+
+struct_declarator_list
+	: struct_declarator
+	| struct_declarator_list ',' struct_declarator
+	;
+
+struct_declarator
+	: ':' constant_expression
+	| declarator ':' constant_expression
+	| declarator
+	;
+
+enumerator_list
+	: enumerator
+	| enumerator_list ',' enumerator
+	;
+
+enumerator	/* identifiers must be flagged as ENUMERATION_CONSTANT */
+	: enumeration_constant '=' constant_expression
+	| enumeration_constant
+	;
+
+declarator
+	: pointer direct_declarator
+	| direct_declarator
+	;
+
+direct_declarator
+	: TOK_IDENTIFIER
+	| '(' declarator ')'
+	| direct_declarator '[' assignment_expression ']'
+	| direct_declarator '(' parameter_type_list ')'
+	| direct_declarator '(' ')'
+	| direct_declarator '(' identifier_list ')'
+	;
+
+parameter_type_list
+	: parameter_list
+	;
+
+parameter_list
+	: parameter_declaration
+	| parameter_list ',' parameter_declaration
+	;
+
+parameter_declaration
+	: declaration_specifiers declarator
+	| declaration_specifiers abstract_declarator
+	| declaration_specifiers
+	;
+
+identifier_list
+	: TOK_IDENTIFIER
+	| identifier_list ',' TOK_IDENTIFIER
+	;
+
+type_name
+	: specifier_qualifier_list abstract_declarator
+	| specifier_qualifier_list
+	;
+
+abstract_declarator
+	: pointer direct_abstract_declarator
+	| pointer
+	| direct_abstract_declarator
+	;
+
+direct_abstract_declarator
+	: '(' abstract_declarator ')'
+	| '[' ']'
+	| '[' '*' ']'
+	| '[' assignment_expression ']'
+	| direct_abstract_declarator '[' assignment_expression ']'
+	| '(' ')'
+	| '(' parameter_type_list ')'
+	| direct_abstract_declarator '(' ')'
+	| direct_abstract_declarator '(' parameter_type_list ')'
+	;
+
+initializer
+	: '{' initializer_list '}'
+	| '{' initializer_list ',' '}'
+	| assignment_expression
+	;
+
+initializer_list
+	: designation initializer
+	| initializer
+	| initializer_list ',' designation initializer
+	| initializer_list ',' initializer
+	;
+
+designation
+	: designator_list '='
+	;
+
+designator_list
+	: designator
+	| designator_list designator
+	;
+
+designator
+	: '[' constant_expression ']'
+	| '.' TOK_IDENTIFIER
+	;
+
+statement
+	: labeled_statement
+	| compound_statement
+	| expression_statement
+	| selection_statement
+	| iteration_statement
+	| jump_statement
+	;
+
+labeled_statement
+	: TOK_IDENTIFIER ':' statement
+	| TOK_CASE constant_expression ':' statement
+	| TOK_DEFAULT ':' statement
+	;
+
+compound_statement
+	: '{' '}'
+	| '{'  block_item_list '}'
+	;
+
+block_item_list
+	: block_item
+	| block_item_list block_item
+	;
+
+block_item
+	: declaration
+	| statement
+	;
+
+expression_statement
+	: ';'
+	| expression ';'
+	;
+
+selection_statement
+	: TOK_IF '(' expression ')' statement TOK_ELSE statement
+	| TOK_IF '(' expression ')' statement
+	| TOK_SWITCH '(' expression ')' statement
+	;
+
+iteration_statement
+	: WHILE '(' expression ')' statement
+	| DO statement WHILE '(' expression ')' ';'
+	| FOR '(' expression_statement expression_statement ')' statement
+	| FOR '(' expression_statement expression_statement expression ')' statement
+	| FOR '(' declaration expression_statement ')' statement
+	| FOR '(' declaration expression_statement expression ')' statement
+	;
+
+jump_statement
+	: TOK_GOTO TOK_IDENTIFIER ';'
+	| TOK_CONTINUE ';'
+	| TOK_BREAK ';'
+	| TOK_RETURN ';'
+	| TOK_RETURN expression ';'
+	;
+
+translation_unit
+	: external_declaration
+	| translation_unit external_declaration
+	;
+
+external_declaration
+	: function_definition
+	| declaration
+	;
+
+function_definition
+	: declaration_specifiers declarator declaration_list compound_statement
+	| declaration_specifiers declarator compound_statement
+
+declaration_list
+	: declaration
+	| declaration_list declaration
+	;

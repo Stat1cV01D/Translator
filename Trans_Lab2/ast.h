@@ -9,7 +9,7 @@
 #include "variable.h"
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4482)
-
+#include "Operators.h"
 #include "language.tab.hpp"
 #include "parser.h"
 
@@ -207,34 +207,26 @@ public:
 
 class LoopAstNode: public AstNode
 {
+private:
 	LoopConditionAstNode *cond;
 	AstNode *block;
 	bool post_check;
+
+	TLabel *entranceLabel;
+	TLabel *outLabel;
 public:
-
-	/*
-	class LoopCodeGenInfo: public TACWriter
-	{
-		int LoopLabel;
-		int EndLabel;
-	public:
-		LoopCodeGenInfo(const TACWriter& orig_output, int LoopLabel, int EndLabel)
-			: TACWriter(orig_output)
-		{
-			this->LoopLabel = LoopLabel;
-			this->EndLabel = EndLabel;
-		}
-	};
-	*/
-
 	LoopAstNode(
 		LoopConditionAstNode *cond,
 		AstNode *block,
+		TLabel *entranceLabel,
+		TLabel *outLabel,
 		bool post_check = false): AstNode(LOOP_NODE, new VoidType()) 
 	{
 		this->cond = cond;
 		this->block = block;
 		this->post_check = post_check;
+		this->entranceLabel = entranceLabel;
+		this->outLabel = outLabel;
 	}
 
 	virtual int Print3AC(TACWriter* output);
@@ -385,7 +377,7 @@ public:
 	TVariable *GetTableReference() { return varTableReference; }
 	virtual int Print3AC(TACWriter* output);
 	virtual int PrintASTree(AstPrintInfo* output);
-	virtual int Serialize(TMLWriter* _output);
+	virtual int Serialize(TMLWriter* output);
 
 	virtual std::string GetValueHolderName()
 	{
@@ -516,9 +508,9 @@ public:
 
 	TLabel *GetLabel() { return labelTableReference; }
 
-	virtual int Print3AC(TACWriter* output) { throw std::string("Not available"); }
+	virtual int Print3AC(TACWriter* output);
 	virtual int PrintASTree(AstPrintInfo* output) { return 0; }
-	virtual int Serialize(TMLWriter* output) { throw std::string("Not available"); }
+	virtual int Serialize(TMLWriter* output);
 };
 
 /// The core class to work with TML generation process - 
@@ -593,18 +585,19 @@ private:
 	AstNode *key;
 	AstNode *case_list;
 	AstNode *case_default;
-
+	TSwitchOperator *opData;
 public:
-	SwitchAstNode(AstNode *key, AstNode *case_list, AstNode *case_default): AstNode(SWITCH_STMT_NODE, new VoidType())
+	SwitchAstNode(AstNode *key, AstNode *case_list, AstNode *case_default, TSwitchOperator *opData): AstNode(SWITCH_STMT_NODE, new VoidType())
 	{
 		this->key = key;
 		this->case_list = case_list;
 		this->case_default = case_default;
+		this->opData = opData;
 	}
 
-	virtual int Print3AC(TACWriter* output) { return 0; }
-	virtual int PrintASTree(AstPrintInfo* output) { return 0; }
-	virtual int Serialize(TMLWriter* output) { return 0; }
+	virtual int Print3AC(TACWriter* output);
+	virtual int PrintASTree(AstPrintInfo* output);
+	virtual int Serialize(TMLWriter* output);
 };
 
 class VerboseAstNode: public AstNode

@@ -44,7 +44,7 @@ unsigned char GetTypedOperator(TMLCOMMAND op, enumTypes typeId)
 	case LONGDOUBLE_TYPE:
 		return LD_START + offset;
 	default:
-		fprintf(stderr, "error: unknown type\n");
+		fprintf(stderr, "error: unknown type for the operator\n");
 		return HALT;
 	}
 }

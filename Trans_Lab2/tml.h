@@ -31,19 +31,19 @@
 	SUB ## SUFFIX, \
 	MUL ## SUFFIX, \
 	DIV ## SUFFIX, \
-	REM ## SUFFIX, 
+	MOD ## SUFFIX, 
 
 #define ACCUMULATOR_OPS(SUFFIX) \
 	LD ## SUFFIX, \
 	ST ## SUFFIX, \
 
 #define COMPARE_OPS(SUFFIX) \
-	CMP ## SUFFIX, \
-	TST ## SUFFIX, 
-
+	CMP ## SUFFIX,
+	
 #define UNARY_OPS(SUFFIX) \
 	NEG ## SUFFIX, \
-	ABS ## SUFFIX,
+	ABS ## SUFFIX, \
+	TST ## SUFFIX, 
 
 #define IO_OPS(SUFFIX) \
 	IN ## SUFFIX, \
@@ -152,7 +152,7 @@ typedef struct
     uint8_t Args[COMMAND_ARGS_MAX_SIZE]; /* Instruction arguments */
 } MachineInstruction;
 
-const char g_MandatoryHeaderPart[] = ".TML";
+const char g_MandatoryHeaderPart[4] = {'.', 'C', 'M', 'L'};
 
 /* Machine instruction */
 typedef struct

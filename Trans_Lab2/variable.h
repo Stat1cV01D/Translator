@@ -15,9 +15,6 @@
 #include "definitions.h"
 #include "BaseTypeClass.h"
 #include "tml.h"
-extern unsigned int g_lastInstructionIndex;
-
-extern unsigned short g_wordsCount;
 
 class TVariable
 {
@@ -32,7 +29,14 @@ class TVariable
 
 	bool isConstValue; /* ћожно ли использовать как константное r-value */
 
+	static int g_wordsCount;
+
 public:
+	static int GetWordsCount()
+	{
+		return g_wordsCount;
+	}
+
 	TVariable(std::string& name, BaseTypeInfo *Type)
 	{
 		this->name = name;

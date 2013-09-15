@@ -1,8 +1,7 @@
 #include "variable.h"
 #include <string>
 
-unsigned short g_wordsCount;
-unsigned int g_lastInstructionIndex;
+int TVariable::g_wordsCount = 0;
 
 TVariable* CreateVariable(BaseTypeInfo *typeTableRef, std::string& name)
 {

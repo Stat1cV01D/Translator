@@ -39,9 +39,6 @@
     <ClCompile Include="symbol_table.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
-    <ClCompile Include="tml-generator.cpp">
-      <Filter>Файлы исходного кода</Filter>
-    </ClCompile>
     <ClCompile Include="HashTable.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
@@ -49,9 +46,6 @@
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
     <ClCompile Include="variable.cpp">
-      <Filter>Файлы исходного кода</Filter>
-    </ClCompile>
-    <ClCompile Include="lex.tac.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
     <ClCompile Include="Operators.cpp">
@@ -152,9 +146,6 @@
       <Filter>Файлы ресурсов</Filter>
     </None>
     <None Include="ClassDiagram1.cd" />
-    <None Include="lexer-3ac.l">
-      <Filter>Файлы ресурсов</Filter>
-    </None>
     <None Include="language.output">
       <Filter>Файлы ресурсов</Filter>
     </None>

@@ -11,20 +11,21 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{DA75F8E9-96F5-468C-A31D-F38D567DA00B}</ProjectGuid>
-    <RootNamespace>Trans_Lab2</RootNamespace>
+    <ProjectGuid>{A999CA30-E204-4E56-AC55-E87AB54749F7}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Trans_Lab6</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -37,104 +38,47 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <CustomBuildBeforeTargets>
-    </CustomBuildBeforeTargets>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <CompileAs>CompileAsCpp</CompileAs>
-      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_STATS; _CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
-      <PreprocessToFile>false</PreprocessToFile>
-      <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>libfl.lib;libfl.a;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <CustomBuildStep>
-      <Command>
-      </Command>
-    </CustomBuildStep>
-    <CustomBuildStep>
-      <Outputs>
-      </Outputs>
-    </CustomBuildStep>
-    <PreBuildEvent>
-      <Command>run.bat</Command>
-    </PreBuildEvent>
-    <PreBuildEvent>
-      <Message>run.bat</Message>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <CompileAs>CompileAsCpp</CompileAs>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>libfl.lib;libfl.a;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ast.cpp" />
-    <ClCompile Include="AstUtils.cpp" />
-    <ClCompile Include="basic-ops.cpp" />
-    <ClCompile Include="common.cpp" />
-    <ClCompile Include="context.cpp" />
-    <ClCompile Include="label.cpp" />
-    <ClCompile Include="language.tab.cpp" />
-    <ClCompile Include="lex.yy.cpp" />
-    <ClCompile Include="Operators.cpp" />
-    <ClCompile Include="parser.cpp" />
-    <ClCompile Include="print-tree.cpp" />
-    <ClCompile Include="pt.cpp" />
-    <ClCompile Include="symbol_table.cpp" />
-    <ClCompile Include="HashTable.cpp" />
-    <ClCompile Include="types.cpp" />
-    <ClCompile Include="variable.cpp" />
+    <ClCompile Include="fileoperations.cpp" />
+    <ClCompile Include="tml.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ast.h" />
-    <ClInclude Include="AstUtils.h" />
-    <ClInclude Include="BaseTypeClass.h" />
-    <ClInclude Include="basic-ops.h" />
-    <ClInclude Include="common.h" />
-    <ClInclude Include="context.h" />
-    <ClInclude Include="definitions.h" />
-    <ClInclude Include="label.h" />
-    <ClInclude Include="language.tab.hpp" />
-    <ClInclude Include="Operators.h" />
-    <ClInclude Include="parser.h" />
-    <ClInclude Include="pt.h" />
-    <ClInclude Include="resources.h" />
-    <ClInclude Include="symbol_table.h" />
-    <ClInclude Include="HashTable.h" />
-    <ClInclude Include="tml-generator.h" />
-    <ClInclude Include="tml.h" />
-    <ClInclude Include="types.h" />
-    <ClInclude Include="variable.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="ClassDiagram1.cd" />
-    <None Include="input.txt" />
-    <None Include="language.output" />
-    <None Include="language.y" />
-    <None Include="lexer.ll" />
-    <None Include="libfl.a" />
-    <None Include="nodeTypes.inc" />
-    <None Include="IDtypes.inc" />
-    <None Include="run.bat" />
-  </ItemGroup>
-  <ItemGroup>
-    <Library Include="libfl.lib" />
+    <ClInclude Include="..\Trans_Lab2\tml.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

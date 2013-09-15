@@ -6,14 +6,61 @@ struct TYPE
 rom[10][20] b;
 int foo;
 float bar;
-TYPE blaVar;
+struct TYPE blaVar;
+int i;
+
 b[0][1] = CXVII;
 blaVar.bla1 = 1;
 if (b[1][1] <= XLV)
 {
-	int foo;
+int foo;
+foo = foo + 1;
 }
 else
 {
-	float bar;
+float bar;
+bar = bar - 1.05;
+}
+
+i = 0;
+do
+{
+	i = i + 1;
+	print(i);
+} while (i < 10);
+
+for (i = 0; i < 10; i = i + 1)
+{		
+	if (i == 3)
+		continue;
+
+	switch(i)
+	{
+	case 1:
+	case 2:
+		{
+			print(i+1);
+			break;
+		}
+	case 5:
+		{
+			i = i + 1;
+			break;
+		}
+	default:
+		{
+			print(i-1);
+			break;		
+		}
+	}
+
+	if (i == 9)
+		break;
+}
+
+i = 0;
+while (i < 10)
+{
+	print(i);
+	i = i + 1;
 }
