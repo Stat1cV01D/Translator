@@ -9,7 +9,9 @@
 
 Node *addStmntToBlock(Node *block, const Node *stmnt)
 {
-    block->ptNode->next = stmnt->ptNode;
+	auto cur = block->ptNode;
+	for (; cur->next != nullptr; cur = cur->next);
+    cur->next = stmnt->ptNode;
 
 	auto blockAstNode = new StatementBlockAstNode();
 	blockAstNode->AddStatement(block->astNode);

@@ -333,74 +333,75 @@ int main(int argc, char* argv[])
 		else OPS(F,float,"%f", tmpFloat)
 		else OPS(D,double,"%d", tmpDouble)
 		else OPS(LD,long double,"%ld", tmpLongDouble)
-		
+		else
+		{
+			switch (operationCode)
+			{
+			case HALT:
+				isHaltCommandMet = !0;
+				break;
 
-        switch (operationCode)
-        {
-        case HALT:
-            isHaltCommandMet = !0;
-            break;
+			case INC:
+				++tmpInteger;
+				memcpy(&Accumulator, &tmpInteger, sizeof (int));
+				break;
+			case DEC:
+				--tmpInteger;
+				memcpy(&Accumulator, &tmpInteger, sizeof (int));
+				break;
 
-        case INC:
-            ++tmpInteger;
-            memcpy(&Accumulator, &tmpInteger, sizeof (int));
-            break;
-        case DEC:
-            --tmpInteger;
-            memcpy(&Accumulator, &tmpInteger, sizeof (int));
-            break;
-
-		CONVERT_OPS(I, tmpInteger, int, F, tmpFloat, D, tmpDouble, LD, tmpLongDouble)
-		CONVERT_OPS(F, tmpFloat, float, I, tmpInteger, D, tmpDouble, LD, tmpLongDouble)
-		CONVERT_OPS(D, tmpDouble, double, I, tmpInteger, F, tmpFloat, LD, tmpLongDouble)
-		CONVERT_OPS(LD, tmpLongDouble, long double, I, tmpInteger, F, tmpFloat, D, tmpDouble)
+			CONVERT_OPS(I, tmpInteger, int, F, tmpFloat, D, tmpDouble, LD, tmpLongDouble)
+			CONVERT_OPS(F, tmpFloat, float, I, tmpInteger, D, tmpDouble, LD, tmpLongDouble)
+			CONVERT_OPS(D, tmpDouble, double, I, tmpInteger, F, tmpFloat, LD, tmpLongDouble)
+			CONVERT_OPS(LD, tmpLongDouble, long double, I, tmpInteger, F, tmpFloat, D, tmpDouble)
         
-        case JMP:
-            memcpy(&ProgramCounter, args, sizeof(int));
-            continue;
-        case JMZ:
-            if (PSW.Z)
-            {
-                memcpy(&ProgramCounter, args, sizeof(int));
-                continue;
-            }
-            break;
-        case JMNZ:
-            if (!PSW.Z)
-            {
-                memcpy(&ProgramCounter, args, sizeof(int));
-                continue;
-            }
-            break;
-        case JMG:
-            if (PSW.G)
-            {
-                memcpy(&ProgramCounter, args, sizeof(int));
-                continue;
-            }
-            break;
-        case JML:
-            if (PSW.L)
-            {
-                memcpy(&ProgramCounter, args, sizeof(int));
-                continue;
-            }
-            break;
+			case JMP:
+				memcpy(&ProgramCounter, args, sizeof(int));
+				continue;
+			case JMZ:
+				if (PSW.Z)
+				{
+					memcpy(&ProgramCounter, args, sizeof(int));
+					continue;
+				}
+				break;
+			case JMNZ:
+				if (!PSW.Z)
+				{
+					memcpy(&ProgramCounter, args, sizeof(int));
+					continue;
+				}
+				break;
+			case JMG:
+				if (PSW.G)
+				{
+					memcpy(&ProgramCounter, args, sizeof(int));
+					continue;
+				}
+				break;
+			case JML:
+				if (PSW.L)
+				{
+					memcpy(&ProgramCounter, args, sizeof(int));
+					continue;
+				}
+				break;
 
-		/* variant 7 additions */
-		case PUSH:
-			{
-				Push(Accumulator);
+			/* variant 7 additions */
+			case PUSH:
+				{
+					Push(Accumulator);
+				}
+				break;
+			case POP:
+				{
+					Accumulator = Pop().cellData;
+				}
+				break;
+			default:
+				PrintError("Unknown code operation", ProgramCounter);
 			}
-			break;
-		case POP:
-			{
-				Accumulator = Pop().cellData;
-			}
-			break;
-        default:
-			PrintError("Unknown code operation", ProgramCounter);
-        }
+		}
         if (0 != isHaltCommandMet)
             break;
         ++ProgramCounter;

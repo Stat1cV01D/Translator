@@ -262,7 +262,8 @@ expression_statement:
 	| 
 	expr_or_assignment TOK_ENDEXPR
 	{
-		$$ = $1;
+		$$ = createNode($1->astNode, 
+				createPtNodeWithChildren("expression_statement", 2, $1->ptNode, $2->ptNode));
 	}
 	|
 	expr error
@@ -1014,7 +1015,8 @@ switch_head: TOK_SWITCH TOK_OPENPAR expr TOK_CLOSEPAR TOK_OPENBR	/*<s1>*/
 				*end = Context.GenerateNewLabel();
 			TSwitchOperator *switchOp = new TSwitchOperator($3->astNode, controlFLowLabel, end);
 			Context.OperatorStackPush(switchOp);
-			$$ = $3;
+			$$ = createNode($3->astNode,
+					createPtNodeWithChildren("switch_head", 4, $1->ptNode, $2->ptNode, $3->ptNode, $4->ptNode));
 		}
 	}
 	;
