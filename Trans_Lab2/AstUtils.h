@@ -25,11 +25,13 @@ protected:
 	AstWriter *owner;
 	int m_LastLabelNumber;
 	int m_LastTmpIndex;
+	int m_LastLiteralIndex;
 
 	THashTable<std::string, TLabel*> *g_labelTable;
 	THashTable<std::string, TVariable*> *g_tmpVarsTable;
 	THashTable<std::string, TVariable*> *g_VariableTable;
 	THashTable<std::string, BaseTypeInfo*> *g_TypeTable;
+	THashTable<std::string, TVariable*> *g_LiteralTable;
 
 	OperatorStack OpStack;
 
@@ -63,6 +65,7 @@ public:
 		g_tmpVarsTable = new THashTable<std::string, TVariable*>(HashFunction, CompareFunction);
 		g_VariableTable = new THashTable<std::string, TVariable*>(HashFunction, CompareFunction);
 		g_TypeTable = new THashTable<std::string, BaseTypeInfo*>(HashFunction, CompareFunction);
+		g_LiteralTable = new THashTable<std::string, TVariable*>(HashFunction, CompareFunction);
 
 		m_LastLabelNumber = 0;
 		m_LastTmpIndex = 0;
@@ -74,6 +77,7 @@ public:
 		delete g_tmpVarsTable;
 		delete g_TypeTable;
 		delete g_VariableTable;
+		delete g_LiteralTable;
 	}
 
 	/// <summary>
@@ -84,18 +88,23 @@ public:
 	/// <summary>
 	/// Returns the index of the next temporary variable.
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>The index of the next temporary variable</returns>
 	int GetNextTmpVarIndex() { return ++m_LastTmpIndex; }
+	/// <summary>
+	/// Returns the index of the next literal variable.
+	/// </summary>
+	/// <returns>The index of the next literal variable</returns>
+	int GetNextLiteralIndex() { return ++m_LastLiteralIndex; }
 
 	/// <summary>
 	/// Gets the last used (current) label number.
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>The last used (current) label number</returns>
 	int GetLastUsedLabelNumber() { return m_LastLabelNumber; }
 	/// <summary>
 	/// Gets the last (current) index of the used temporary variable.
 	/// </summary>
-	/// <returns></returns>
+	/// <returns>The last (current) index of the used temporary variable</returns>
 	int GetLastUsedTmpVarIndex() { return m_LastTmpIndex; }
 
 	void ProcessLabelTable(THashTable<std::string, TLabel*>::ItemCallbackFunc PrintItem)
@@ -115,11 +124,27 @@ public:
 		TVariable *result = CreateVariable(type, GenerateVariableName(std::string("$t"), this->GetNextTmpVarIndex()));
 		if (!isDescribed) // means we are generating code now.
 		{
-			result->StaticMalloc();
+			result->ReserveMemory();
 		}
 		g_tmpVarsTable->st_put(result->GetName(), result);
 		return result;
 	}
+	
+	//TVariable *AddLiteral(std::string& str_literal)
+	//{
+	//	if (g_LiteralTable->st_exist(str_literal))
+	//	{
+	//		return g_LiteralTable->st_get(str_literal);
+	//	}
+	//	else
+	//	{
+	//		TVariable *result = CreateVariable(new LiteralType(str_literal.size()), str_literal);
+	//		result->ReserveMemory();
+	//		g_LiteralTable->st_put(result->GetName(), result);
+	//		return result;
+	//	}
+	//}
+
 
 	TVariable *GetLastUsedTmpVar()
 	{
@@ -649,6 +674,7 @@ protected:
 				instruction.AddrMode = DIRECT_MODE;
 				switch(operand->GetResultType()->getID())
 				{
+				case ROM_TYPE:
 				case INT_TYPE:
 					{
 						auto value = dynamic_cast<NumValueAstNode *>(operand)->ToInt();
@@ -660,6 +686,11 @@ protected:
 						auto value = dynamic_cast<NumValueAstNode *>(operand)->ToDouble();
 						memcpy(&instruction.Args, &value, sizeof(value));
 					}	
+					break;
+				case LITERAL_TYPE:
+					{
+
+					}
 					break;
 				}
 			}
@@ -808,6 +839,39 @@ public:
 		// NOTE: Make "+1" here so we do not increase instructions number!
 		label->InitLabel(GetLastWrittenInstructionIndex() + 1);
 	}
+
+	void InitVariableData(VarAstNode *varNode)
+	{
+		int oldPos = this->FileSeek(
+				sizeof(TMLHeader) + 
+				varNode->GetTableReference()->GetMemoryOffset()*sizeof(TMemoryCell)
+				, SEEK_SET);
+		switch (varNode->GetResultType()->getID())
+		{
+		case ROM_TYPE:
+		case INT_TYPE:
+			{
+				auto var = varNode->GetTableReference()->ValueToInt();
+				this->BinaryWrite(&var, sizeof(TMemoryCell)*varNode->GetTableReference()->SizeOf());
+			}
+			break;
+		case FLOAT_TYPE:
+			{
+				auto var = varNode->GetTableReference()->ValueToDouble();
+				this->BinaryWrite(&var, sizeof(TMemoryCell)*varNode->GetTableReference()->SizeOf());
+			}
+			break;
+		case LITERAL_TYPE:
+			{
+				auto var = varNode->GetTableReference()->ValueToString();
+				this->BinaryWrite(var.c_str(), sizeof(TMemoryCell)*varNode->GetTableReference()->SizeOf());
+			}
+			break;
+		}
+		
+		this->FileSeek(oldPos, SEEK_SET);
+	}
+
 
 	void SetResult(AstNode *resultNode)
 	{

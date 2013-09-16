@@ -25,12 +25,45 @@ class TVariable
 
 	int iValue;
 	float fValue;
-	char sValue[STRING_LITERAL_LENGTH];
+	std::string sValue;
 
 	bool isConstValue; /* ћожно ли использовать как константное r-value */
 
 	static int g_wordsCount;
 
+	int RomanToInt()
+	{
+		char romanNums[] = "IVXLCDM";
+		int arabicNums[] = {1, 5, 10, 50, 100, 500, 1000};
+		int len = sValue.size();
+		int *result = new int[len];
+		int total = 0, i = 0, j = 0, n = 0;
+
+		// try convert to int from roman
+		for (i = 0; i < len; i++)
+		{
+			for (j = 0; j < sizeof(romanNums); j++)
+			{
+				if (value[i] = romanNums[j])
+					result[i] = arabicNums[j];
+			}
+		}
+
+		for (n = 0; n < len; n++)
+		{
+			if (result[n] >= result[n+1])
+			{
+				total = total + result[n];
+
+			}
+			else if (result[n] < result[n+1])
+			{
+				total = total + (result[n+1]-result[n]);
+				n++;
+			}
+		}
+		return total;
+	}
 public:
 	static int GetWordsCount()
 	{
@@ -45,11 +78,31 @@ public:
 		initialized = false;
 	}
 
+	void SetValue(int value)
+	{
+		this->iValue = value;
+	}
+
+	void SetValue(float value)
+	{
+		this->fValue = value;
+	}
+
+	void SetValue(char *value)
+	{
+		SetValue(std::string(value));
+	}
+
+	void SetValue(std::string& value)
+	{
+		this->sValue = value;
+	}
+
 	BaseTypeInfo *GetType() { return typeTableRef; }
 	int SizeOf() { return GetType()->SizeOf(); }
 
 	// Reserve memory space for the variable by the offset
-	void StaticMalloc()
+	void ReserveMemory()
 	{
 		memoryOffset = g_wordsCount;
 		g_wordsCount += GetType()->SizeOf();
@@ -64,6 +117,41 @@ public:
 		initialized = flag;
 	}
 	bool IsInitialized() { return initialized; }
+	
+	int ValueToInt()
+	{
+		switch (typeTableRef->getID())
+		{
+		case LITERAL_TYPE:
+			return atoi(sValue.c_str());	
+		case INT_TYPE:
+			return iValue;
+		case FLOAT_TYPE:
+			return atof(sValue.c_str());
+		case ROM_TYPE:
+			return RomanToInt();
+		default:
+			return 0;
+		}
+	}
+
+	double ValueToDouble()
+	{
+		switch (typeTableRef->getID())
+		{
+		case INT_TYPE:
+			return iValue;
+		case LITERAL_TYPE:
+			return atof(sValue.c_str());
+		case FLOAT_TYPE:
+			return fValue;
+		case ROM_TYPE:
+			return RomanToInt();
+		default:
+			return 0;
+		}
+	}
+
 	std::string ValueToString()
 	{
 		char convert_buf[10];
@@ -75,6 +163,7 @@ public:
 			case FLOAT_TYPE:
 				sprintf(convert_buf, "%f", fValue);
 				return std::string(convert_buf);
+			case ROM_TYPE:
 			case LITERAL_TYPE:
 				return std::string(sValue);
 		}
@@ -104,7 +193,7 @@ public:
 	{
 		TVariable *field = CreateVariable(type, std::string(name));
 		fieldList.emplace_back(field);
-		field->StaticMalloc();
+		field->ReserveMemory();
 	}
 
 	TVariable *GetField(std::string& fieldName)

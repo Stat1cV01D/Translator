@@ -58,12 +58,13 @@ assign_op			{assign}
 punctuator			{end_expr}|{open_par}|{close_par}|{open_br}|{close_br}
 keyword				{if}|{else}
 identifier 			{letter}({letter}|{digit})*
-
+string_literal		
 int_const			{digit}+
 float_const			({digit}+\.{digit}*)|({digit}*\.{digit}+)
 rom_decl			rom
 int_decl			int
 float_decl			float
+string_literal		L?\"(\\.|[^\\"])*\"
 
 for_decl			for
 while_decl			while
@@ -133,7 +134,7 @@ union				{ REACTION(union,			TOK_UNION) }
 switch				{ REACTION(switch,			TOK_SWITCH) }
 case				{ REACTION(case,			TOK_CASE) }
 default				{ REACTION(default,			TOK_DEFAULT) }
-
+{string_literal}	{ REACTION(string_literal,	TOK_STRING_LITERAL) }
 
 {identifier}		{ REACTION(identifier,		TOK_IDENTIFIER) }
 .					{

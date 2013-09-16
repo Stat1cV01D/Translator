@@ -547,6 +547,12 @@ int VarAstNode::PrintASTree(AstPrintInfo* output)
 }
 int VarAstNode::Serialize(TMLWriter* output)
 {
+	if (!this->isAllocated)
+	{
+		output->InitVariableData(this);
+		this->isAllocated = true;
+	}
+
 	output->SetResult(this);
 	return 0;
 }
@@ -564,7 +570,14 @@ int NumValueAstNode::PrintASTree(AstPrintInfo* output)
 }
 int NumValueAstNode::Serialize(TMLWriter* output)
 {
-	output->SetResult(this);
+	if (this->GetResultType()->getID() == LITERAL_TYPE)
+	{
+		auto strVar = new VarAstNode(true, output->GetContext()->GenerateNewTmpVar(this->GetResultType(), false));
+		strVar->GetTableReference()->SetValue(this->ToString());
+		output->SetResult(strVar);
+	}
+	else
+		output->SetResult(this);
 	return 0;
 }
 

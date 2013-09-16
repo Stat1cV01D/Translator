@@ -82,24 +82,7 @@ struct Node;
 %token <_node> TOK_CASE
 %token <_node> TOK_DEFAULT
 
-//duplicate 3AC definitions here as this header is included first
-%token <_node> TMP_VAR LABEL NAME
-%token <_node> INT_CONST 
-%token <_node> FLOAT_CONST 
-%token <_node> LITERAL
-%token <_node> IFFALSE 
-%token <_node> IFTRUE
-%token <_node> ASSIGN 
-%token <_node> OR 
-%token <_node> AND 
-%token <_node> XOR 
-%token <_node> NOT 
-%token <_node> INPUT 
-%token <_node> OUTPUT
-%token <_node> GOTO
-%token <_node> CMP
-//%type <_AstNode> start3ac program stmt stmt_list expression factor assign label go_to array_item _struct_item
-
+%token <_node> TOK_STRING_LITERAL
 
 %nonassoc EXPR_ERROR
 %nonassoc STMNT_BLOCK_ERROR
@@ -118,7 +101,7 @@ struct Node;
 %type <_node> start declaration_list stmnt stmnt_list stmnt_block_start stmnt_block 
 %type <_node> expression_statement expr_or_assignment expr struct_item identifier declaration_stmt struct_type
 %type <_node> if_stmt loop_decl switch_stmt print_stmt read_stmt assignment struct_def struct_head struct_body struct_tail
-%type <_node> loop_for_expr instruction_body loop_while_expr type array type_name left_assign_expr num_const
+%type <_node> loop_for_expr instruction_body loop_while_expr type array type_name left_assign_expr const
 %type <_node> switch_head case_list default case_stmt case_head case_body
 %type <_node> default_head for_decl while_decl do_while_decl
 
@@ -779,9 +762,9 @@ expr :
 		$$ = $1;
 	}
 	|
-	num_const[num]
+	const
 	{
-		$$ = $num;
+		$$ = $1;
 	}
 	|
 	expr[left] TOK_B_AND[op] expr[right]
@@ -955,29 +938,37 @@ identifier:
 	}
 	;
 
-num_const:
+const:
 	TOK_INT_CONST[val]
 	{
 		char *id = strdup($val->ptNode->text);
 
-		$$ = createNode(new NumValueAstNode($val->ptNode->text, new IntType()), 
-				createPtNodeWithChildren("num_const", 1, $val->ptNode));
+		$$ = createNode(new NumValueAstNode(id, new IntType()), 
+				createPtNodeWithChildren("const", 1, $val->ptNode));
 	}
 	|
 	TOK_ROM_CONST[val]
 	{
 		char *id = strdup($val->ptNode->text);
 
-		$$ = createNode(new NumValueAstNode($val->ptNode->text, new RomanType()), 
-				createPtNodeWithChildren("num_const", 1, $val->ptNode));
+		$$ = createNode(new NumValueAstNode(id, new RomanType()), 
+				createPtNodeWithChildren("const", 1, $val->ptNode));
 	}
 	|
 	TOK_FLOAT_CONST[val]
 	{
 		char *id = strdup($val->ptNode->text);
 
-		$$ = createNode(new NumValueAstNode($val->ptNode->text, new FloatType()), 
-				createPtNodeWithChildren("num_const", 1, $val->ptNode));
+		$$ = createNode(new NumValueAstNode(id, new FloatType()), 
+				createPtNodeWithChildren("const", 1, $val->ptNode));
+	}
+	|
+	TOK_STRING_LITERAL[val]
+	{
+		char *id = strdup($val->ptNode->text);
+
+		$$ = createNode(new NumValueAstNode($val->ptNode->text, new LiteralType(strlen(id))), 
+				createPtNodeWithChildren("const", 1, $val->ptNode));
 	}
 	;
 

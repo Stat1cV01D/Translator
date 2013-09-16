@@ -240,9 +240,11 @@ public:
 	}
 };
 
+// Value is placed directly into the TML command argument
 class NumValueAstNode: public AstNode, public IValueHolderNode
 {
-	bool isConstant;
+	// TODO: make value storage|cache list so that not to write duplicate values?
+
 	std::string value; //string because of ROM type which is to be converted
 
 	int RomanToInt()
@@ -307,6 +309,7 @@ public:
 	{
 		switch (GetResultType()->getID())
 		{
+		case LITERAL_TYPE:
 		case INT_TYPE:
 			return atoi(value.c_str());
 		case FLOAT_TYPE:
@@ -324,6 +327,7 @@ public:
 		{
 		case INT_TYPE:
 			return atoi(value.c_str());
+		case LITERAL_TYPE:
 		case FLOAT_TYPE:
 			return atof(value.c_str());
 		case ROM_TYPE:
@@ -365,14 +369,17 @@ public:
 	void SetNextDim(DimensionAstNode *next_dimension) { this->next_dimension = next_dimension; }
 };
 
+// Value is referenced from the heap into the TML command argument
 class VarAstNode: public AstNode, public IValueHolderNode
 {
+	bool isAllocated;
 	TVariable *varTableReference;
 public:
 	VarAstNode(bool isTemporary, TVariable *varTableReference): 
 	  AstNode((isTemporary ? TMP_ID_NODE : ID_NODE), varTableReference->GetType()->Clone()) 
 	{
 		this->varTableReference = varTableReference;
+		this->isAllocated = false;
 	}
 	TVariable *GetTableReference() { return varTableReference; }
 	virtual int Print3AC(TACWriter* output);

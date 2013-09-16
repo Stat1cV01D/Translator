@@ -56,11 +56,11 @@ public:
 		return 1;
 	}
 
-	int st_exist(TKEY& name)
+	bool st_exist(TKEY& name)
 	{
 		st_statopcount = 0;
 		Record *rec = st_find(name);
-		return !!rec;
+		return (rec != nullptr);
 	}
 
 	TVALUE& st_get(TKEY& name)

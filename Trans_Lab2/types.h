@@ -8,6 +8,7 @@
 #define _TYPES_H_
 
 #include <vector>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string>
 #include <stdio.h>
@@ -15,14 +16,14 @@
 #include <stdarg.h> 
 #include "variable.h"
 #include "BaseTypeClass.h"
+#include "tml.h"
 //#include "ast.h"
 
 extern void FreeVariable(void *var);
 extern void PrintVariable(FILE *stream, void *item);
 
-#define SIZE_OF_INT		1
-#define SIZE_OF_FLOAT	1
-#define CHAR_IN_WORD	4
+#define SIZE_OF_INT		1 //sizeof(int) < sizeof(TMemoryCell)
+#define SIZE_OF_FLOAT	1 //sizeof(float) < sizeof(TMemoryCell)
 
 class BoolType: public BaseTypeInfo
 {
@@ -45,9 +46,9 @@ public:
 class LiteralType: public BaseTypeInfo
 {
 protected:
-	unsigned short length;
+	uint16_t length;
 public:
-	int GetLength() {return length;}
+	uint16_t GetLength() { return length; }
 	virtual std::string GetName() 
 	{ 
 		char convert_buf[10];
@@ -57,15 +58,15 @@ public:
 
 	virtual enumTypes getID() { return enumTypes::LITERAL_TYPE; }
 
-	virtual int SizeOf() 
-	{ 			
-		if( length % CHAR_IN_WORD)
-			return length / CHAR_IN_WORD + 1;
+	virtual int SizeOf()
+	{
+		if (length % sizeof(TMemoryCell) != 0)
+			return length / sizeof(TMemoryCell) + 1;
 		else
-			return length / CHAR_IN_WORD; 
+			return length / sizeof(TMemoryCell); 
 	}
 
-	LiteralType(unsigned short length) {this->length = length; }
+	LiteralType(uint16_t length) { this->length = length; }
 	virtual BaseTypeInfo* Clone() { return new LiteralType(*this); }
 };
 
