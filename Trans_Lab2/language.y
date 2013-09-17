@@ -750,12 +750,16 @@ assignment:
 		BaseTypeInfo *type = $left->astNode->GetResultType();
 		AssertOneOfTypes($right, @right, 1, type->getID());
 		
-		TVariable *var = Context.getVar($left->ptNode->firstChild->text, 1, NULL, @id);
+		TVariable *var = Context.getVar($left->ptNode->firstChild->text, 1, NULL, @left);
 		
-		auto constValueNode = dynamic_cast<NumValueAstNode*>(right->astNode);
+		auto constValueNode = dynamic_cast<NumValueAstNode*>($right->astNode);
 		if (constValueNode != nullptr)
 		{
-			dynamic_cast<IValueHolderAstNode*>(left->astNode)
+			auto varNode = dynamic_cast<IValueHolderNode*>($left->astNode);
+			if (varNode != nullptr)
+			{
+				varNode->SetValue(constValueNode);
+			}
 			$$ = $left;	
 		}
 		else

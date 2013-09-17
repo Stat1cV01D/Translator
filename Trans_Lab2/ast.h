@@ -73,7 +73,7 @@ public:
 	virtual int Serialize(TMLWriter* output) = 0;
 };
 
-class NumValueAstNode
+class NumValueAstNode;
 
 class IValueHolderNode
 {
