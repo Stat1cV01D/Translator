@@ -14,13 +14,14 @@
 #include <stdio.h>
 #include "definitions.h"
 #include "BaseTypeClass.h"
+#include "types.h"
 #include "tml.h"
 
 class TVariable
 {
 	std::string name;
 	BaseTypeInfo *typeTableRef;
-	unsigned short memoryOffset;
+	uint16_t memoryOffset;
 	bool initialized;
 
 	int iValue;
@@ -44,7 +45,7 @@ class TVariable
 		{
 			for (j = 0; j < sizeof(romanNums); j++)
 			{
-				if (value[i] = romanNums[j])
+				if (sValue[i] = romanNums[j])
 					result[i] = arabicNums[j];
 			}
 		}
@@ -64,13 +65,8 @@ class TVariable
 		}
 		return total;
 	}
-public:
-	static int GetWordsCount()
-	{
-		return g_wordsCount;
-	}
 
-	TVariable(std::string& name, BaseTypeInfo *Type)
+	void Init(std::string& name, BaseTypeInfo *Type)
 	{
 		this->name = name;
 		this->typeTableRef = Type;
@@ -78,24 +74,63 @@ public:
 		initialized = false;
 	}
 
+	void SetStrValue(std::string &value, bool typeCheck)
+	{
+		if (typeCheck && this->typeTableRef->getID() == LITERAL_TYPE)
+		{
+			throw std::string("Error: type assign mismatch");
+		}
+		
+		sValue = value;
+		initialized = true;
+	}
+
+#define SETVALUEMACRO(typeID, thisValue) \
+	if (this->typeTableRef->getID() == typeID) { \
+		initialized = true; \
+		this->thisValue = value; \
+	} else { \
+		throw std::string("Error: type assign mismatch"); \
+	}
+
+public:
+	TVariable(std::string& name, BaseTypeInfo *Type)
+	{
+		Init(name, Type);
+	}
+	
+	~TVariable()
+	{
+		delete typeTableRef;
+	}
+
+	void SetValue(BaseTypeInfo *Type, std::string& initValue)
+	{
+		delete typeTableRef;
+		typeTableRef = Type;
+		SetStrValue(initValue, false);
+	}
+
 	void SetValue(int value)
 	{
-		this->iValue = value;
+		SETVALUEMACRO(INT_TYPE, iValue)
 	}
-
 	void SetValue(float value)
 	{
-		this->fValue = value;
+		SETVALUEMACRO(FLOAT_TYPE, fValue)
 	}
-
+	void SetValue(std::string& value)
+	{
+		SetStrValue(value, true);
+	}
 	void SetValue(char *value)
 	{
 		SetValue(std::string(value));
 	}
 
-	void SetValue(std::string& value)
+	static int GetWordsCount()
 	{
-		this->sValue = value;
+		return g_wordsCount;
 	}
 
 	BaseTypeInfo *GetType() { return typeTableRef; }
@@ -109,13 +144,9 @@ public:
 	}
 
 	// Get the memory offset
-	unsigned short GetMemoryOffset() { return memoryOffset; }
+	uint16_t GetMemoryOffset() { return memoryOffset; }
 
 	std::string GetName() { return name; }
-	void SetInitialized(bool flag)
-	{
-		initialized = flag;
-	}
 	bool IsInitialized() { return initialized; }
 	
 	int ValueToInt()

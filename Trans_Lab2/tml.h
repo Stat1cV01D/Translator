@@ -113,10 +113,10 @@ typedef union
 /* Machine status word */
 typedef struct
 {
-	unsigned char Z : 1; /* Zero flag */
-	unsigned char G : 1; /* Greater flag */
-	unsigned char L : 1; /* Lesser flag */
-	unsigned char RESERVED : 5;
+	uint8_t Z : 1; /* Zero flag */
+	uint8_t G : 1; /* Greater flag */
+	uint8_t L : 1; /* Lesser flag */
+	uint8_t RESERVED[5];
 } TMachineStatus;
 
 /* Size of instruction arguments, in bytes */

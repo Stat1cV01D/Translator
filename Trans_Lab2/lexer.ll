@@ -58,7 +58,7 @@ assign_op			{assign}
 punctuator			{end_expr}|{open_par}|{close_par}|{open_br}|{close_br}
 keyword				{if}|{else}
 identifier 			{letter}({letter}|{digit})*
-string_literal		
+		
 int_const			{digit}+
 float_const			({digit}+\.{digit}*)|({digit}*\.{digit}+)
 rom_decl			rom

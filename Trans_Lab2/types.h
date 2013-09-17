@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include "definitions.h"
 #include <stdarg.h> 
-#include "variable.h"
+//#include "variable.h"
 #include "BaseTypeClass.h"
 #include "tml.h"
 //#include "ast.h"

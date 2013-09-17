@@ -19,6 +19,8 @@ MachineInstruction* g_MachineCodeSegment = NULL;
 FILE* g_InputFile = NULL;    /* поток для файла с программой на машинном языке */
 TStack *g_stackTop = NULL;
 
+TMachineStatus        PSW;
+
 template<typename T> T GetValue(MachineInstruction MI)
 {
 	T result;
@@ -210,7 +212,6 @@ int main(int argc, char* argv[])
     uint8_t operationCode, addresingMode;
     unsigned char args[COMMAND_ARGS_MAX_SIZE];
     TMemoryCell    Accumulator;
-    TMachineStatus        PSW;
     unsigned long  ProgramCounter;
     unsigned int lastInstructionNumber;
 

@@ -547,7 +547,7 @@ int VarAstNode::PrintASTree(AstPrintInfo* output)
 }
 int VarAstNode::Serialize(TMLWriter* output)
 {
-	if (!this->isAllocated)
+	if (this->GetTableReference()->IsInitialized() && !this->isAllocated)
 	{
 		output->InitVariableData(this);
 		this->isAllocated = true;
@@ -574,7 +574,7 @@ int NumValueAstNode::Serialize(TMLWriter* output)
 	{
 		auto strVar = new VarAstNode(true, output->GetContext()->GenerateNewTmpVar(this->GetResultType(), false));
 		strVar->GetTableReference()->SetValue(this->ToString());
-		output->SetResult(strVar);
+		output->Serialize(strVar);
 	}
 	else
 		output->SetResult(this);

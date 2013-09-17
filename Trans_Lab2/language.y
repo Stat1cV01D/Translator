@@ -735,8 +735,6 @@ left_assign_expr
     :
 	identifier[id]
 	{
-		TVariable *var = Context.getVar($id->ptNode->firstChild->text, 1, NULL, @id);
-		var->SetInitialized(true);
 		$$ = $1;
 	}
 	|
@@ -751,9 +749,20 @@ assignment:
 	{
 		BaseTypeInfo *type = $left->astNode->GetResultType();
 		AssertOneOfTypes($right, @right, 1, type->getID());
-
-		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode), 
-				createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));
+		
+		TVariable *var = Context.getVar($left->ptNode->firstChild->text, 1, NULL, @id);
+		
+		auto constValueNode = dynamic_cast<NumValueAstNode*>(right->astNode);
+		if (constValueNode != nullptr)
+		{
+			dynamic_cast<IValueHolderAstNode*>(left->astNode)
+			$$ = $left;	
+		}
+		else
+		{
+			$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode), 
+					createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));
+		}
 	}
 
 expr :

@@ -73,10 +73,13 @@ public:
 	virtual int Serialize(TMLWriter* output) = 0;
 };
 
+class NumValueAstNode
+
 class IValueHolderNode
 {
 public:
 	virtual std::string GetValueHolderName() = 0;
+	virtual void SetValue(NumValueAstNode *valueNode) = 0;
 	virtual ~IValueHolderNode() {}
 };
 
@@ -345,6 +348,11 @@ public:
 	{
 		return std::string("$c")+this->ToString();
 	}
+
+	virtual void SetValue(NumValueAstNode *valueNode)
+	{
+		this->value = valueNode->value;
+	}
 };
 
 class DimensionAstNode: public AstNode
@@ -392,6 +400,12 @@ public:
 			return this->GetTableReference()->GetName();
 		else
 			return std::string("$id")+this->GetTableReference()->GetName();
+	}
+
+	virtual void SetValue(NumValueAstNode *valueNode)
+	{
+		this->GetTableReference()->SetValue(valueNode->GetResultType()->Clone(), 
+				valueNode->ToString());
 	}
 };
 
@@ -455,6 +469,11 @@ public:
 	{
 		return this->var->GetValueHolderName();
 	}
+	
+	virtual void SetValue(NumValueAstNode *valueNode)
+	{
+		throw std::string("Not implemented");
+	}
 };
 
 class StructAddressAstNode: public AstNode, public IValueHolderNode
@@ -484,6 +503,12 @@ public:
 	virtual std::string GetValueHolderName()
 	{
 		return GetStruct()->GetName()+std::string(".")+GetField()->GetName();
+	}
+	
+	virtual void SetValue(NumValueAstNode *valueNode)
+	{
+		this->GetField()->SetValue(valueNode->GetResultType()->Clone(), 
+			valueNode->ToString());
 	}
 };
 
