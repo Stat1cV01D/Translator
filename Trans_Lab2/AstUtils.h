@@ -689,7 +689,10 @@ protected:
 					break;
 				case LITERAL_TYPE:
 					{
-
+						uint32_t index;
+						instruction.AddrMode = ABSOLUTE_MODE;
+						index = dynamic_cast<VarAstNode*>(operand)->GetTableReference()->GetMemoryOffset();
+						memcpy(&instruction.Args, &index, sizeof(uint32_t));
 					}
 					break;
 				}
@@ -699,6 +702,10 @@ protected:
 		case TMP_ID_NODE:
 		case VARIABLE_NODE:
 		case TMP_VAR_NODE:
+		
+		case ARRAY_ITEM_NODE:
+		case STRUCT_ITEM_NODE:
+		case UNION_TYPE:
 			{
 				this->Serialize(operand);
 				operand = this->GetLastOperationResult();
@@ -706,20 +713,6 @@ protected:
 				uint32_t index;
 				instruction.AddrMode = ABSOLUTE_MODE;
 				index = dynamic_cast<VarAstNode*>(operand)->GetTableReference()->GetMemoryOffset();
-				memcpy(&instruction.Args, &index, sizeof(uint32_t));
-			}
-			break;
-		case ARRAY_ITEM_NODE:
-		case STRUCT_ITEM_NODE:
-		case UNION_TYPE:
-			{
-				instruction.AddrMode = INDIRECT_MODE;
-
-				// serialize the variable offset to the last used temporary variable
-				this->Serialize(operand);
-				operand = this->GetLastOperationResult();
-
-				uint32_t index = dynamic_cast<VarAstNode*>(operand)->GetTableReference()->GetMemoryOffset(); // The result tmp var with the pointer (offset) to the var
 				memcpy(&instruction.Args, &index, sizeof(uint32_t));
 			}
 			break;

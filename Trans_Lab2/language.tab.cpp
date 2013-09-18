@@ -575,10 +575,10 @@ static const yytype_uint16 yyrline[] =
      445,   467,   473,   479,   484,   497,   503,   509,   515,   523,
      531,   539,   548,   556,   566,   576,   588,   595,   602,   611,
      621,   631,   642,   647,   654,   695,   701,   707,   713,   736,
-     743,   750,   760,   765,   770,   775,   780,   785,   791,   797,
-     802,   807,   812,   817,   822,   827,   833,   847,   852,   863,
-     869,   876,   917,   942,   950,   958,   966,   975,   982,   990,
-    1015,  1019,  1025,  1031,  1054,  1058,  1063,  1069
+     741,   748,   773,   778,   783,   788,   793,   798,   804,   810,
+     815,   820,   825,   830,   835,   840,   846,   860,   865,   876,
+     882,   889,   930,   955,   963,   971,   979,   988,   995,  1003,
+    1028,  1032,  1038,  1044,  1067,  1071,  1076,  1082
 };
 #endif
 
@@ -2472,8 +2472,6 @@ yyreduce:
   case 69:
 
     {
-		TVariable *var = Context.getVar((yyvsp[(1) - (1)]._node)->ptNode->firstChild->text, 1, NULL, (yylsp[(1) - (1)]));
-		var->SetInitialized(true);
 		(yyval._node) = (yyvsp[(1) - (1)]._node);
 	}
     break;
@@ -2490,9 +2488,24 @@ yyreduce:
     {
 		BaseTypeInfo *type = (yyvsp[(1) - (3)]._node)->astNode->GetResultType();
 		AssertOneOfTypes((yyvsp[(3) - (3)]._node), (yylsp[(3) - (3)]), 1, type->getID());
-
-		(yyval._node) = createNode(new OperatorAstNode((yyvsp[(2) - (3)]._node)->ptNode->text, (yyvsp[(1) - (3)]._node)->astNode, (yyvsp[(3) - (3)]._node)->astNode), 
-				createPtNodeWithChildren("expr", 3, (yyvsp[(1) - (3)]._node)->ptNode, (yyvsp[(2) - (3)]._node)->ptNode, (yyvsp[(3) - (3)]._node)->ptNode));
+		
+		TVariable *var = Context.getVar((yyvsp[(1) - (3)]._node)->ptNode->firstChild->text, 1, NULL, (yylsp[(1) - (3)]));
+		
+		auto constValueNode = dynamic_cast<NumValueAstNode*>((yyvsp[(3) - (3)]._node)->astNode);
+		if (constValueNode != nullptr)
+		{
+			auto varNode = dynamic_cast<IValueHolderNode*>((yyvsp[(1) - (3)]._node)->astNode);
+			if (varNode != nullptr)
+			{
+				varNode->SetValue(constValueNode);
+			}
+			(yyval._node) = (yyvsp[(1) - (3)]._node);	
+		}
+		else
+		{
+			(yyval._node) = createNode(new OperatorAstNode((yyvsp[(2) - (3)]._node)->ptNode->text, (yyvsp[(1) - (3)]._node)->astNode, (yyvsp[(3) - (3)]._node)->astNode), 
+					createPtNodeWithChildren("expr", 3, (yyvsp[(1) - (3)]._node)->ptNode, (yyvsp[(2) - (3)]._node)->ptNode, (yyvsp[(3) - (3)]._node)->ptNode));
+		}
 	}
     break;
 

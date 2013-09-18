@@ -73,7 +73,7 @@ public:
 	virtual int Serialize(TMLWriter* output) = 0;
 };
 
-class NumValueAstNode
+class NumValueAstNode;
 
 class IValueHolderNode
 {
@@ -414,6 +414,8 @@ class ArrayAddressAstNode: public AstNode, public IValueHolderNode
 	VarAstNode *var;
 	DimensionAstNode *dimensions;
 
+	VarAstNode *SumTmpVarNode, *MulTmpVarNode;
+
 	int GetNumDimensions()
 	{
 		int dimensions_num = 0;
@@ -435,11 +437,18 @@ public:
 
 		if (varType->GetSizes().size() < GetNumDimensions())
 			throw std::string("Error: too much dimensions for the declared variable");
+		
+		SumTmpVarNode = nullptr;
+		MulTmpVarNode = nullptr;
 	}
 
 	~ArrayAddressAstNode()
 	{
+		if (SumTmpVarNode != nullptr)
+			delete SumTmpVarNode;
 
+		if (MulTmpVarNode != nullptr)
+			delete MulTmpVarNode;
 	}
 
 	// TODO: make it more flexible to assignment checks for:
@@ -480,17 +489,24 @@ class StructAddressAstNode: public AstNode, public IValueHolderNode
 {
 	VarAstNode *Struct;
 	TVariable *Field;
+
+	VarAstNode *SumTmpVarNode;
 public:
 	StructAddressAstNode(VarAstNode *Struct, TVariable *Field): AstNode(STRUCT_ITEM_NODE, Field->GetType()) 
 	{
 		this->Struct = Struct;
 		this->Field = Field;
+
+		this->SumTmpVarNode = nullptr;
 	}
 
 	~StructAddressAstNode() 
 	{
 		delete Struct;
 		delete Field;
+
+		if (SumTmpVarNode != nullptr)
+			delete SumTmpVarNode;
 	}
 
 	TVariable *GetStruct() { return Struct->GetTableReference(); }

@@ -29,14 +29,6 @@ template<typename T> T GetValue(MachineInstruction MI)
 	case DIRECT_MODE:
 		memcpy(&result, MI.Args, sizeof (T));
 		break;
-	case INDIRECT_MODE:
-		{
-			uint32_t index; 
-			memcpy(&index, MI.Args, sizeof (uint32_t)); 
-			memcpy(&index, &g_MachineDataSegment[index], sizeof (uint32_t)); 
-			memcpy(&result, &g_MachineDataSegment[index], sizeof (T));
-		}
-		break;
 	case ABSOLUTE_MODE:
 		{
 			uint32_t index; 
@@ -49,7 +41,7 @@ template<typename T> T GetValue(MachineInstruction MI)
 	return result;
 }
 
-template<typename T> int UnaryOperations(TMemoryCell &Accumulator, TMachineStatus &PSW, MachineInstruction MI, char *str_template, T &VAR)
+template<typename T> int UnaryOperations(TMemoryCell &Accumulator, TMachineStatus &PSW, MachineInstruction MI, T &VAR)
 {
 	int result = 1;
 
@@ -59,13 +51,6 @@ template<typename T> int UnaryOperations(TMemoryCell &Accumulator, TMachineStatu
 
 	switch (op)
 	{
-	case IN_:
-		scanf(str_template, &VAR);
-		memcpy(&Accumulator, &VAR, sizeof (VAR));
-		break; 
-	case OUT_: 
-		printf(str_template, VAR); 
-		break; 
 	case NEG_: 
 		VAR *= (T)(-1.0); 
 		memcpy(&Accumulator, &VAR, sizeof (VAR)); 
@@ -85,7 +70,19 @@ template<typename T> int UnaryOperations(TMemoryCell &Accumulator, TMachineStatu
 	return result;
 }
 
-template<typename T> int IOOperations(TMemoryCell &Accumulator, MachineInstruction MI, T& VAR)
+// type equality compile time check code
+template <typename T, typename U>
+struct same_type 
+{
+static const bool value = false;
+};
+template <typename T>
+struct same_type< T, T >
+{
+static const bool value = true;
+};
+
+template<typename T> int IOOperations(TMemoryCell &Accumulator, MachineInstruction MI, char *str_template, T& VAR)
 {
 	int result = 1;
 	
@@ -108,14 +105,44 @@ template<typename T> int IOOperations(TMemoryCell &Accumulator, MachineInstructi
 			memcpy(&index, args, sizeof (uint32_t)); 
 			memcpy(&g_MachineDataSegment[index], &Accumulator, sizeof(T)); 
 		} 
-		else if (addresingMode == INDIRECT_MODE) 
-		{ 
-			uint32_t index; 
-			memcpy(&index, args, sizeof (uint32_t)); 
-			memcpy(&index, &g_MachineDataSegment[index], sizeof (uint32_t));
-			memcpy(&g_MachineDataSegment[index], &Accumulator, sizeof (T));
-		} 
 		break;
+	case IN_:
+	case OUT_: 
+		{
+			T *ptrVAR = nullptr;
+			switch (MI.AddrMode)
+			{
+			case DIRECT_MODE:
+				ptrVAR = &VAR;
+				break;
+			case ABSOLUTE_MODE:
+				{
+					uint32_t index; 
+					memcpy(&index, args, sizeof (uint32_t)); 
+					ptrVAR = (T*)&g_MachineDataSegment[index];
+				}
+				break;
+			}
+
+			switch (op)
+			{
+			case IN_: 
+				{
+					scanf(str_template, ptrVAR);
+					memcpy(&Accumulator, ptrVAR, sizeof (*ptrVAR));
+				}
+				break; 
+			case OUT_:
+				{
+					// NOTE: an unfortunate workaround for the strings
+					if (same_type<T, char>::value) 
+						printf(str_template, ptrVAR);
+					else
+						printf(str_template, VAR);
+				}
+				break; 
+			}
+		}
 	default:
 		result = 0;
 	}
@@ -227,6 +254,7 @@ int main(int argc, char* argv[])
     float tmpFloat = 0.0f;
 	double tmpDouble = 0.0;
 	long double tmpLongDouble = 0.0;
+	char tmpCharPtr = 0;
 
     if (2 != argc)
     {
@@ -318,14 +346,15 @@ int main(int argc, char* argv[])
         memcpy(&tmpFloat, &Accumulator, sizeof (float));
 		memcpy(&tmpDouble, &Accumulator, sizeof (double));
 		memcpy(&tmpLongDouble, &Accumulator, sizeof (long double));
+		memcpy(&tmpCharPtr, &Accumulator, sizeof (char*));
 
 #define OPS(SUFFIX, TYPE, STR, VAR) \
 		if (operationCode > SUFFIX ## _START && operationCode < SUFFIX ## _NOARGS) \
 		{ \
 			codeLine.OpCode -= SUFFIX ## _START; \
-			if (UnaryOperations<TYPE>(Accumulator, PSW, codeLine, STR, VAR)); \
+			if (UnaryOperations<TYPE>(Accumulator, PSW, codeLine, VAR)); \
 			else if (PowOperations<TYPE>(Accumulator, codeLine, VAR)); \
-			else if (IOOperations<TYPE>(Accumulator, codeLine, VAR)); \
+			else if (IOOperations<TYPE>(Accumulator, codeLine, STR, VAR)); \
 			else if (BinaryOperations<TYPE>(Accumulator, codeLine, VAR)); \
 			codeLine.OpCode += SUFFIX ## _START; \
 		} 
@@ -334,6 +363,7 @@ int main(int argc, char* argv[])
 		else OPS(F,float,"%f", tmpFloat)
 		else OPS(D,double,"%d", tmpDouble)
 		else OPS(LD,long double,"%ld", tmpLongDouble)
+		else OPS(S,char,"%s", tmpCharPtr)
 		else
 		{
 			switch (operationCode)
@@ -350,6 +380,7 @@ int main(int argc, char* argv[])
 				--tmpInteger;
 				memcpy(&Accumulator, &tmpInteger, sizeof (int));
 				break;
+
 
 			CONVERT_OPS(I, tmpInteger, int, F, tmpFloat, D, tmpDouble, LD, tmpLongDouble)
 			CONVERT_OPS(F, tmpFloat, float, I, tmpInteger, D, tmpDouble, LD, tmpLongDouble)

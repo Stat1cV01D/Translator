@@ -13,10 +13,10 @@ int ConditionalAstNode::Print3AC(TACWriter* output)
 		labelNumber_end = output->GetContext()->GenerateNewLabel();
 
 	LabelAstNode endLabelAstNode(labelNumber_end);
-	LabelAstNode falseAstNode(labelNumber_false);
+	LabelAstNode falseLabelAstNode(labelNumber_false);
 
 	// 1. check the result and process true_block (TODO [SV] 14.08.13 16:14: with possible optimization|elimination?)
-	OperatorAstNode op(OP_IFFALSE, cond, &falseAstNode);
+	OperatorAstNode op(OP_IFFALSE, cond, &falseLabelAstNode);
 	output->CodeGen(&op);
 
 	if (this->true_block != nullptr)
@@ -27,8 +27,9 @@ int ConditionalAstNode::Print3AC(TACWriter* output)
 	if (this->false_block != nullptr)
 	{
 		OperatorAstNode op(OP_GOTO, &endLabelAstNode);
-		output->CodeGen(&falseAstNode);
 		output->CodeGen(&op); // for the iftrue block to end
+		
+		output->CodeGen(&falseLabelAstNode);
 		output->CodeGen(false_block);
 	}
 
@@ -66,7 +67,10 @@ int ConditionalAstNode::Serialize(TMLWriter* output)
 	// 1. check the result and process true_block (TODO [SV] 14.08.13 16:14: with possible optimization|elimination?)
 	OperatorAstNode op(OP_IFFALSE, cond, &falseLabelAstNode);
 	output->Serialize(&op);
-	output->Serialize(true_block);
+	if (this->true_block != nullptr) // might be null if there are no statements (or declarations only)
+	{
+		output->Serialize(true_block);
+	}
 
 	if (this->false_block != nullptr)
 	{
@@ -77,7 +81,7 @@ int ConditionalAstNode::Serialize(TMLWriter* output)
 		output->Serialize(false_block);
 	}
 
-	output->BindLabelToNextWrittenInstruction(labelNumber_end);
+	output->Serialize(&endLabelAstNode);
 	return 0;
 }
 
@@ -824,14 +828,19 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 	// Push desired addresses for the dimensions
 	output->Serialize(this->dimensions);
 
+	if (this->SumTmpVarNode == nullptr)
+	{
+		auto SumTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
+		this->SumTmpVarNode = new VarAstNode(true, SumTmpVar);
+	}
+	if (this->SumTmpVarNode == nullptr)
+	{
+		auto MulTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
+		this->MulTmpVarNode = new VarAstNode(true, MulTmpVar);
+	}
+
 	auto *varType = dynamic_cast<ArrayType*>(var->GetTableReference()->GetType());
 	auto sizes = varType->GetSizes();
-
-	auto SumTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
-	VarAstNode* SumTmpVarNode = new VarAstNode(true, SumTmpVar);
-
-	auto MulTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
-	VarAstNode MulTmpVarNode(true, MulTmpVar);
 
 	for (auto it = sizes.begin(); it != sizes.end(); it++)
 	{
@@ -840,12 +849,12 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 		// MulTmpVar = A
 		output->WriteInstruction(POP);
 		NumValueAstNode DimSizeNode(*it);
-		OperatorAstNode Mul(OP_MULT, nullptr, &DimSizeNode, &MulTmpVarNode);
+		OperatorAstNode Mul(OP_MULT, nullptr, &DimSizeNode, MulTmpVarNode);
 		output->Serialize(&Mul);
 
 		// A = SumTmpVar + MulTmpVar
 		// SumTmpVar = A
-		OperatorAstNode Plus(OP_PLUS, SumTmpVarNode, &MulTmpVarNode, SumTmpVarNode);
+		OperatorAstNode Plus(OP_PLUS, SumTmpVarNode, MulTmpVarNode, SumTmpVarNode);
 		output->Serialize(&Plus);
 	}
 
@@ -878,9 +887,11 @@ int StructAddressAstNode::Serialize(TMLWriter* output)
 	std::string fieldName = GetField()->GetName();
 	NumValueAstNode FieldOffsetNode((int)dynamic_cast<StructType*>(GetStruct()->GetType())->Offset(fieldName));
 
-	auto SumTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
-	VarAstNode *SumTmpVarNode = new VarAstNode(true, SumTmpVar);
-
+	if (SumTmpVarNode == nullptr)
+	{
+		auto SumTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
+		SumTmpVarNode = new VarAstNode(true, SumTmpVar);
+	}
 	// SumTmpVarNode is the result var
 	OperatorAstNode ArrayItemOffset(OP_PLUS, &VarOffsetNode, &FieldOffsetNode, SumTmpVarNode);
 	output->Serialize(&ArrayItemOffset);
