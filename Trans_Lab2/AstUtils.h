@@ -702,7 +702,16 @@ protected:
 		case TMP_ID_NODE:
 		case VARIABLE_NODE:
 		case TMP_VAR_NODE:
-		
+			{
+				this->Serialize(operand);
+				operand = this->GetLastOperationResult();
+
+				uint32_t index;
+				instruction.AddrMode = ABSOLUTE_MODE;
+				index = dynamic_cast<VarAstNode*>(operand)->GetTableReference()->GetMemoryOffset();
+				memcpy(&instruction.Args, &index, sizeof(uint32_t));
+			}
+			break;		
 		case ARRAY_ITEM_NODE:
 		case STRUCT_ITEM_NODE:
 		case UNION_TYPE:
@@ -711,7 +720,7 @@ protected:
 				operand = this->GetLastOperationResult();
 
 				uint32_t index;
-				instruction.AddrMode = ABSOLUTE_MODE;
+				instruction.AddrMode = ABSOLUTE_POINTER_MODE;
 				index = dynamic_cast<VarAstNode*>(operand)->GetTableReference()->GetMemoryOffset();
 				memcpy(&instruction.Args, &index, sizeof(uint32_t));
 			}
@@ -837,7 +846,7 @@ public:
 	{
 		int oldPos = this->FileSeek(
 				sizeof(TMLHeader) + 
-				varNode->GetTableReference()->GetMemoryOffset()*sizeof(TMemoryCell)
+				varNode->CalculateMemoryOffset()*sizeof(TMemoryCell)
 				, SEEK_SET);
 		switch (varNode->GetResultType()->getID())
 		{

@@ -70,7 +70,7 @@ int GetDimensionInfo(DimensionAstNode *dimensions_list, int **sizes)
 		{
 			auto valueNode = dynamic_cast<NumValueAstNode*>(cur->GetExpr());
 			if (valueNode == nullptr)
-				break;
+				return -1;
 			(*sizes)[i++] = valueNode->ToInt();
 		}
 	}

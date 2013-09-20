@@ -31,6 +31,8 @@ class AstNode
 {
     TreeType nodeType;
 	BaseTypeInfo *resultType;
+
+	int codeOffset; // offset in code segment of TML;
 public:
 
 	AstNode(TreeType category, BaseTypeInfo *type) 
@@ -67,6 +69,11 @@ public:
 		return (IsNodeOfType(var->GetType()));
 	}
 
+	void SetCodeOffset(int offset)
+	{
+		this->codeOffset = offset;
+	}
+
 	/// <summary> Prints out the Three address code </summary>
 	virtual int Print3AC(TACWriter* output) = 0;
 	virtual int PrintASTree(AstPrintInfo* output) = 0;
@@ -79,7 +86,8 @@ class IValueHolderNode
 {
 public:
 	virtual std::string GetValueHolderName() = 0;
-	virtual void SetValue(NumValueAstNode *valueNode) = 0;
+	virtual int SetValue(NumValueAstNode *valueNode) = 0;
+	virtual int CalculateMemoryOffset() = 0;
 	virtual ~IValueHolderNode() {}
 };
 
@@ -349,9 +357,15 @@ public:
 		return std::string("$c")+this->ToString();
 	}
 
-	virtual void SetValue(NumValueAstNode *valueNode)
+	virtual int SetValue(NumValueAstNode *valueNode)
 	{
 		this->value = valueNode->value;
+		return 0;
+	}
+
+	virtual int CalculateMemoryOffset()
+	{
+		throw std::string("Can not calculate memory offset for constant value!");
 	}
 };
 
@@ -402,10 +416,16 @@ public:
 			return std::string("$id")+this->GetTableReference()->GetName();
 	}
 
-	virtual void SetValue(NumValueAstNode *valueNode)
+	virtual int SetValue(NumValueAstNode *valueNode)
 	{
 		this->GetTableReference()->SetValue(valueNode->GetResultType()->Clone(), 
 				valueNode->ToString());
+		return 0;
+	}
+
+	virtual int CalculateMemoryOffset()
+	{
+		return this->GetTableReference()->GetMemoryOffset();
 	}
 };
 
@@ -414,7 +434,7 @@ class ArrayAddressAstNode: public AstNode, public IValueHolderNode
 	VarAstNode *var;
 	DimensionAstNode *dimensions;
 
-	VarAstNode *SumTmpVarNode, *MulTmpVarNode;
+	VarAstNode *ArrayOffsetVarNode, *MulTmpVarNode;
 
 	int GetNumDimensions()
 	{
@@ -438,23 +458,19 @@ public:
 		if (varType->GetSizes().size() < GetNumDimensions())
 			throw std::string("Error: too much dimensions for the declared variable");
 		
-		SumTmpVarNode = nullptr;
+		ArrayOffsetVarNode = nullptr;
 		MulTmpVarNode = nullptr;
 	}
 
 	~ArrayAddressAstNode()
 	{
-		if (SumTmpVarNode != nullptr)
-			delete SumTmpVarNode;
+		if (ArrayOffsetVarNode != nullptr)
+			delete ArrayOffsetVarNode;
 
 		if (MulTmpVarNode != nullptr)
 			delete MulTmpVarNode;
 	}
 
-	// TODO: make it more flexible to assignment checks for:
-	// 1) array = var
-	// 2) var = array
-	// 3) array = array
 	virtual BaseTypeInfo *GetResultType()
 	{
 		int dimensions_num = GetNumDimensions();
@@ -479,9 +495,27 @@ public:
 		return this->var->GetValueHolderName();
 	}
 	
-	virtual void SetValue(NumValueAstNode *valueNode)
+	virtual int SetValue(NumValueAstNode *valueNode)
 	{
-		throw std::string("Not implemented");
+
+	}
+
+	virtual int CalculateMemoryOffset()
+	{
+		int *dimensionSizes = NULL;
+		int numDimensions = GetDimensionInfo(this->dimensions, &dimensionSizes);
+		if (numDimensions == -1)
+			return 0;
+		else
+		{
+			auto arraySizes = dynamic_cast<ArrayType*>(this->var->GetResultType())->GetSizes();
+			int sum = 0;
+			for (int i = 0; i < numDimensions; i++)
+			{
+				sum += dimensionSizes[i]*arraySizes[i]; 
+			}
+			return sum;
+		}
 	}
 };
 
@@ -521,10 +555,16 @@ public:
 		return GetStruct()->GetName()+std::string(".")+GetField()->GetName();
 	}
 	
-	virtual void SetValue(NumValueAstNode *valueNode)
+	virtual int SetValue(NumValueAstNode *valueNode)
 	{
 		this->GetField()->SetValue(valueNode->GetResultType()->Clone(), 
 			valueNode->ToString());
+		return 0;
+	}
+
+	virtual int CalculateMemoryOffset()
+	{
+		return GetField()->GetMemoryOffset();
 	}
 };
 

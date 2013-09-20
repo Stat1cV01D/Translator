@@ -36,6 +36,14 @@ template<typename T> T GetValue(MachineInstruction MI)
 			memcpy(&result, &g_MachineDataSegment[index], sizeof (T)); 
 		}
 		break;
+	case ABSOLUTE_POINTER_MODE:
+		{
+			uint32_t index; 
+			memcpy(&index, MI.Args, sizeof (index)); 
+			memcpy(&index, &g_MachineDataSegment[index], sizeof(index));
+			memcpy(&result, &g_MachineDataSegment[index], sizeof (T));
+		}
+		break;
 	}
 
 	return result;
@@ -105,6 +113,13 @@ template<typename T> int IOOperations(TMemoryCell &Accumulator, MachineInstructi
 			memcpy(&index, args, sizeof (uint32_t)); 
 			memcpy(&g_MachineDataSegment[index], &Accumulator, sizeof(T)); 
 		} 
+		else if (addresingMode == ABSOLUTE_POINTER_MODE)
+		{
+			uint32_t index; 
+			memcpy(&index, args, sizeof (index)); 
+			memcpy(&index, &g_MachineDataSegment[index], sizeof(index));
+			memcpy(&g_MachineDataSegment[index], &Accumulator, sizeof(T));
+		}
 		break;
 	case IN_:
 	case OUT_: 
@@ -119,6 +134,14 @@ template<typename T> int IOOperations(TMemoryCell &Accumulator, MachineInstructi
 				{
 					uint32_t index; 
 					memcpy(&index, args, sizeof (uint32_t)); 
+					ptrVAR = (T*)&g_MachineDataSegment[index];
+				}
+				break;
+			case ABSOLUTE_POINTER_MODE:
+				{
+					uint32_t index; 
+					memcpy(&index, args, sizeof (index)); 
+					memcpy(&index, &g_MachineDataSegment[index], sizeof(index));
 					ptrVAR = (T*)&g_MachineDataSegment[index];
 				}
 				break;
@@ -371,7 +394,8 @@ int main(int argc, char* argv[])
 			case HALT:
 				isHaltCommandMet = !0;
 				break;
-
+			case NOP:
+				break;
 			case INC:
 				++tmpInteger;
 				memcpy(&Accumulator, &tmpInteger, sizeof (int));

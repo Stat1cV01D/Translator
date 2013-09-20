@@ -758,15 +758,16 @@ assignment:
 			auto varNode = dynamic_cast<IValueHolderNode*>($left->astNode);
 			if (varNode != nullptr)
 			{
-				varNode->SetValue(constValueNode);
+				if (varNode->SetValue(constValueNode) == 0)
+				{
+					$$ = $left;	
+					break;
+				}
 			}
-			$$ = $left;	
 		}
-		else
-		{
-			$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode), 
-					createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));
-		}
+
+		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode), 
+				createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));
 	}
 
 expr :

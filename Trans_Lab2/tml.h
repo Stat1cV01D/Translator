@@ -72,6 +72,7 @@ enum TMLCOMMAND : uint8_t
 {
 	/* Halt processor */
 	HALT,
+	NOP,
 	// general command names
 	INSERTCOMMANDS(_) 
 	// typed command names
@@ -142,7 +143,7 @@ typedef struct STACK
 /* Addressing modes */
 #define ABSOLUTE_MODE			0x00
 #define DIRECT_MODE				0x01
-#define INDIRECT_MODE			0x02
+#define ABSOLUTE_POINTER_MODE	0x02
 #define LAST_MODE				0x02
 
 /* Machine instruction */

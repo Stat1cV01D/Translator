@@ -84,11 +84,9 @@ class RomanType: public BaseTypeInfo
 protected:
 	unsigned short length;
 public:
-	int GetLength() { return length; }
-
 	virtual enumTypes getID() { return enumTypes::ROM_TYPE; }
 
-	virtual int SizeOf() { return GetLength(); }
+	virtual int SizeOf() { return SIZE_OF_INT; }
 	RomanType() { this->length = 10; }
 	virtual BaseTypeInfo* Clone() { return new RomanType(*this); }
 };

@@ -569,7 +569,8 @@ int NumValueAstNode::Print3AC(TACWriter* output)
 }
 int NumValueAstNode::PrintASTree(AstPrintInfo* output)
 {
-	output->AstWriteFormat("const %s %s\n", GetResultType()->GetName().c_str(), value.c_str());
+	auto typeName = GetResultType()->GetName();
+	output->AstWriteFormat("const %s %s\n", typeName.c_str(), value.c_str());
 	return 0;
 }
 int NumValueAstNode::Serialize(TMLWriter* output)
@@ -828,12 +829,12 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 	// Push desired addresses for the dimensions
 	output->Serialize(this->dimensions);
 
-	if (this->SumTmpVarNode == nullptr)
+	if (this->ArrayOffsetVarNode == nullptr)
 	{
 		auto SumTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
-		this->SumTmpVarNode = new VarAstNode(true, SumTmpVar);
+		this->ArrayOffsetVarNode = new VarAstNode(true, SumTmpVar);
 	}
-	if (this->SumTmpVarNode == nullptr)
+	if (this->ArrayOffsetVarNode == nullptr)
 	{
 		auto MulTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
 		this->MulTmpVarNode = new VarAstNode(true, MulTmpVar);
@@ -854,17 +855,17 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 
 		// A = SumTmpVar + MulTmpVar
 		// SumTmpVar = A
-		OperatorAstNode Plus(OP_PLUS, SumTmpVarNode, MulTmpVarNode, SumTmpVarNode);
+		OperatorAstNode Plus(OP_PLUS, ArrayOffsetVarNode, MulTmpVarNode, ArrayOffsetVarNode);
 		output->Serialize(&Plus);
 	}
 
 	NumValueAstNode varOffset(this->var->GetTableReference()->GetMemoryOffset());
 
 	// SumTmpVarNode is the result var
-	OperatorAstNode ArrayItemOffset(OP_PLUS, SumTmpVarNode, &varOffset, SumTmpVarNode);
+	OperatorAstNode ArrayItemOffset(OP_PLUS, ArrayOffsetVarNode, &varOffset, ArrayOffsetVarNode);
 	output->Serialize(&ArrayItemOffset);
 
-	output->SetResult(SumTmpVarNode);
+	output->SetResult(ArrayOffsetVarNode);
 	return 0;
 }
 
