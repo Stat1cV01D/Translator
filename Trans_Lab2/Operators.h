@@ -13,7 +13,11 @@ enum enumOperatorType
 	OT_FOR,
 	OT_SWITCH,
 	OT_CASE,
-	OT_DEFAULT
+	OT_DEFAULT,
+	
+	//optimization-related types
+	OT_PUSH,
+	OT_POP
 };
 
 class TOperator
@@ -138,6 +142,37 @@ public:
 	}
 
 	TLabel *GetEndLabel() { return endLabel; }
+};
+
+
+class TPushOperator: public TOperator
+{
+private:
+	int codeSegmentOffset;
+public:
+	TPushOperator(int codeSegmentOffset)
+		: TOperator(OT_PUSH)
+	{
+		this->codeSegmentOffset = codeSegmentOffset;
+	}
+
+	virtual ~TPushOperator() {}
+
+	int GetCodeSegmentOffset()
+	{
+		return codeSegmentOffset;
+	}
+};
+
+class TPopOperator: public TOperator
+{
+public:
+	TPopOperator()
+		: TOperator(OT_POP)
+	{
+		
+	}
+	virtual ~TPopOperator() {}
 };
 
 class OperatorStack

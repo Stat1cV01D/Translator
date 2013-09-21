@@ -23,6 +23,7 @@ class TVariable
 	BaseTypeInfo *typeTableRef;
 	uint16_t memoryOffset;
 	bool initialized;
+	bool isAllocated;
 
 	int iValue;
 	float fValue;
@@ -72,6 +73,7 @@ class TVariable
 		this->typeTableRef = Type;
 		memoryOffset = 0;
 		initialized = false;
+		isAllocated = false;
 	}
 
 	void SetStrValue(std::string &value, bool typeCheck)
@@ -83,6 +85,12 @@ class TVariable
 		
 		sValue = value;
 		initialized = true;
+	}
+
+	void SetMemoryOffset(int offset)
+	{
+		memoryOffset = offset;
+		isAllocated = true;
 	}
 
 #define SETVALUEMACRO(typeID, thisValue) \
@@ -99,6 +107,12 @@ public:
 		Init(name, Type);
 	}
 	
+	TVariable(std::string& name, BaseTypeInfo *Type, int offset)
+	{
+		Init(name, Type);
+		SetMemoryOffset(offset);
+	}
+
 	~TVariable()
 	{
 		delete typeTableRef;
@@ -139,8 +153,11 @@ public:
 	// Reserve memory space for the variable by the offset
 	void ReserveMemory()
 	{
-		memoryOffset = g_wordsCount;
-		g_wordsCount += GetType()->SizeOf();
+		if (!isAllocated)
+		{
+			SetMemoryOffset(g_wordsCount);
+			g_wordsCount += GetType()->SizeOf();
+		}
 	}
 
 	// Get the memory offset

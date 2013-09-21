@@ -619,6 +619,8 @@ class TMLWriter: public AstWriter
 private:
 	int g_lastInstructionIndex;
 	AstNode *lastOpResultNode;
+
+	OperatorStack PushInstructionsStack;
 protected:	
 
 	/// <summary>
@@ -755,6 +757,7 @@ protected:
 public:
 	TMLWriter(ParserContext *context, FILE *out = nullptr)
 		: AstWriter(context, out)
+		, PushInstructionsStack()
 	{
 		TMLWriteHeader();
 		g_lastInstructionIndex = 0;
@@ -777,6 +780,22 @@ public:
 		instruction.AddrMode = ABSOLUTE_MODE;
 		WriteInstructionBase(instruction);
 	}
+
+/*
+	void WritePushInstruction()
+	{
+		WriteInstruction(PUSH);
+		PushInstructionsStack.Push(new TPushOperator(FileSeek(0, SEEK_CUR)));
+	}
+
+	void WritePopInstruction()
+	{
+		auto pushOp = dynamic_cast<TPushOperator*>(PushInstructionsStack.Pop());
+
+		WriteInstruction(POP);
+		
+	}
+*/
 
 	/// <summary>
 	/// Writes the typed instruction taking the operand as a parameter or just

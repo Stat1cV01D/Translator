@@ -784,7 +784,7 @@ int ArrayAddressAstNode::Print3AC(TACWriter* output)
 	// Push desired addresses for the dimensions
 	output->CodeGen(this->dimensions);
 
-	auto *varType = dynamic_cast<ArrayType*>(var->GetTableReference()->GetType());
+	auto *varType = dynamic_cast<ArrayType*>(varNode->GetTableReference()->GetType());
 	auto sizes = varType->GetSizes();
 
 	auto SumTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType(), true);
@@ -809,7 +809,7 @@ int ArrayAddressAstNode::Print3AC(TACWriter* output)
 	}
 
 	// SumTmpVarNode is the result var
-	OperatorAstNode ArrayItemOffset(OP_PLUS, &SumTmpVarNode, this->var);
+	OperatorAstNode ArrayItemOffset(OP_PLUS, &SumTmpVarNode, this->varNode);
 	output->SetLastUsedValueName(SumTmpVarNode.GetValueHolderName());
 	
 	return 0;
@@ -817,7 +817,7 @@ int ArrayAddressAstNode::Print3AC(TACWriter* output)
 
 int ArrayAddressAstNode::PrintASTree(AstPrintInfo* output)
 {
-	auto varName = this->var->GetTableReference()->GetName();
+	auto varName = this->varNode->GetTableReference()->GetName();
 	output->AstWriteFormat("%s\n", varName.c_str());
 	output->Print(this->dimensions);
 	output->AstWriteLine("");
@@ -840,7 +840,7 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 		this->MulTmpVarNode = new VarAstNode(true, MulTmpVar);
 	}
 
-	auto *varType = dynamic_cast<ArrayType*>(var->GetTableReference()->GetType());
+	auto *varType = dynamic_cast<ArrayType*>(varNode->GetTableReference()->GetType());
 	auto sizes = varType->GetSizes();
 
 	for (auto it = sizes.begin(); it != sizes.end(); it++)
@@ -859,7 +859,7 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 		output->Serialize(&Plus);
 	}
 
-	NumValueAstNode varOffset(this->var->GetTableReference()->GetMemoryOffset());
+	NumValueAstNode varOffset(this->varNode->GetTableReference()->GetMemoryOffset());
 
 	// SumTmpVarNode is the result var
 	OperatorAstNode ArrayItemOffset(OP_PLUS, ArrayOffsetVarNode, &varOffset, ArrayOffsetVarNode);

@@ -397,6 +397,7 @@ class VarAstNode: public AstNode, public IValueHolderNode
 	bool isAllocated;
 	TVariable *varTableReference;
 public:
+	friend class ArrayAddressAstNode;
 	VarAstNode(bool isTemporary, TVariable *varTableReference): 
 	  AstNode((isTemporary ? TMP_ID_NODE : ID_NODE), varTableReference->GetType()->Clone()) 
 	{
@@ -416,11 +417,22 @@ public:
 			return std::string("$id")+this->GetTableReference()->GetName();
 	}
 
+	bool IsAllocated()
+	{
+		return isAllocated;
+	}
+
 	virtual int SetValue(NumValueAstNode *valueNode)
 	{
 		this->GetTableReference()->SetValue(valueNode->GetResultType()->Clone(), 
 				valueNode->ToString());
-		return 0;
+		if (this->isAllocated)
+			return 1;
+		else
+		{
+			this->isAllocated = true;
+			return 0;
+		}
 	}
 
 	virtual int CalculateMemoryOffset()
@@ -431,7 +443,7 @@ public:
 
 class ArrayAddressAstNode: public AstNode, public IValueHolderNode
 {
-	VarAstNode *var;
+	VarAstNode *varNode;
 	DimensionAstNode *dimensions;
 
 	VarAstNode *ArrayOffsetVarNode, *MulTmpVarNode;
@@ -450,13 +462,14 @@ public:
 	ArrayAddressAstNode(VarAstNode *var, DimensionAstNode *dimensions)
 		: AstNode(ARRAY_ITEM_NODE, var->GetResultType()) 
 	{
-		this->var = var;
-		this->dimensions = dimensions;
-
 		auto varType = dynamic_cast<ArrayType*>(var->GetResultType());
 
 		if (varType->GetSizes().size() < GetNumDimensions())
 			throw std::string("Error: too much dimensions for the declared variable");
+		
+		this->varNode = var;
+		this->dimensions = dimensions;
+		varNode->isAllocated = true;
 		
 		ArrayOffsetVarNode = nullptr;
 		MulTmpVarNode = nullptr;
@@ -474,7 +487,7 @@ public:
 	virtual BaseTypeInfo *GetResultType()
 	{
 		int dimensions_num = GetNumDimensions();
-		auto varType = dynamic_cast<ArrayType*>(var->GetResultType());
+		auto varType = dynamic_cast<ArrayType*>(varNode->GetResultType());
 		
 		if (varType->GetSizes().size() == dimensions_num)
 		{
@@ -492,12 +505,18 @@ public:
 
 	virtual std::string GetValueHolderName()
 	{
-		return this->var->GetValueHolderName();
+		return this->varNode->GetValueHolderName();
 	}
 	
 	virtual int SetValue(NumValueAstNode *valueNode)
 	{
+		int offset = CalculateMemoryOffset();
+		if (offset == -1)
+			return -1;
 
+		TVariable tmpVar(std::string("tmpVar"), this->GetResultType()->Clone(), offset);
+		VarAstNode tmpVarNode(true, &tmpVar);
+		return tmpVarNode.SetValue(valueNode);
 	}
 
 	virtual int CalculateMemoryOffset()
@@ -505,10 +524,10 @@ public:
 		int *dimensionSizes = NULL;
 		int numDimensions = GetDimensionInfo(this->dimensions, &dimensionSizes);
 		if (numDimensions == -1)
-			return 0;
+			return -1;
 		else
 		{
-			auto arraySizes = dynamic_cast<ArrayType*>(this->var->GetResultType())->GetSizes();
+			auto arraySizes = dynamic_cast<ArrayType*>(this->varNode->GetResultType())->GetSizes();
 			int sum = 0;
 			for (int i = 0; i < numDimensions; i++)
 			{

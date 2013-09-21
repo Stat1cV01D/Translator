@@ -758,7 +758,7 @@ assignment:
 			auto varNode = dynamic_cast<IValueHolderNode*>($left->astNode);
 			if (varNode != nullptr)
 			{
-				if (varNode->SetValue(constValueNode) == 0)
+				if (!varNode->IsAllocated() && varNode->SetValue(constValueNode) == 0)
 				{
 					$$ = $left;	
 					break;
