@@ -63,9 +63,9 @@
 	ACCUMULATOR_OPS(SUFFIX) \
 	COMPARE_OPS(SUFFIX) \
 	POW_OP(SUFFIX) \
+	IO_OPS(SUFFIX) \
 	SUFFIX ## _NOARGS, \
-	UNARY_OPS(SUFFIX) \
-	IO_OPS(SUFFIX) 
+	UNARY_OPS(SUFFIX) 
 
 /* Operation codes */
 enum TMLCOMMAND : uint8_t
@@ -141,15 +141,15 @@ typedef struct STACK
 } TStack;
 
 /* Addressing modes */
-#define ABSOLUTE_MODE			0x00
-#define DIRECT_MODE				0x01
+#define DIRECT_MODE				0x00
+#define ABSOLUTE_MODE			0x01
 #define ABSOLUTE_POINTER_MODE	0x02
 #define LAST_MODE				0x02
 
 /* Machine instruction */
 typedef struct
 {
-    uint8_t OpCode;   /* Operation code. See above */
+    TMLCOMMAND OpCode;   /* Operation code. See above */
     uint8_t AddrMode; /* Addressing mode. See above */
     uint8_t Args[COMMAND_ARGS_MAX_SIZE]; /* Instruction arguments */
 } MachineInstruction;

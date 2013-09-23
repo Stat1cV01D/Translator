@@ -233,6 +233,19 @@ Node* CreateExpressionNode(Node *op, bool isBooleanOp, Node *left, Node *right, 
 				ptNode);
 }
 
+TVariable *GetVariableForAssign(Node *node, YYLTYPE location)
+{
+	auto structItemAstNode = dynamic_cast<StructAddressAstNode*>(node->astNode);
+	if (structItemAstNode != nullptr)
+	{
+		return structItemAstNode->GetField();
+	}
+	else
+	{
+		return Context.getVar(node->ptNode->firstChild->text, 1, NULL, location);
+	}
+}
+
 
 
 #ifdef short
@@ -568,17 +581,17 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   140,   140,   144,   152,   157,   167,   171,   175,   182,
-     186,   194,   194,   202,   202,   208,   214,   214,   220,   220,
-     228,   233,   240,   246,   252,   260,   265,   289,   304,   309,
-     314,   319,   324,   329,   358,   364,   389,   397,   434,   440,
-     445,   467,   473,   479,   484,   497,   503,   509,   515,   523,
-     531,   539,   548,   556,   566,   576,   588,   595,   602,   611,
-     621,   631,   642,   647,   654,   695,   701,   707,   713,   736,
-     741,   748,   774,   779,   784,   789,   794,   799,   805,   811,
-     816,   821,   826,   831,   836,   841,   847,   861,   866,   877,
-     883,   890,   931,   956,   964,   972,   980,   989,   996,  1004,
-    1029,  1033,  1039,  1045,  1068,  1072,  1077,  1083
+       0,   153,   153,   157,   165,   170,   180,   184,   188,   195,
+     199,   207,   207,   215,   215,   221,   227,   227,   233,   233,
+     241,   246,   253,   259,   265,   273,   278,   302,   317,   322,
+     327,   332,   337,   342,   371,   377,   402,   410,   447,   453,
+     458,   480,   486,   492,   497,   510,   516,   522,   528,   536,
+     544,   552,   561,   569,   579,   589,   601,   608,   615,   624,
+     634,   644,   655,   660,   667,   708,   714,   720,   726,   749,
+     754,   761,   789,   794,   799,   804,   809,   814,   820,   826,
+     831,   836,   841,   846,   851,   856,   862,   876,   881,   892,
+     898,   905,   946,   971,   979,   987,   995,  1004,  1011,  1019,
+    1044,  1048,  1054,  1060,  1083,  1087,  1092,  1098
 };
 #endif
 
@@ -2489,21 +2502,23 @@ yyreduce:
 		BaseTypeInfo *type = (yyvsp[(1) - (3)]._node)->astNode->GetResultType();
 		AssertOneOfTypes((yyvsp[(3) - (3)]._node), (yylsp[(3) - (3)]), 1, type->getID());
 		
-		TVariable *var = Context.getVar((yyvsp[(1) - (3)]._node)->ptNode->firstChild->text, 1, NULL, (yylsp[(1) - (3)]));
-
-		auto constValueNode = dynamic_cast<NumValueAstNode*>((yyvsp[(3) - (3)]._node)->astNode);
+		TVariable *var = GetVariableForAssign((yyvsp[(1) - (3)]._node), (yylsp[(1) - (3)]));
+		
+		/* // TODO: work for 8-th lab 
+		auto constValueNode = dynamic_cast<NumValueAstNode*>($right->astNode);
 		if (constValueNode != nullptr)
 		{
-			auto varNode = dynamic_cast<IValueHolderNode*>((yyvsp[(1) - (3)]._node)->astNode);
+			auto varNode = dynamic_cast<IValueHolderNode*>($left->astNode);
 			if (varNode != nullptr)
 			{
 				if (varNode->SetValue(constValueNode) == 0)
 				{
-					(yyval._node) = (yyvsp[(1) - (3)]._node);	
+					$$ = $left;	
 					break;
 				}
 			}
 		}
+		*/
 
 		(yyval._node) = createNode(new OperatorAstNode((yyvsp[(2) - (3)]._node)->ptNode->text, (yyvsp[(1) - (3)]._node)->astNode, (yyvsp[(3) - (3)]._node)->astNode), 
 				createPtNodeWithChildren("expr", 3, (yyvsp[(1) - (3)]._node)->ptNode, (yyvsp[(2) - (3)]._node)->ptNode, (yyvsp[(3) - (3)]._node)->ptNode));

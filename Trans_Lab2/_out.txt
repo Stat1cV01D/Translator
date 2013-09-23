@@ -1,83 +1,26 @@
+	Push	$c2
 	Push	$c1
-	Push	$c0
-	Pop	$t16
-	$t16	=	$t16	*	$c10
-	$t15	=	$t15	+	$t16
-	Pop	$t16
-	$t16	=	$t16	*	$c20
-	$t15	=	$t15	+	$t16
-	$t15	=	$cCXVII
-	blaVar.bla1	=	$c1
+	Pop	$t5
+	$t5	=	$t5	*	$c3
+	$t4	=	$t4	+	$t5
+	Pop	$t5
+	$t4	=	$t5	+	$t4
+	$t4	=	$t4	+	$idb
+	$t4	=	$cCXVII
+	Push	$c2
 	Push	$c1
-	Push	$c1
-	Pop	$t18
-	$t18	=	$t18	*	$c10
-	$t17	=	$t17	+	$t18
-	Pop	$t18
-	$t18	=	$t18	*	$c20
-	$t17	=	$t17	+	$t18
-	$t1	=	$t17	<=	$cXLV
-	iffalse	$t1	$L13
-	$t2	=	$id0:foo	+	$c1
+	Pop	$t7
+	$t7	=	$t7	*	$c3
+	$t6	=	$t6	+	$t7
+	Pop	$t7
+	$t6	=	$t7	+	$t6
+	$t6	=	$t6	+	$idb
+	$t1	=	$t6	<=	$cXLV
+	iffalse	$t1	$L1
+	$t2	=	$id0:foo	+	$c3
 	$id0:foo	=	$t2
-$L13:
-	Goto	$L14
+	Goto	$L2
+$L1:
 	$t3	=	$id1:bar	-	$c1.05
 	$id1:bar	=	$t3
-$L14:
-	$idi	=	$c0
-$L1:
-	$t4	=	$idi	+	$c1
-	$idi	=	$t4
-	PRINT	$idi
-	$t5	=	$idi	<	$c10
-	iftrue	$t5	$L1
 $L2:
-	$idi	=	$c0
-	Goto	$L16
-$L3:
-	$t7	=	$idi	+	$c1
-	$idi	=	$t7
-$L16:
-	$t6	=	$idi	<	$c10
-	iffalse	$t6	$L4
-	$t8	=	$idi	==	$c3
-	iffalse	$t8	$L17
-	Goto	$L3
-$L17:
-	$t19	=	$idi	==	$c1
-	iftrue	$t19	$L7
-	$t20	=	$idi	==	$c2
-	iftrue	$t20	$L8
-	$t21	=	$idi	==	$c5
-	iftrue	$t21	$L9
-	Goto	$L10
-$L7:
-$L8:
-	$t9	=	$idi	+	$c1
-	PRINT	$t9
-	Goto	$L6
-$L9:
-	$t10	=	$idi	+	$c1
-	$idi	=	$t10
-	Goto	$L6
-$L10:
-	$t11	=	$idi	-	$c1
-	PRINT	$t11
-	Goto	$L6
-$L6:
-	$t12	=	$idi	==	$c9
-	iffalse	$t12	$L18
-	Goto	$L4
-$L18:
-	Goto	$L3
-$L4:
-	$idi	=	$c0
-$L11:
-	$t13	=	$idi	<	$c10
-	iffalse	$t13	$L12
-	PRINT	$idi
-	$t14	=	$idi	+	$c1
-	$idi	=	$t14
-	Goto	$L11
-$L12:

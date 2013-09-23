@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 #include "..\Trans_Lab2\tml.h"
 
 extern FILE* g_InputFile;
@@ -21,25 +22,24 @@ int CloseProgramFile(void)
     return 0;
 }
 
-int LoadProgramFileHeader(FILE* inputFile, unsigned short* dataSegmentSize, unsigned short* codeSegmentSize)
+int LoadProgramFileHeader(FILE* inputFile, uint16_t* dataSegmentSize, uint16_t* codeSegmentSize)
 {
-    char headerText[5] = "\0";
-    int size = strlen(g_MandatoryHeaderPart);
-    if (0 == fread(headerText, size, 1, inputFile))
+    char headerText[4];
+
+    if (0 == fread(headerText, sizeof(g_MandatoryHeaderPart), 1, inputFile))
     {
         return -1;
     }
     
-    headerText[size] = 0;
-    if (0 != strcmp(headerText, g_MandatoryHeaderPart))
+    if (0 != memcmp(headerText, g_MandatoryHeaderPart, sizeof(g_MandatoryHeaderPart)))
     {
         return -2;
     }
-    if (0 == fread(codeSegmentSize, sizeof(unsigned short), 1, inputFile))
+    if (0 == fread(codeSegmentSize, sizeof(uint16_t), 1, inputFile))
     {
         return -3;
     }
-    if (0 == fread(dataSegmentSize, sizeof(unsigned short), 1, inputFile))
+    if (0 == fread(dataSegmentSize, sizeof(uint16_t), 1, inputFile))
     {
         return -4;
     }

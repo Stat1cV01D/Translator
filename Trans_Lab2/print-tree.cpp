@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
+#include <fstream>
 
 #include "parser.h"
 #include "ThreeAddrCode.h"
@@ -88,7 +90,7 @@ void print_3ac()
 {
 	char FN[MAX_PATH];
 	sprintf(FN, "_out.txt");
-	FILE *g_outputFile = fopen(FN, "w+");
+	FILE *g_outputFile = fopen(FN, "w+b");
 	
 	TACWriter CGInfo(&Context, g_outputFile);
 	CGInfo.CodeGen(astTree);
@@ -100,6 +102,7 @@ void MakeTML()
 {
 	char FN[MAX_PATH];
 	sprintf(FN, "_out.tml");
+	
 	FILE *g_OutputTmlFile = fopen(FN, "w+b");
 
 	try
@@ -119,7 +122,7 @@ void print_astTree()
 {
     printf("Abstract syntax tree:\n---------------------\n\n");
 
-	AstPrintInfo PrintInfo(&Context);
+	AstPrintInfo PrintInfo(&Context, stdout);
 	PrintInfo.Print(astTree);
     printf("\n");
 }
@@ -128,7 +131,7 @@ void print_ptTree()
 {
     printf("Parse tree:\n-----------\n\n");
 	
-	PtPrintInfo PrintInfo(&Context);
+	PtPrintInfo PrintInfo(&Context, stdout);
 	PrintInfo.Print(ptTree);
 
 	printf("\n");

@@ -78,7 +78,7 @@ class TVariable
 
 	void SetStrValue(std::string &value, bool typeCheck)
 	{
-		if (typeCheck && this->typeTableRef->getID() == LITERAL_TYPE)
+		if (typeCheck && this->typeTableRef->getID() != LITERAL_TYPE)
 		{
 			throw std::string("Error: type assign mismatch");
 		}
@@ -214,6 +214,8 @@ public:
 			case ROM_TYPE:
 			case LITERAL_TYPE:
 				return std::string(sValue);
+			default:
+				return std::string("Error type converting to string ") + typeTableRef->GetName();
 		}
 	}
 };
@@ -241,7 +243,6 @@ public:
 	{
 		TVariable *field = CreateVariable(type, std::string(name));
 		fieldList.emplace_back(field);
-		field->ReserveMemory();
 	}
 
 	TVariable *GetField(std::string& fieldName)

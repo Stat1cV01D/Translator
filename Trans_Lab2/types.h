@@ -116,9 +116,9 @@ class ArrayType: public BaseTypeInfo
 public:
 	virtual int SizeOf() 
 	{
-		int itemsCount = 0;
+		int itemsCount = 1;
 		for(auto it = sizes.begin(); it != sizes.end(); it++)
-			itemsCount += *it;
+			itemsCount *= *it;
 		return (itemsCount * itemTypeRef->SizeOf());
 	}
 	

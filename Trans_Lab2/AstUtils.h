@@ -5,6 +5,9 @@
 #include "Variable.h"
 #include "types.h"
 #include <vector>
+#include <iostream>
+#include <sstream>
+#include <fstream>
 #include "language.tab.hpp"
 #include "context.h"
 #include "parser.h"
@@ -349,7 +352,7 @@ public:
 			return;
 		}
 		TVariable *var = new TVariable(nameWithNs, type);
-
+		var->ReserveMemory();
 		g_VariableTable->st_put(nameWithNs, var);
 	}
 
@@ -486,12 +489,13 @@ protected:
 	/// <param name="code">The code.</param>
 	void WriteLine(const char *code)
 	{
-		fprintf(m_output, "%s\n", code);
+		WriteFormat("%s\n", code);
 	}
 
-	int FileSeek(int offset, int mode)
+	long FSeek(long offset, std::ios::seek_dir mode)
 	{
-		return fseek(m_output, offset, mode);
+		fseek(m_output, offset, mode);
+		return ftell(m_output);
 	}
 
 	/// <summary>
@@ -499,9 +503,9 @@ protected:
 	/// </summary>
 	/// <param name="code">The code.</param>
 	/// <param name="size">The size.</param>
-	void BinaryWrite(const void *code, int size)
+	void BinaryWrite(const void *code, size_t size)
 	{
-		fwrite(code, size, sizeof(char), m_output);
+		fwrite(code, sizeof(char), size, m_output);
 	}
 
 public:
@@ -511,13 +515,11 @@ public:
 		this->m_output = copy.m_output;
 	}
 
-	AstWriter(ParserContext *context, FILE *output)
+	AstWriter(ParserContext *context, FILE* output)
 	{
-		if (output == nullptr)
-			output = stdout;
-		m_output = output;
 		m_CallLevel = 0;
 		this->context = context;
+		this->m_output = output;
 	}
 
 	virtual ~AstWriter() {}
@@ -535,7 +537,7 @@ public:
 		lastUsedValueName()
 	{}
 
-	TACWriter(ParserContext *context, FILE *out = nullptr): AstWriter(context, out) {}
+	TACWriter(ParserContext *context, FILE* out): AstWriter(context, out) {}
 	
 	virtual ~TACWriter() {}
 
@@ -584,7 +586,7 @@ public:
 class AstPrintInfo: public AstWriter
 {
 public:
-	AstPrintInfo(ParserContext *context, FILE *in = nullptr): AstWriter(context, in) {}
+	AstPrintInfo(ParserContext *context, FILE* out): AstWriter(context, out) {}
 	virtual ~AstPrintInfo() {}
 
 	int Print(AstNode *node)
@@ -641,22 +643,24 @@ protected:
 		BinaryWrite(&instruction, sizeof(instruction));
 	}
 
-	uint8_t GetTypedOperator(TMLCOMMAND op, enumTypes typeId)
+	TMLCOMMAND GetTypedOperator(TMLCOMMAND op, enumTypes typeId)
 	{
-		int8_t offset = op - __START;
+		int8_t offset = (uint8_t)op - (uint8_t)__START;
 		// calculate the typed operator
 
 		switch(typeId)
 		{
 		case INT_TYPE:
 		case ROM_TYPE: // NOTE: roman types are converted to int automatically during compilation
-			return (I_START + offset);
+			return (TMLCOMMAND)((uint8_t)I_START + offset);
 		case FLOAT_TYPE:
-			return (F_START + offset);
+			return (TMLCOMMAND)((uint8_t)F_START + offset);
 		case DOUBLE_TYPE:
-			return (D_START + offset);
+			return (TMLCOMMAND)((uint8_t)D_START + offset);
 		case LONGDOUBLE_TYPE:
-			return (LD_START + offset);
+			return (TMLCOMMAND)((uint8_t)LD_START + offset);
+		case LITERAL_TYPE:
+			return (TMLCOMMAND)((uint8_t)S_START + offset);
 		default:
 			fprintf(stderr, "error: unknown type for command\n");
 			return HALT;
@@ -689,14 +693,6 @@ protected:
 						memcpy(&instruction.Args, &value, sizeof(value));
 					}	
 					break;
-				case LITERAL_TYPE:
-					{
-						uint32_t index;
-						instruction.AddrMode = ABSOLUTE_MODE;
-						index = dynamic_cast<VarAstNode*>(operand)->GetTableReference()->GetMemoryOffset();
-						memcpy(&instruction.Args, &index, sizeof(uint32_t));
-					}
-					break;
 				}
 			}
 			break;
@@ -704,6 +700,9 @@ protected:
 		case TMP_ID_NODE:
 		case VARIABLE_NODE:
 		case TMP_VAR_NODE:
+		
+		case STRUCT_ITEM_NODE:
+		case UNION_TYPE:
 			{
 				this->Serialize(operand);
 				operand = this->GetLastOperationResult();
@@ -715,8 +714,6 @@ protected:
 			}
 			break;		
 		case ARRAY_ITEM_NODE:
-		case STRUCT_ITEM_NODE:
-		case UNION_TYPE:
 			{
 				this->Serialize(operand);
 				operand = this->GetLastOperationResult();
@@ -739,28 +736,48 @@ protected:
 		TMLHeader header;
 		memcpy(&header.signature, g_MandatoryHeaderPart, sizeof(g_MandatoryHeaderPart));
 		header.codeSegmentSize = (uint16_t)(g_lastInstructionIndex*sizeof(MachineInstruction));
-		header.dataSegmentSize = (uint16_t)(TVariable::GetWordsCount() * sizeof (TMemoryCell));
+		header.dataSegmentSize = varBuffer.str().size();//(uint16_t)(TVariable::GetWordsCount() * sizeof (TMemoryCell));
 
-		FileSeek(0, SEEK_SET);
+		FSeek(0, SEEK_SET);
 		BinaryWrite(&header, sizeof(header));
 	}
 
+	std::stringstream varBuffer;
+	
 	void TMLFillDataSegment()
 	{
-		unsigned char zeroByte[256] = {0};
-		uint16_t codeSegmentSize = (uint16_t)(g_lastInstructionIndex * sizeof(MachineInstruction));
-		uint32_t offset = sizeof(TMLHeader) + (uint16_t)codeSegmentSize;
-		FileSeek(sizeof(TMLHeader), SEEK_SET);
-		BinaryWrite(&zeroByte[0], TVariable::GetWordsCount() * sizeof(TMemoryCell));
+		FSeek(sizeof(TMLHeader) + (g_lastInstructionIndex*sizeof(MachineInstruction)), SEEK_SET);
+		auto Str = varBuffer.str();
+		BinaryWrite(Str.c_str(), Str.size());
+	}
+	
+	int VarFSeek(int pos, std::ios::seek_dir mode)
+	{
+		//2, ios::end
+		varBuffer.seekp(pos, mode);
+		return varBuffer.tellp();
+	}
+
+	void VarBinaryWrite(const void *data, int size)
+	{
+		varBuffer.write((char*)data, size);
 	}
 
 public:
-	TMLWriter(ParserContext *context, FILE *out = nullptr)
+	TMLWriter(ParserContext *context, FILE* out)
 		: AstWriter(context, out)
 		, PushInstructionsStack()
+		, varBuffer(std::ios::binary | std::ios::in | std::ios::out)
 	{
 		TMLWriteHeader();
-		g_lastInstructionIndex = 0;
+		//TMLFillDataSegment(); // allocate var space beforehand!
+		int offset = FSeek(0, SEEK_CUR);
+		g_lastInstructionIndex = -1; // so that first increment returns 0
+
+		int size = TVariable::GetWordsCount() * sizeof (TMemoryCell);
+		auto preallocateBuf = new char[size];
+		VarBinaryWrite(preallocateBuf, size);
+		delete []preallocateBuf;
 	}
 
 	virtual ~TMLWriter()
@@ -776,7 +793,7 @@ public:
 	{
 		MachineInstruction instruction;
 		memset(&instruction, 0, sizeof(instruction));
-		instruction.OpCode = (uint8_t) op;
+		instruction.OpCode = op;
 		instruction.AddrMode = ABSOLUTE_MODE;
 		WriteInstructionBase(instruction);
 	}
@@ -821,6 +838,7 @@ public:
 		{
 			instruction.AddrMode = DIRECT_MODE;
 		}
+
 		WriteInstructionBase(instruction);
 	}
 
@@ -836,7 +854,7 @@ public:
 
 		MachineInstruction jumpInstruction;
 		memset(&jumpInstruction, 0, sizeof(jumpInstruction));
-		jumpInstruction.OpCode = (uint8_t) op;
+		jumpInstruction.OpCode = op;
 		jumpInstruction.AddrMode = ABSOLUTE_MODE;
 		WriteInstructionBase(jumpInstruction);
 		AddJumpIndex(label, GetLastWrittenInstructionIndex());
@@ -863,36 +881,34 @@ public:
 
 	void InitVariableData(VarAstNode *varNode)
 	{
-		int oldPos = this->FileSeek(
-				sizeof(TMLHeader) + 
-				varNode->CalculateMemoryOffset()*sizeof(TMemoryCell)
-				, SEEK_SET);
+		//int oldPos = this->FSeek(0, SEEK_CUR);
+		this->VarFSeek(varNode->CalculateMemoryOffset()*sizeof(TMemoryCell), std::ios::beg);
+
 		switch (varNode->GetResultType()->getID())
 		{
 		case ROM_TYPE:
 		case INT_TYPE:
 			{
 				auto var = varNode->GetTableReference()->ValueToInt();
-				this->BinaryWrite(&var, sizeof(TMemoryCell)*varNode->GetTableReference()->SizeOf());
+				this->VarBinaryWrite(&var, sizeof(TMemoryCell)*varNode->GetTableReference()->SizeOf());
 			}
 			break;
 		case FLOAT_TYPE:
 			{
 				auto var = varNode->GetTableReference()->ValueToDouble();
-				this->BinaryWrite(&var, sizeof(TMemoryCell)*varNode->GetTableReference()->SizeOf());
+				this->VarBinaryWrite(&var, sizeof(TMemoryCell)*varNode->GetTableReference()->SizeOf());
 			}
 			break;
 		case LITERAL_TYPE:
 			{
 				auto var = varNode->GetTableReference()->ValueToString();
-				this->BinaryWrite(var.c_str(), sizeof(TMemoryCell)*varNode->GetTableReference()->SizeOf());
+				this->VarBinaryWrite(var.c_str(), sizeof(TMemoryCell)*varNode->GetTableReference()->SizeOf());
 			}
 			break;
 		}
 		
-		this->FileSeek(oldPos, SEEK_SET);
+		//this->FSeek(oldPos, SEEK_SET);
 	}
-
 
 	void SetResult(AstNode *resultNode)
 	{
@@ -918,11 +934,11 @@ public:
 				int jumpIndex = (*it)->GetIndex();
 				offset = 
 					sizeof(TMLHeader) +
-					(int32_t) (jumpIndex * sizeof(MachineInstruction)) +
-					(int32_t) sizeof(i.OpCode) +
-					(int32_t) sizeof(i.AddrMode);
+					(jumpIndex * sizeof(MachineInstruction)) +
+					sizeof(i.OpCode) +
+					sizeof(i.AddrMode);
 
-				this->FileSeek(offset, SEEK_SET);
+				this->FSeek(offset, SEEK_SET);
 				unsigned int instruction_index = label->GetInstructionIndex();
 				this->BinaryWrite(&instruction_index, sizeof(uint32_t));
 			}
@@ -932,9 +948,18 @@ public:
 		//auto codeSegmentSize = (unsigned short)(g_lastInstructionIndex * sizeof(MachineInstruction));
 		//auto dataSegmentSize = (unsigned short)(TVariable::GetWordsCount() * sizeof (TMemoryCell));
 		
+		// Now we gotta backup the code section before we rewrite the contents of TML output
+		//std::stringstream backupStream(std::ios::in | std::ios::out | std::ios::binary);
+		//backupStream << std::ifstream(codeStream);
+
 		// Write segment sizes
 		TMLWriteHeader();
+		// Write data segment 
 		TMLFillDataSegment();
+
+		// and then put code back
+		//std::ofstream out(codeStream);
+		//out << backupStream;
 	}
 };
 
@@ -959,7 +984,7 @@ protected:
 	}
 
 public:
-	PtPrintInfo(ParserContext *context, FILE *in = nullptr): AstWriter(context, in) {}
+	PtPrintInfo(ParserContext *context, FILE* out): AstWriter(context, out) {}
 	virtual ~PtPrintInfo() {}
 
 	int Print(PtNode *node)

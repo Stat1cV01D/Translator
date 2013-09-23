@@ -259,7 +259,8 @@ template<typename T> int BinaryOperations(TMemoryCell &Accumulator, MachineInstr
 int main(int argc, char* argv[])
 {
     MachineInstruction codeLine;
-    uint8_t operationCode, addresingMode;
+	TMLCOMMAND operationCode;
+    uint8_t addresingMode;
     unsigned char args[COMMAND_ARGS_MAX_SIZE];
     TMemoryCell    Accumulator;
     unsigned long  ProgramCounter;
@@ -371,22 +372,27 @@ int main(int argc, char* argv[])
 		memcpy(&tmpLongDouble, &Accumulator, sizeof (long double));
 		memcpy(&tmpCharPtr, &Accumulator, sizeof (char*));
 
+		// I don't the nature of it yet, but i need that "+2", lol
 #define OPS(SUFFIX, TYPE, STR, VAR) \
-		if (operationCode > SUFFIX ## _START && operationCode < SUFFIX ## _NOARGS) \
+		if ((uint8_t)operationCode > (uint8_t)SUFFIX ## _START) \
 		{ \
-			codeLine.OpCode -= SUFFIX ## _START; \
-			if (UnaryOperations<TYPE>(Accumulator, PSW, codeLine, VAR)); \
-			else if (PowOperations<TYPE>(Accumulator, codeLine, VAR)); \
-			else if (IOOperations<TYPE>(Accumulator, codeLine, STR, VAR)); \
+			codeLine.OpCode = (TMLCOMMAND)((uint8_t)codeLine.OpCode - (uint8_t)SUFFIX ## _START + (uint8_t)__START); \
+			if (PowOperations<TYPE>(Accumulator, codeLine, VAR)); \
 			else if (BinaryOperations<TYPE>(Accumulator, codeLine, VAR)); \
-			codeLine.OpCode += SUFFIX ## _START; \
+			else if (UnaryOperations<TYPE>(Accumulator, PSW, codeLine, VAR)); \
+			else if (IOOperations<TYPE>(Accumulator, codeLine, STR, VAR)); \
+			codeLine.OpCode = (TMLCOMMAND)((uint8_t)codeLine.OpCode + (uint8_t)SUFFIX ## _START - (uint8_t)__START); \
 		} 
 
-		OPS(I,int,"%d", tmpInteger)
-		else OPS(F,float,"%f", tmpFloat)
-		else OPS(D,double,"%d", tmpDouble)
-		else OPS(LD,long double,"%ld", tmpLongDouble)
-		else OPS(S,char,"%s", tmpCharPtr)
+		if ((uint8_t)operationCode > (uint8_t)__START  && (uint8_t)operationCode < (uint8_t)_TYPED_COMMANDS_END)
+		{
+			// The order is important!
+			OPS(S,char,"%s", tmpCharPtr)
+			else OPS(LD,long double,"%ld", tmpLongDouble)
+			else OPS(D,double,"%d", tmpDouble)
+			else OPS(F,float,"%f", tmpFloat)
+			else OPS(I,int,"%d", tmpInteger)
+		}
 		else
 		{
 			switch (operationCode)

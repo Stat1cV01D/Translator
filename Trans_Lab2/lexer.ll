@@ -1,5 +1,6 @@
 %{
 #include "parser.h"
+#include "pt.h"
 #if defined _WIN32 || defined _WIN64
 	#include <io.h>			// Äëÿ isatty
 #endif
@@ -134,7 +135,13 @@ union				{ REACTION(union,			TOK_UNION) }
 switch				{ REACTION(switch,			TOK_SWITCH) }
 case				{ REACTION(case,			TOK_CASE) }
 default				{ REACTION(default,			TOK_DEFAULT) }
-{string_literal}	{ REACTION(string_literal,	TOK_STRING_LITERAL) }
+{string_literal}	{ 
+						yytext = &(yytext[1]);
+						yytext[ strlen(yytext)-1 ] = 0;
+						REACTION(string_literal,	TOK_STRING_LITERAL)
+						// unquote the string
+						
+					}
 
 {identifier}		{ REACTION(identifier,		TOK_IDENTIFIER) }
 .					{

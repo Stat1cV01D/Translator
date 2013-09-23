@@ -84,10 +84,21 @@ class NumValueAstNode;
 
 class IValueHolderNode
 {
+protected:
+	bool isAllocated;
 public:
 	virtual std::string GetValueHolderName() = 0;
 	virtual int SetValue(NumValueAstNode *valueNode) = 0;
 	virtual int CalculateMemoryOffset() = 0;
+
+	virtual bool IsAllocated()
+	{
+		return isAllocated;
+	}
+	IValueHolderNode() 
+	{
+		isAllocated = false;
+	}
 	virtual ~IValueHolderNode() {}
 };
 
@@ -271,7 +282,7 @@ class NumValueAstNode: public AstNode, public IValueHolderNode
 		{
 			for (j = 0; j < sizeof(romanNums); j++)
 			{
-				if (value[i] = romanNums[j])
+				if (value[i] == romanNums[j])
 					result[i] = arabicNums[j];
 			}
 		}
@@ -292,23 +303,32 @@ class NumValueAstNode: public AstNode, public IValueHolderNode
 		return total;
 	}
 public:
-	NumValueAstNode(int value): AstNode(CONST_NODE, new IntType()) 
+	NumValueAstNode(int value)
+		: AstNode(CONST_NODE, new IntType())
+		, IValueHolderNode()
 	{
 		char convert_buf[10];
 		sprintf(convert_buf, "%d", value);
 		this->value = std::string(convert_buf);
+		this->isAllocated = true;
 	}
 
-	NumValueAstNode(float value): AstNode(CONST_NODE, new FloatType()) 
+	NumValueAstNode(float value)
+		: AstNode(CONST_NODE, new FloatType())
+		, IValueHolderNode() 
 	{
 		char convert_buf[10];
 		sprintf(convert_buf, "%f", value);
 		this->value = std::string(convert_buf);
+		this->isAllocated = true;
 	}
 
-	NumValueAstNode(char *value, BaseTypeInfo *type): AstNode(CONST_NODE, type) 
+	NumValueAstNode(char *value, BaseTypeInfo *type)
+		: AstNode(CONST_NODE, type)
+		, IValueHolderNode()
 	{
 		this->value = std::string(value);
+		this->isAllocated = true;
 	}
 
 	std::string ToString() 
@@ -394,7 +414,6 @@ public:
 // Value is referenced from the heap into the TML command argument
 class VarAstNode: public AstNode, public IValueHolderNode
 {
-	bool isAllocated;
 	TVariable *varTableReference;
 public:
 	friend class ArrayAddressAstNode;
@@ -402,7 +421,6 @@ public:
 	  AstNode((isTemporary ? TMP_ID_NODE : ID_NODE), varTableReference->GetType()->Clone()) 
 	{
 		this->varTableReference = varTableReference;
-		this->isAllocated = false;
 	}
 	TVariable *GetTableReference() { return varTableReference; }
 	virtual int Print3AC(TACWriter* output);
@@ -415,11 +433,6 @@ public:
 			return this->GetTableReference()->GetName();
 		else
 			return std::string("$id")+this->GetTableReference()->GetName();
-	}
-
-	bool IsAllocated()
-	{
-		return isAllocated;
 	}
 
 	virtual int SetValue(NumValueAstNode *valueNode)
@@ -460,16 +473,17 @@ class ArrayAddressAstNode: public AstNode, public IValueHolderNode
 
 public:
 	ArrayAddressAstNode(VarAstNode *var, DimensionAstNode *dimensions)
-		: AstNode(ARRAY_ITEM_NODE, var->GetResultType()) 
+		: AstNode(ARRAY_ITEM_NODE, var->GetResultType())
+		, IValueHolderNode()
 	{
-		auto varType = dynamic_cast<ArrayType*>(var->GetResultType());
-
-		if (varType->GetSizes().size() < GetNumDimensions())
-			throw std::string("Error: too much dimensions for the declared variable");
-		
 		this->varNode = var;
 		this->dimensions = dimensions;
-		varNode->isAllocated = true;
+
+		auto varType = dynamic_cast<ArrayType*>(var->GetResultType());
+		if (varType->GetSizes().size() < GetNumDimensions())
+			throw std::string("Error: too much dimensions for the declared variable");
+
+		this->isAllocated = true;
 		
 		ArrayOffsetVarNode = nullptr;
 		MulTmpVarNode = nullptr;
@@ -578,6 +592,7 @@ public:
 	{
 		this->GetField()->SetValue(valueNode->GetResultType()->Clone(), 
 			valueNode->ToString());
+		this->isAllocated = true;
 		return 0;
 	}
 

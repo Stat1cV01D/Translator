@@ -574,6 +574,7 @@ int yy_flex_debug = 0;
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
 #include "parser.h"
+#include "pt.h"
 #if defined _WIN32 || defined _WIN64
 	#include <io.h>			// Äëÿ isatty
 #endif
@@ -1042,7 +1043,13 @@ YY_RULE_SETUP
 case 44:
 /* rule 44 can match eol */
 YY_RULE_SETUP
-{ REACTION(string_literal,	TOK_STRING_LITERAL) }
+{ 
+						yytext = &(yytext[1]);
+						yytext[ strlen(yytext)-1 ] = 0;
+						REACTION(string_literal,	TOK_STRING_LITERAL)
+						// unquote the string
+						
+					}
 	YY_BREAK
 case 45:
 YY_RULE_SETUP

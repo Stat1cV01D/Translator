@@ -328,8 +328,7 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 		{
 			TLabel *L1, *L2;
 
-			NumValueAstNode trueNode(TML_TRUE, right->GetResultType()->Clone()), 
-				falseNode(TML_FALSE, right->GetResultType()->Clone());
+			NumValueAstNode trueNode(1), falseNode(0);
 
 			L1 = output->GetContext()->GenerateNewLabel();
 			L2 = output->GetContext()->GenerateNewLabel();
@@ -350,8 +349,7 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 		{
 			TLabel *L1, *L2;
 
-			NumValueAstNode trueNode(TML_TRUE, right->GetResultType()->Clone()), 
-				falseNode(TML_FALSE, right->GetResultType()->Clone());
+			NumValueAstNode trueNode(1), falseNode(0);
 
 			L1 = output->GetContext()->GenerateNewLabel();
 			L2 = output->GetContext()->GenerateNewLabel();
@@ -402,7 +400,13 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 			output->Serialize(&EndingAnd);
 		}
 		break;
-
+	case OP_ASSIGN:
+		{
+			output->Serialize(right);
+			output->WriteTypedInstruction(LD_, output->GetLastOperationResult());
+			output->WriteTypedInstruction(ST_, left);
+		}
+		break;
 	case OP_EQ:
 	case OP_NOT_EQ:
 	case OP_LARGER:
@@ -412,8 +416,7 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 		{
 			TLabel *L1, *L2;
 
-			NumValueAstNode trueNode(TML_TRUE, right->GetResultType()->Clone()), 
-							falseNode(TML_FALSE, right->GetResultType()->Clone());
+			NumValueAstNode trueNode(1), falseNode(0);
 
 			L1 = output->GetContext()->GenerateNewLabel();
 			L2 = output->GetContext()->GenerateNewLabel();
@@ -462,7 +465,7 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 		{
 			//NOTE: output's left can be an expression, var or num value
 			output->Serialize(left);
-
+			//output->WriteTypedInstruction(LD_, left);
 			output->WriteTypedInstruction(OUT_, output->GetLastOperationResult());
 		}
 		break;
@@ -526,7 +529,7 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 		break;
 	}
 
-	if (result != nullptr) // NOOTE: for arithmetic and logical operations only! 
+	if (result != nullptr) // NOTE: for arithmetic and logical operations only! 
 	{
 		output->WriteTypedInstruction(ST_, result);
 		output->SetResult(result);
@@ -577,7 +580,7 @@ int NumValueAstNode::Serialize(TMLWriter* output)
 {
 	if (this->GetResultType()->getID() == LITERAL_TYPE)
 	{
-		auto strVar = new VarAstNode(true, output->GetContext()->GenerateNewTmpVar(this->GetResultType(), false));
+		auto strVar = new VarAstNode(true, output->GetContext()->GenerateNewTmpVar(this->GetResultType()->Clone(), false));
 		strVar->GetTableReference()->SetValue(this->ToString());
 		output->Serialize(strVar);
 	}
@@ -771,8 +774,7 @@ int DimensionAstNode::Serialize(TMLWriter* output)
 		output->Serialize(this->next_dimension);
 
 	// TODO: serialize result to TmpVar and then push 
-	output->Serialize(this->GetExpr());
-
+	output->WriteTypedInstruction(LD_, this->GetExpr());	
 	// NOTE: dimension values are generated into INT values!
 	output->WriteInstruction(PUSH);
 
@@ -793,7 +795,8 @@ int ArrayAddressAstNode::Print3AC(TACWriter* output)
 	auto MulTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType(), true);
 	VarAstNode MulTmpVarNode(true, MulTmpVar);
 
-	for (auto it = sizes.begin(); it != sizes.end(); it++)
+	auto loop_end = --sizes.end();
+	for (auto it = sizes.begin(); it != loop_end; it++)
 	{
 		output->CodeGen(&MulTmpVarNode);
 		auto valName = output->GetLastUsedValueName();
@@ -808,8 +811,16 @@ int ArrayAddressAstNode::Print3AC(TACWriter* output)
 		output->CodeGen(&Plus);
 	}
 
+	// add last dimension addres with no multiplication!
+	output->CodeGen(&MulTmpVarNode);
+	auto valName = output->GetLastUsedValueName();
+	output->CodeWriteFormat("\tPop\t%s\n", valName.c_str());
+	OperatorAstNode Plus(OP_PLUS, &MulTmpVarNode, &SumTmpVarNode, &SumTmpVarNode);
+	output->CodeGen(&Plus);
+
 	// SumTmpVarNode is the result var
-	OperatorAstNode ArrayItemOffset(OP_PLUS, &SumTmpVarNode, this->varNode);
+	OperatorAstNode ArrayItemOffset(OP_PLUS, &SumTmpVarNode, this->varNode, &SumTmpVarNode);
+	output->CodeGen(&ArrayItemOffset);
 	output->SetLastUsedValueName(SumTmpVarNode.GetValueHolderName());
 	
 	return 0;
@@ -834,7 +845,7 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 		auto SumTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
 		this->ArrayOffsetVarNode = new VarAstNode(true, SumTmpVar);
 	}
-	if (this->ArrayOffsetVarNode == nullptr)
+	if (this->MulTmpVarNode == nullptr)
 	{
 		auto MulTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
 		this->MulTmpVarNode = new VarAstNode(true, MulTmpVar);
@@ -843,7 +854,13 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 	auto *varType = dynamic_cast<ArrayType*>(varNode->GetTableReference()->GetType());
 	auto sizes = varType->GetSizes();
 
-	for (auto it = sizes.begin(); it != sizes.end(); it++)
+	ArrayOffsetVarNode->GetTableReference()->SetValue(0);
+	output->Serialize(ArrayOffsetVarNode);
+	MulTmpVarNode->GetTableReference()->SetValue(1);
+	output->Serialize(MulTmpVarNode);
+
+	auto loop_end = --sizes.end();
+	for (auto it = sizes.begin(); it != loop_end; it++)
 	{
 		// A = POP // current dimension address
 		// A = A * size
@@ -859,13 +876,18 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 		output->Serialize(&Plus);
 	}
 
+	// add last dimension address with no multiplication!
+	output->WriteInstruction(POP);
+	OperatorAstNode Plus(OP_PLUS, nullptr, ArrayOffsetVarNode, ArrayOffsetVarNode);
+	output->Serialize(&Plus);
+
 	NumValueAstNode varOffset(this->varNode->GetTableReference()->GetMemoryOffset());
 
 	// SumTmpVarNode is the result var
 	OperatorAstNode ArrayItemOffset(OP_PLUS, ArrayOffsetVarNode, &varOffset, ArrayOffsetVarNode);
 	output->Serialize(&ArrayItemOffset);
-
 	output->SetResult(ArrayOffsetVarNode);
+
 	return 0;
 }
 

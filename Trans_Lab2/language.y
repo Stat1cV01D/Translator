@@ -133,6 +133,19 @@ Node* CreateExpressionNode(Node *op, bool isBooleanOp, Node *left, Node *right, 
 	return createNode(new OperatorAstNode(op->ptNode->text, left->astNode, rightOpAst, new VarAstNode(true, Context.GenerateNewTmpVar(type))), 
 				ptNode);
 }
+
+TVariable *GetVariableForAssign(Node *node, YYLTYPE location)
+{
+	auto structItemAstNode = dynamic_cast<StructAddressAstNode*>(node->astNode);
+	if (structItemAstNode != nullptr)
+	{
+		return structItemAstNode->GetField();
+	}
+	else
+	{
+		return Context.getVar(node->ptNode->firstChild->text, 1, NULL, location);
+	}
+}
 %}
 
 %%
@@ -750,21 +763,23 @@ assignment:
 		BaseTypeInfo *type = $left->astNode->GetResultType();
 		AssertOneOfTypes($right, @right, 1, type->getID());
 		
-		TVariable *var = Context.getVar($left->ptNode->firstChild->text, 1, NULL, @left);
+		TVariable *var = GetVariableForAssign($left, @left);
 		
+		/* // TODO: work for 8-th lab 
 		auto constValueNode = dynamic_cast<NumValueAstNode*>($right->astNode);
 		if (constValueNode != nullptr)
 		{
 			auto varNode = dynamic_cast<IValueHolderNode*>($left->astNode);
 			if (varNode != nullptr)
 			{
-				if (!varNode->IsAllocated() && varNode->SetValue(constValueNode) == 0)
+				if (varNode->SetValue(constValueNode) == 0)
 				{
 					$$ = $left;	
 					break;
 				}
 			}
 		}
+		*/
 
 		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode), 
 				createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));
