@@ -701,7 +701,6 @@ protected:
 		case VARIABLE_NODE:
 		case TMP_VAR_NODE:
 		
-		case STRUCT_ITEM_NODE:
 		case UNION_TYPE:
 			{
 				this->Serialize(operand);
@@ -709,18 +708,22 @@ protected:
 
 				uint32_t index;
 				instruction.AddrMode = ABSOLUTE_MODE;
-				index = dynamic_cast<VarAstNode*>(operand)->GetTableReference()->GetMemoryOffset();
+				index = dynamic_cast<IValueHolderNode*>(operand)->CalculateMemoryOffset();
 				memcpy(&instruction.Args, &index, sizeof(uint32_t));
 			}
 			break;		
+		case STRUCT_ITEM_NODE:
 		case ARRAY_ITEM_NODE:
 			{
+				WriteInstruction(PUSH); // Save what's been in
 				this->Serialize(operand);
+				WriteInstruction(POP); // Restore it
+
 				operand = this->GetLastOperationResult();
 
 				uint32_t index;
 				instruction.AddrMode = ABSOLUTE_POINTER_MODE;
-				index = dynamic_cast<VarAstNode*>(operand)->GetTableReference()->GetMemoryOffset();
+				index = dynamic_cast<IValueHolderNode*>(operand)->CalculateMemoryOffset();
 				memcpy(&instruction.Args, &index, sizeof(uint32_t));
 			}
 			break;
