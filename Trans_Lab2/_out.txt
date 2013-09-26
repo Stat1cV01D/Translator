@@ -1,35 +1,46 @@
 	Push	$c2
 	Push	$c1
-	Pop	$t5
-	$t5	=	$t5	*	$c3
-	$t4	=	$t4	+	$t5
-	Pop	$t5
-	$t4	=	$t5	+	$t4
-	$t4	=	$t4	+	$idb
-	$t4	=	$cCXVII
+	Pop	$t4
+	$t4	=	$t4	*	$c10
+	$t3	=	$t3	+	$t4
+	Pop	$t4
+	$t3	=	$t4	+	$t3
+	$t3	=	$t3	+	$idb
+	$t3	=	$cCXVII
 	Push	$c2
 	Push	$c1
-	Pop	$t7
-	$t7	=	$t7	*	$c3
-	$t6	=	$t6	+	$t7
-	Pop	$t7
-	$t6	=	$t7	+	$t6
-	$t6	=	$t6	+	$idb
-	PRINT	$t6
-	Push	$c2
-	Push	$c1
-	Pop	$t9
-	$t9	=	$t9	*	$c3
-	$t8	=	$t8	+	$t9
-	Pop	$t9
-	$t8	=	$t9	+	$t8
-	$t8	=	$t8	+	$idb
-	$t1	=	$t8	<=	$cXLV
-	iffalse	$t1	$L1
-	$t2	=	$id0:foo	+	$c3
-	$id0:foo	=	$t2
-	Goto	$L2
+	Pop	$t6
+	$t6	=	$t6	*	$c10
+	$t5	=	$t5	+	$t6
+	Pop	$t6
+	$t5	=	$t6	+	$t5
+	$t5	=	$t5	+	$idb
+	PRINT	$t5
+	$idi	=	$c0
+	Goto	$L3
 $L1:
-	$t3	=	$id1:bar	-	$c1.05
-	$id1:bar	=	$t3
+	$t2	=	$idi	+	$c1
+	$idi	=	$t2
+$L3:
+	$t1	=	$idi	<	$c10
+	iffalse	$t1	$L2
+	Push	$c1
+	Push	$idi
+	Pop	$t8
+	$t8	=	$t8	*	$c10
+	$t7	=	$t7	+	$t8
+	Pop	$t8
+	$t7	=	$t8	+	$t7
+	$t7	=	$t7	+	$idb
+	$t7	=	$idi
+	Push	$c1
+	Push	$idi
+	Pop	$t10
+	$t10	=	$t10	*	$c10
+	$t9	=	$t9	+	$t10
+	Pop	$t10
+	$t9	=	$t10	+	$t9
+	$t9	=	$t9	+	$idb
+	PRINT	$t9
+	Goto	$L1
 $L2:

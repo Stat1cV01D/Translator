@@ -1,15 +1,11 @@
-rom[3][3] b;
+rom[10][3] b;
+int i;
 
 b[1][2] = CXVII;
 print(b[1][2]);
 
-if (b[1][2] <= XLV)
+for(i = 0; i < 10; i = i+1)
 {
-int foo;
-foo = foo + 3;
-}
-else
-{
-float bar;
-bar = bar - 1.05;
+	b[i][1] = i;
+	print(b[i][1]);
 }

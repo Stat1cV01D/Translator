@@ -634,15 +634,18 @@ int LoopAstNode::Print3AC(TACWriter* output)
 	}
 
 	// The continuation condition post check (for do{}while() loops)
-	if (this->cond->GetB_expr() != nullptr && this->post_check)
+	if (this->cond->GetB_expr() != nullptr)
 	{
-		OperatorAstNode op(OP_IFTRUE, this->cond->GetB_expr(), &labelNumber_loop);
-		output->CodeGen(&op);
-	}
-	else
-	{
-		OperatorAstNode op(OP_GOTO,  &labelNumber_loop);
-		output->CodeGen(&op);
+		if (this->post_check)
+		{
+			OperatorAstNode op(OP_IFTRUE, this->cond->GetB_expr(), &labelNumber_loop);
+			output->CodeGen(&op);
+		}
+		else
+		{
+			OperatorAstNode op(OP_GOTO,  &labelNumber_loop);
+			output->CodeGen(&op);
+		}
 	}
 	output->CodeGen(&labelNumber_end);
 	return 0;
@@ -706,15 +709,18 @@ int LoopAstNode::Serialize(TMLWriter* output)
 	}
 
 	// The continuation condition post check (for do{}while() loops)
-	if (this->cond->GetB_expr() != nullptr && this->post_check)
+	if (this->cond->GetB_expr() != nullptr)
 	{
-		OperatorAstNode op(OP_IFTRUE, this->cond->GetB_expr(), &labelNumber_loop);
-		output->Serialize(&op);
-	}
-	else
-	{
-		OperatorAstNode op(OP_GOTO, &labelNumber_loop);
-		output->Serialize(&op);
+		if (this->post_check)
+		{
+			OperatorAstNode op(OP_IFTRUE, this->cond->GetB_expr(), &labelNumber_loop);
+			output->Serialize(&op);
+		}
+		else
+		{
+			OperatorAstNode op(OP_GOTO, &labelNumber_loop);
+			output->Serialize(&op);
+		}
 	}
 	output->Serialize(&labelNumber_end);
 	return 0;

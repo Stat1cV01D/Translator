@@ -714,15 +714,14 @@ protected:
 			break;		
 		case ARRAY_ITEM_NODE:
 			{
-				WriteInstruction(PUSH); // Save what's been in
+				WriteInstruction(PUSH); // Save what's been in the VM's accumulator register
 				this->Serialize(operand);
 				WriteInstruction(POP); // Restore it
 
 				operand = this->GetLastOperationResult();
 
-				uint32_t index;
 				instruction.AddrMode = ABSOLUTE_POINTER_MODE;
-				index = dynamic_cast<IValueHolderNode*>(operand)->CalculateMemoryOffset();
+				uint32_t index = dynamic_cast<IValueHolderNode*>(operand)->CalculateMemoryOffset();
 				memcpy(&instruction.Args, &index, sizeof(uint32_t));
 			}
 			break;
@@ -737,7 +736,7 @@ protected:
 	{
 		TMLHeader header;
 		memcpy(&header.signature, g_MandatoryHeaderPart, sizeof(g_MandatoryHeaderPart));
-		header.codeSegmentSize = (uint16_t)(g_lastInstructionIndex*sizeof(MachineInstruction));
+		header.codeSegmentSize = (uint16_t)((g_lastInstructionIndex+1)*sizeof(MachineInstruction));
 		header.dataSegmentSize = varBuffer.str().size();//(uint16_t)(TVariable::GetWordsCount() * sizeof (TMemoryCell));
 
 		FSeek(0, SEEK_SET);
@@ -748,7 +747,7 @@ protected:
 	
 	void TMLFillDataSegment()
 	{
-		FSeek(sizeof(TMLHeader) + (g_lastInstructionIndex*sizeof(MachineInstruction)), SEEK_SET);
+		FSeek(sizeof(TMLHeader) + ((g_lastInstructionIndex+1)*sizeof(MachineInstruction)), SEEK_SET);
 		auto Str = varBuffer.str();
 		BinaryWrite(Str.c_str(), Str.size());
 	}
