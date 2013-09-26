@@ -161,7 +161,7 @@ template<typename T> int IOOperations(TMemoryCell &Accumulator, MachineInstructi
 					if (same_type<T, char>::value) 
 						printf(str_template, ptrVAR);
 					else
-						printf(str_template, VAR);
+						printf(str_template, *ptrVAR);
 				}
 				break; 
 			}
@@ -370,7 +370,7 @@ int main(int argc, char* argv[])
         memcpy(&tmpFloat, &Accumulator, sizeof (float));
 		memcpy(&tmpDouble, &Accumulator, sizeof (double));
 		memcpy(&tmpLongDouble, &Accumulator, sizeof (long double));
-		memcpy(&tmpCharPtr, &Accumulator, sizeof (char*));
+		memcpy(&tmpCharPtr, &Accumulator, sizeof (char));
 
 		// I don't the nature of it yet, but i need that "+2", lol
 #define OPS(SUFFIX, TYPE, STR, VAR) \
@@ -500,10 +500,10 @@ void Push(TMemoryCell Data)
 	memset(stackItem, 0, sizeof(STACK));
 
 	stackItem->data.cellData = Data;
-	if (g_stackTop)
-		g_stackTop->prev = stackItem;
-	else
-		g_stackTop = stackItem;
+	if (g_stackTop != nullptr)
+		stackItem->prev = g_stackTop;
+
+	g_stackTop = stackItem;
 }
 
 STACKDATA Pop(void)

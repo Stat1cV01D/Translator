@@ -700,7 +700,7 @@ protected:
 		case TMP_ID_NODE:
 		case VARIABLE_NODE:
 		case TMP_VAR_NODE:
-		
+		case STRUCT_ITEM_NODE:
 		case UNION_TYPE:
 			{
 				this->Serialize(operand);
@@ -712,7 +712,6 @@ protected:
 				memcpy(&instruction.Args, &index, sizeof(uint32_t));
 			}
 			break;		
-		case STRUCT_ITEM_NODE:
 		case ARRAY_ITEM_NODE:
 			{
 				WriteInstruction(PUSH); // Save what's been in

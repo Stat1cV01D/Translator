@@ -598,7 +598,8 @@ public:
 
 	virtual int CalculateMemoryOffset()
 	{
-		return GetField()->GetMemoryOffset();
+		auto structType = dynamic_cast<StructType*>(GetStruct()->GetType());
+		return GetStruct()->GetMemoryOffset() + structType->Offset(GetField()->GetName());
 	}
 };
 

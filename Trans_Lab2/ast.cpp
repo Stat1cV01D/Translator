@@ -464,9 +464,8 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 	case OP_OUTPUT:
 		{
 			//NOTE: output's left can be an expression, var or num value
-			output->Serialize(left);
 			//output->WriteTypedInstruction(LD_, left);
-			output->WriteTypedInstruction(OUT_, output->GetLastOperationResult());
+			output->WriteTypedInstruction(OUT_, left);
 		}
 		break;
 	case OP_SAVE:

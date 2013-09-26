@@ -15,7 +15,16 @@
 	Pop	$t7
 	$t6	=	$t7	+	$t6
 	$t6	=	$t6	+	$idb
-	$t1	=	$t6	<=	$cXLV
+	PRINT	$t6
+	Push	$c2
+	Push	$c1
+	Pop	$t9
+	$t9	=	$t9	*	$c3
+	$t8	=	$t8	+	$t9
+	Pop	$t9
+	$t8	=	$t9	+	$t8
+	$t8	=	$t8	+	$idb
+	$t1	=	$t8	<=	$cXLV
 	iffalse	$t1	$L1
 	$t2	=	$id0:foo	+	$c3
 	$id0:foo	=	$t2

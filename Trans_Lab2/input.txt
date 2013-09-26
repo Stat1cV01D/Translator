@@ -1,6 +1,8 @@
 rom[3][3] b;
 
 b[1][2] = CXVII;
+print(b[1][2]);
+
 if (b[1][2] <= XLV)
 {
 int foo;
