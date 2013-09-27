@@ -20,6 +20,7 @@
 #define UNEXPECTED_CONTINUE_ERROR		"unexpected continue"
 #define TYPE_REDEFINITION_ERROR			"type redefinition"
 #define INVALID_ASSIGN_L_VALUE			"expression on left of ':=' must be a base type variable"
+#define ERROR_DECLARATIONS_FIRST		"variable declarations should go before any statements in the block"
 /* structs */
 #define UNDECLARED_STRUCT_FIELD			"undeclared struct field"
 #define STRUCT_FIELD_REDEFINITION		"struct field redefinition"

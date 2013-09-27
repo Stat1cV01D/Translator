@@ -174,6 +174,12 @@ start :  /* empty */
 		astTree = $stmnt_list->astNode;
 		ptTree = ptNode;
 	}
+	| 
+	stmnt_list declaration_list
+	{
+		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, ERROR_DECLARATIONS_FIRST, @2),
+				nullptr);
+	}
 	;
 
 declaration_list: 
@@ -205,9 +211,9 @@ stmnt_list: stmnt
 stmnt_block_start
     :
     TOK_OPENBR[st] {TBlockContext::Push();}
-      {
-        $$ = $st;
-      }
+	{
+		$$ = $st;
+	}
     ;
 
 stmnt_block
