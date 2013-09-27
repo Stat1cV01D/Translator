@@ -737,7 +737,8 @@ protected:
 		TMLHeader header;
 		memcpy(&header.signature, g_MandatoryHeaderPart, sizeof(g_MandatoryHeaderPart));
 		header.codeSegmentSize = (uint16_t)((g_lastInstructionIndex+1)*sizeof(MachineInstruction));
-		header.dataSegmentSize = varBuffer.str().size();//(uint16_t)(TVariable::GetWordsCount() * sizeof (TMemoryCell));
+		
+		header.dataSegmentSize = varBuffer.str().size();
 
 		FSeek(0, SEEK_SET);
 		BinaryWrite(&header, sizeof(header));
@@ -923,6 +924,8 @@ public:
 
 	void AfterProcess()
 	{
+		WriteInstruction(HALT); // Mark the end of the program
+
 		// Rewrite the header and the data segment with updated info and data
 		GetContext()->ProcessLabelTable(
 			[=] (TLabel*& label) -> bool
@@ -946,21 +949,12 @@ public:
 			return true;
 		}
 		);
-		//auto codeSegmentSize = (unsigned short)(g_lastInstructionIndex * sizeof(MachineInstruction));
-		//auto dataSegmentSize = (unsigned short)(TVariable::GetWordsCount() * sizeof (TMemoryCell));
 		
-		// Now we gotta backup the code section before we rewrite the contents of TML output
-		//std::stringstream backupStream(std::ios::in | std::ios::out | std::ios::binary);
-		//backupStream << std::ifstream(codeStream);
-
 		// Write segment sizes
 		TMLWriteHeader();
 		// Write data segment 
 		TMLFillDataSegment();
 
-		// and then put code back
-		//std::ofstream out(codeStream);
-		//out << backupStream;
 	}
 };
 

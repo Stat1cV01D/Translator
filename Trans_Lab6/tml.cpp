@@ -12,12 +12,13 @@
 #include <math.h>
 #include <sys/stat.h>
 #include "..\Trans_Lab2\tml.h"
+#include <vector>
 
 TMemoryCell*        g_MachineDataSegment = NULL;
 MachineInstruction* g_MachineCodeSegment = NULL;
 
 FILE* g_InputFile = NULL;    /* поток для файла с программой на машинном языке */
-TStack *g_stackTop = NULL;
+std::vector<STACKDATA> g_stackTop;
 
 TMachineStatus        PSW;
 
@@ -289,7 +290,7 @@ int main(int argc, char* argv[])
     if (0 != fileOpeningStatus)
     {
         char tmp[132] = "\0";
-        sprintf(tmp, "File %s doesn't exist", argv[1]);
+        sprintf(tmp, "File %s doesn\'t exist", argv[1]);
         PrintFatalError(tmp);
     }
 
@@ -317,7 +318,7 @@ int main(int argc, char* argv[])
 
     programSize = dataSegmentSize + codeSegmentSize
                   + sizeof(dataSegmentSize) + sizeof(codeSegmentSize)
-                  + strlen(g_MandatoryHeaderPart) 
+                  + sizeof(g_MandatoryHeaderPart) 
                   ;
     stat(argv[1], &programFileState);
     if (programSize < (unsigned int)programFileState.st_size)
@@ -387,11 +388,11 @@ int main(int argc, char* argv[])
 		if ((uint8_t)operationCode > (uint8_t)__START  && (uint8_t)operationCode < (uint8_t)_TYPED_COMMANDS_END)
 		{
 			// The order is important!
-			OPS(S,char,"%s", tmpCharPtr)
-			else OPS(LD,long double,"%ld", tmpLongDouble)
-			else OPS(D,double,"%d", tmpDouble)
-			else OPS(F,float,"%f", tmpFloat)
-			else OPS(I,int,"%d", tmpInteger)
+			OPS(S,char,"%s\n", tmpCharPtr)
+			else OPS(LD,long double,"%lf\n", tmpLongDouble)
+			else OPS(D,double,"%f\n", tmpDouble)
+			else OPS(F,float,"%f\n", tmpFloat)
+			else OPS(I,int,"%d\n", tmpInteger)
 		}
 		else
 		{
@@ -496,14 +497,9 @@ void PrintError(const char* errorMessage, unsigned int instructionNumber)
 
 void Push(TMemoryCell Data)
 {
-	STACK *stackItem = (STACK*)malloc(sizeof(STACK));
-	memset(stackItem, 0, sizeof(STACK));
-
-	stackItem->data.cellData = Data;
-	if (g_stackTop != nullptr)
-		stackItem->prev = g_stackTop;
-
-	g_stackTop = stackItem;
+	STACKDATA data;
+	data.cellData = Data;
+	g_stackTop.emplace_back(data);
 }
 
 STACKDATA Pop(void)
@@ -511,12 +507,10 @@ STACKDATA Pop(void)
 	STACKDATA result;
 	memset(&result, 0, sizeof(STACKDATA));
 
-	if (g_stackTop)
+	if (g_stackTop.size() != 0)
 	{
-		result = g_stackTop->data;
-		STACK *old = g_stackTop;
-		g_stackTop = g_stackTop->prev;
-		free(old);
+		result = g_stackTop.back();
+		g_stackTop.erase(--g_stackTop.end());
 	}
 	return result;
 }
