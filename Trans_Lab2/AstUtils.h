@@ -12,6 +12,7 @@
 #include "context.h"
 #include "parser.h"
 #include "HashTable.h"
+#include "Function.h"
 
 class AstNode;
 class OperatorStack;
@@ -35,6 +36,7 @@ protected:
 	THashTable<std::string, TVariable*> *g_VariableTable;
 	THashTable<std::string, BaseTypeInfo*> *g_TypeTable;
 	THashTable<std::string, TVariable*> *g_LiteralTable;
+	THashTable<std::string, Function*> *g_FunctionsTable;
 
 	OperatorStack OpStack;
 
@@ -69,6 +71,7 @@ public:
 		g_VariableTable = new THashTable<std::string, TVariable*>(HashFunction, CompareFunction);
 		g_TypeTable = new THashTable<std::string, BaseTypeInfo*>(HashFunction, CompareFunction);
 		g_LiteralTable = new THashTable<std::string, TVariable*>(HashFunction, CompareFunction);
+		g_FunctionsTable = new THashTable<std::string, Function*>(HashFunction, CompareFunction);
 
 		m_LastLabelNumber = 0;
 		m_LastTmpIndex = 0;
@@ -81,6 +84,7 @@ public:
 		delete g_TypeTable;
 		delete g_VariableTable;
 		delete g_LiteralTable;
+		delete g_FunctionsTable;
 	}
 
 	/// <summary>
@@ -205,6 +209,19 @@ public:
 	bool OnUserTypeDefinition()
 	{
 		return (TopUserType() != nullptr);
+	}
+
+	bool OnFunctionDefinition()
+	{
+		bool result = false;
+		OpStack.ProcessOperatorsStack(
+			[=, &result](TOperator *op) -> bool
+			{
+				auto funcDefOp = dynamic_cast<TFunctionOperator*>(op);
+				return !(result = (funcDefOp != nullptr));
+			}
+			);
+		return result;
 	}
 
 	void VerifyLabelTable()
@@ -738,6 +755,10 @@ protected:
 		memcpy(&header.signature, g_MandatoryHeaderPart, sizeof(g_MandatoryHeaderPart));
 		header.codeSegmentSize = (uint16_t)((g_lastInstructionIndex+1)*sizeof(MachineInstruction));
 		
+		int size = (TVariable::GetWordsCount() * sizeof (TMemoryCell)) - varBuffer.str().size();
+		auto preallocateBuf = new char[size];
+		VarBinaryWrite(preallocateBuf, size);
+		
 		header.dataSegmentSize = varBuffer.str().size();
 
 		FSeek(0, SEEK_SET);
@@ -776,10 +797,6 @@ public:
 		int offset = FSeek(0, SEEK_CUR);
 		g_lastInstructionIndex = -1; // so that first increment returns 0
 
-		int size = TVariable::GetWordsCount() * sizeof (TMemoryCell);
-		auto preallocateBuf = new char[size];
-		VarBinaryWrite(preallocateBuf, size);
-		delete []preallocateBuf;
 	}
 
 	virtual ~TMLWriter()
