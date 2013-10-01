@@ -12,7 +12,6 @@
 #include "context.h"
 #include "parser.h"
 #include "HashTable.h"
-#include "Function.h"
 
 class AstNode;
 class OperatorStack;
@@ -36,7 +35,7 @@ protected:
 	THashTable<std::string, TVariable*> *g_VariableTable;
 	THashTable<std::string, BaseTypeInfo*> *g_TypeTable;
 	THashTable<std::string, TVariable*> *g_LiteralTable;
-	THashTable<std::string, FunctionData*> *g_FunctionsTable;
+	THashTable<std::string, TFunctionOperator*> *g_FunctionsTable;
 
 	OperatorStack OpStack;
 
@@ -71,7 +70,7 @@ public:
 		g_VariableTable = new THashTable<std::string, TVariable*>(HashFunction, CompareFunction);
 		g_TypeTable = new THashTable<std::string, BaseTypeInfo*>(HashFunction, CompareFunction);
 		g_LiteralTable = new THashTable<std::string, TVariable*>(HashFunction, CompareFunction);
-		g_FunctionsTable = new THashTable<std::string, FunctionData*>(HashFunction, CompareFunction);
+		g_FunctionsTable = new THashTable<std::string, TFunctionOperator*>(HashFunction, CompareFunction);
 
 		m_LastLabelNumber = 0;
 		m_LastTmpIndex = 0;
@@ -410,6 +409,17 @@ public:
 		return var;
 	}
 
+	typedef std::tr1::function<bool (TVariable *)> BlockVarCallbackFunc;
+
+	void ProcessCurrentBlockVariables(TFunctionOperator *funcOp, BlockVarCallbackFunc func)
+	{
+		// might not very optimal: we'll have to find all variables in all blocks
+		// instead of allocating the block-dependent varibles separately
+		auto blockNameSpace = func->GetBlockNameSpace();
+		g_VariablesTable->
+
+	}
+
 	bool OnFunctionDefinition()
 	{
 		bool result = false;
@@ -428,7 +438,7 @@ public:
 		return g_FunctionsTable->st_exist(funcName);
 	}
 
-	FunctionData *GetFunction(std::string& funcName)
+	TFunctionOperator *GetFunction(std::string& funcName)
 	{
 		if (!IsFunctionDefined(funcName))
 			return nullptr;
@@ -436,7 +446,7 @@ public:
 			return g_FunctionsTable->st_get(funcName);
 	}
 
-	void AddFunction(FunctionData *func)
+	void AddFunction(TFunctionOperator *func)
 	{
 		g_FunctionsTable->st_put(func->GetName(), func);
 	}

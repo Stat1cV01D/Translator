@@ -177,30 +177,32 @@ public:
 	virtual ~TPopOperator() {}
 };
 
-// This practically duplicates the FunctionData class. Should I do smth with it?
 class TFunctionOperator: public TOperator
 {
 protected:
 	BaseTypeInfo *returnType;		// return var type label
 	TLabel *enterLabel;				// function start label
 	std::string name;
+	std::string blockNameSpace;
 	std::vector<TVariable*> parameters;
 public:
-	TFunctionOperator(BaseTypeInfo *returnType, std::string &name, TLabel *enterLabel)
+	TFunctionOperator(BaseTypeInfo *returnType, std::string &name, std::string &nameSpace, TLabel *enterLabel)
 		: TOperator(OT_FUNCTION) 
 	{
 		this->returnType = returnType;
 		this->enterLabel = enterLabel;
 		this->name = name;
+		this->blockNameSpace = nameSpace;
 	}
 	virtual ~TFunctionOperator() {}
 
 	TLabel *GetStart() { return enterLabel; }
 	BaseTypeInfo *GetResultType() { return returnType; }
 	std::string GetName() { return name; }
+	std::string GetBlockNameSpace() { return blockNameSpace; }
 
 	std::vector<TVariable*> GetParametersList() { return parameters; }
-	void SetParametersList(std::vector<TVariable*> parameters)
+	void SetParametersList(std::vector<TVariable*> &parameters)
 	{
 		this->parameters = parameters;
 	}

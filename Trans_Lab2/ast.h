@@ -801,10 +801,10 @@ public:
 
 class FunctionCallAstNode: public AstNode
 {
-	FunctionData *functionData;
+	TFunctionOperator *functionData;
 	std::vector<TVariable*> parametersList;
 public:
-	FunctionCallAstNode(FunctionData *_functionData, std::vector<TVariable*> _parametersList)
+	FunctionCallAstNode(TFunctionOperator *_functionData, std::vector<TVariable*> _parametersList)
 		: AstNode(FUNCTION_CALL_NODE, _functionData->GetResultType()->Clone())
 		, parametersList(_parametersList)
 	{

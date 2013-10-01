@@ -19,6 +19,7 @@ MachineInstruction* g_MachineCodeSegment = NULL;
 
 FILE* g_InputFile = NULL;    /* поток для файла с программой на машинном языке */
 std::vector<STACKDATA> g_stackTop;
+std::vector<int> g_stackAddress;
 
 TMachineStatus        PSW;
 
@@ -467,13 +468,38 @@ int main(int argc, char* argv[])
 				}
 				break;
 			case EXCH:
+				switch (addresingMode)
 				{
-
+				case DIRECT_MODE:
+					{
+						uint32_t index; 
+						memcpy(&index, args, sizeof (uint32_t)); 
+						Exch(index);
+					}
+					break;
+				case ABSOLUTE_MODE:
+					{
+						uint32_t index; 
+						memcpy(&index, args, sizeof (uint32_t)); 
+						Exch(g_MachineDataSegment[index]);
+					}
+					break;
+				case ABSOLUTE_POINTER_MODE:
+					{
+						uint32_t index; 
+						memcpy(&index, args, sizeof (index)); 
+						memcpy(&index, &g_MachineDataSegment[index], sizeof(index));
+						Exch(g_MachineDataSegment[index]);
+					}
+					break;
 				}
 				break;
 			case CALL:
+				PushAddress(ProgramCounter+1);
+				memcpy(&ProgramCounter, args, sizeof(int));
 				break;
 			case RET:
+				ProgramCounter = PopAddress();			
 				break;
 			default:
 				PrintError("Unknown code operation", ProgramCounter);
@@ -509,6 +535,23 @@ void PrintError(const char* errorMessage, unsigned int instructionNumber)
     printf("ERROR: %s at instruction # %d.\n", errorMessage, instructionNumber);
 }
 
+void PushAddress(int address)
+{
+	g_stackAddress.emplace_back(address);
+}
+
+int PopAddress()
+{
+	int result = 0;
+	
+	if (g_stackAddress.size() != 0)
+	{
+		result = g_stackAddress.back();
+		g_stackAddress.erase(--g_stackAddress.end());
+	}
+	return result;
+}
+
 void Push(TMemoryCell Data)
 {
 	STACKDATA data;
@@ -516,20 +559,27 @@ void Push(TMemoryCell Data)
 	g_stackTop.emplace_back(data);
 }
 
-// Exchange stack[0] and stack[1] by default
+// Exchange stack top and stack [top-1] by default
 void Exch(int index = 1)
 {
-	STACKDATA data;
-	data.cellData = Data;
-	g_stackTop.emplace_back(data);
+	STACKDATA Data;
+	Data = g_stackTop[ g_stackTop.size() - 1 - index ];
+	g_stackTop[ g_stackTop.size() - 1 - index ] = g_stackTop[ g_stackTop.size() - 1];
+	g_stackTop[ g_stackTop.size() - 1 ] = Data;
 }
 
-// Exchange stack[0] and Data
-void Exch(TMemoryCell &Data)
+// Exchange stack top and Data
+void Exch(TMemoryCell &_Data)
 {
-	STACKDATA data;
-	data.cellData = Data;
-	g_stackTop.emplace_back(data);
+	STACKDATA tmp;
+	STACKDATA Data;
+	Data.cellData = _Data;
+
+	tmp = Data;
+	Data = g_stackTop[ g_stackTop.size() - 1 ];
+	g_stackTop[ g_stackTop.size() - 1 ] = tmp;
+
+	_Data = tmp.cellData;
 }
 
 STACKDATA Pop(void)

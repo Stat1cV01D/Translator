@@ -3169,7 +3169,7 @@ yyreduce:
 					delete (*it); // we don't need it anymore
 				}
 			}
-			auto funcDef = new FunctionData(
+			auto funcDef = new TFunctionOperator(
 					funcCallOp->GetResultType()->Clone(),
 					funcname,
 					parameters,

@@ -1031,16 +1031,32 @@ int SwitchAstNode::Serialize(TMLWriter* output)
 int FunctionAstNode::Print3AC(TACWriter* output)
 {
 	auto parametersList = functionData->GetParametersList();
-	for (auto it = parametersList.begin(); it != parametersList.end(); it++)
+	if (parametersList.size() > 0)
 	{
-		VarAstNode varNode(false, (*it));
+		VarAstNode varNode(false, parametersList[0]);
 		output->CodeGen(&varNode);
 		auto varName = output->GetLastUsedValueName();
-		output->CodeWriteFormat("\tPop\t%s\n", varName.c_str());
+		output->CodeWriteFormat("\tExch\t%s\n", varName.c_str());
+		
+		int i = 1;
+		for (auto it = ++parametersList.begin(); it != parametersList.end(); i++, it++)
+		{
+			VarAstNode varNode(false, (*it));
+			output->CodeGen(&varNode);
+			auto varName = output->GetLastUsedValueName();
+			if (i != 1)
+				output->CodeWriteFormat("\tExch\t%d\n", i-1);
+			output->CodeWriteFormat("\tExch\t%d\n", i);
+			output->CodeWriteFormat("\tExch\t%s\n", varName.c_str());
+		}
+		output->CodeWriteFormat("\tExch\t%d\n", i);
 	}
-	auto valName = output->GetLastUsedValueName();
-	// NOTE: dimension values are generated into INT values!
-	output->CodeWriteFormat("\tPop\t%s\n", valName.c_str());
+	
+	output->GetContext()->ProcessBlockVariables(
+
+		);
+
+	output->CodeWriteFormat("\tPush\t%s\n", valName.c_str());
 
 	return 0;
 }

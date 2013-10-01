@@ -1317,10 +1317,11 @@ function_def_head
 		TLabel *callLabel = Context.GenerateNewLabel();
 		auto funcName = std::string($2->ptNode->text);
 
-		auto functionOp = new TFunctionOperator($1->astNode->GetResultType()->Clone(), funcName, callLabel);
-		Context.OperatorStackPush(functionOp);	
-
 		TBlockContext::Push_FunctionParametersDef(funcName);
+		auto nameSpace = TBlockContext::GetCurrent()->GetBlockNamepace();
+
+		auto functionOp = new TFunctionOperator($1->astNode->GetResultType()->Clone(), funcName, nameSpace, callLabel);
+		Context.OperatorStackPush(functionOp);
 	}
 	;
 
