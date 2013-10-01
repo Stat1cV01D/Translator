@@ -3,10 +3,12 @@
 #include <vector>
 #include <string>
 #include <stdint.h>
+#include <functional>
 #include "label.h"
 #include "basic-ops.h"
 #include "types.h"
 #include "variable.h"
+#include "Function.h"
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4482)
 #include "Operators.h"
@@ -121,26 +123,40 @@ class StatementBlockAstNode: public AstNode
 {
 	std::vector<AstNode*> stmnts;
 public:
+	typedef std::tr1::function<int (AstNode *)> CallbackFunc;
+
 	StatementBlockAstNode(): AstNode(STMNT_BLOCK_NODE, new VoidType()) {}
-	void AddStatement(AstNode *stmnt) { stmnts.emplace_back(stmnt); }
 	~StatementBlockAstNode() { for (auto it = stmnts.begin(); it != stmnts.end(); it++) delete (*it); }
 
-	virtual int Print3AC(TACWriter* output) 
-	{
+	void AddStatement(AstNode *stmnt) { stmnts.emplace_back(stmnt); }
+	int ProcessStatements(CallbackFunc callback)
+	{ 		
 		int result;
 		for (auto it = stmnts.begin(); it != stmnts.end(); it++) 
-			if ((result = (*it)->Print3AC(output)) != 0)
+			if ((result = callback(*it)) != 0)
 				return result;
 		return 0;
 	}
 
+
+	virtual int Print3AC(TACWriter* output) 
+	{
+		return ProcessStatements(
+			[&output](AstNode *node) -> int
+			{
+				return node->Print3AC(output);
+			}
+		);
+	}
+
 	virtual int PrintASTree(AstPrintInfo* output)
 	{
-		int result;
-		for (auto it = stmnts.begin(); it != stmnts.end(); it++) 
-			if ((result = (*it)->PrintASTree(output)) != 0)
-				return result;
-		return 0;
+		return ProcessStatements(
+			[&output](AstNode *node) -> int
+			{
+				return node->PrintASTree(output);
+			}
+		);
 	}
 
 	/// <summary>
@@ -150,11 +166,12 @@ public:
 	/// <returns></returns>
 	virtual int Serialize(TMLWriter* output)
 	{		
-		int result;
-		for (auto it = stmnts.begin(); it != stmnts.end(); it++) 
-			if ((result = (*it)->Serialize(output)) != 0)
-				return result;
-		return 0;
+		return ProcessStatements(
+			[&output](AstNode *node) -> int
+			{
+				return node->Serialize(output);
+			}
+		);
 	}
 };
 
@@ -763,6 +780,40 @@ public:
 	virtual int PrintASTree(AstPrintInfo* output) { return 0; }
 	virtual int Serialize(TMLWriter* output) { return 0; }
 
+};
+
+class FunctionAstNode: public AstNode
+{
+	TFunctionOperator *functionData;
+	AstNode* statementsBlock;
+public:
+	FunctionAstNode(TFunctionOperator *_functionData, AstNode* statementsBlock)
+		: AstNode(FUNCTION_NODE, _functionData->GetResultType()->Clone())
+	{
+		this->functionData = _functionData;
+		this->statementsBlock = statementsBlock;
+	}
+
+	virtual int Print3AC(TACWriter* output);
+	virtual int PrintASTree(AstPrintInfo* output);
+	virtual int Serialize(TMLWriter* output);
+};
+
+class FunctionCallAstNode: public AstNode
+{
+	FunctionData *functionData;
+	std::vector<TVariable*> parametersList;
+public:
+	FunctionCallAstNode(FunctionData *_functionData, std::vector<TVariable*> _parametersList)
+		: AstNode(FUNCTION_CALL_NODE, _functionData->GetResultType()->Clone())
+		, parametersList(_parametersList)
+	{
+		this->functionData = _functionData;
+	}
+
+	virtual int Print3AC(TACWriter* output) { return 0; }
+	virtual int PrintASTree(AstPrintInfo* output) { return 0; }
+	virtual int Serialize(TMLWriter* output) { return 0; }
 };
 
 #endif // AST_H_INCLUDED

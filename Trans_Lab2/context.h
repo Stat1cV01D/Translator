@@ -5,6 +5,7 @@
 class TBlockContext
 {
 private:
+	static bool EarlyFunctionDefPush;
 	static TBlockContext *bl_context;
 
     TBlockContext *parent;
@@ -21,6 +22,7 @@ private:
 public:
 	static void Init();
 	static void Push();
+	static void Push_FunctionParametersDef(std::string &funcName);
 	static void Pop();
 	static TBlockContext *GetCurrent();
 	std::string GetBlockNamepace();

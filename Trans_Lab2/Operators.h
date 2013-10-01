@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <functional>
+#include "BaseTypeClass.h"
 
 class AstNode;
 class TLabel;
@@ -14,6 +15,7 @@ enum enumOperatorType
 	OT_SWITCH,
 	OT_CASE,
 	OT_DEFAULT,
+	OT_FUNCTION,
 	
 	//optimization-related types
 	OT_PUSH,
@@ -175,14 +177,44 @@ public:
 	virtual ~TPopOperator() {}
 };
 
+// This practically duplicates the FunctionData class. Should I do smth with it?
+class TFunctionOperator: public TOperator
+{
+protected:
+	BaseTypeInfo *returnType;		// return var type label
+	TLabel *enterLabel;				// function start label
+	std::string name;
+	std::vector<TVariable*> parameters;
+public:
+	TFunctionOperator(BaseTypeInfo *returnType, std::string &name, TLabel *enterLabel)
+		: TOperator(OT_FUNCTION) 
+	{
+		this->returnType = returnType;
+		this->enterLabel = enterLabel;
+		this->name = name;
+	}
+	virtual ~TFunctionOperator() {}
+
+	TLabel *GetStart() { return enterLabel; }
+	BaseTypeInfo *GetResultType() { return returnType; }
+	std::string GetName() { return name; }
+
+	std::vector<TVariable*> GetParametersList() { return parameters; }
+	void SetParametersList(std::vector<TVariable*> parameters)
+	{
+		this->parameters = parameters;
+	}
+};
+
 class OperatorStack
 {
 private:
-
 	int m_stackTop;
 	std::vector<TOperator *> g_operatorStack;
 
 public:
+	typedef std::tr1::function<bool (TOperator *)> CallbackFunc;
+
 	OperatorStack(void);
 	virtual ~OperatorStack(void);
 
@@ -195,5 +227,12 @@ public:
 	TOperator *Top();
 
 	bool IsEmpty();
+
+	void ProcessOperatorsStack(CallbackFunc func)
+	{
+		for (auto it = g_operatorStack.begin(); it != g_operatorStack.end(); it++)
+			if (!func((*it)))
+				break;
+	}
 };
 

@@ -47,6 +47,9 @@ template<typename T> T GetValue(MachineInstruction MI)
 		break;
 	}
 
+	auto i = (int*)malloc(sizeof(int));
+	free(i);
+
 	return result;
 }
 
@@ -108,20 +111,24 @@ template<typename T> int IOOperations(TMemoryCell &Accumulator, MachineInstructi
 		}
 		break; 
 	case ST_: 
-		if (addresingMode == ABSOLUTE_MODE) 
-		{ 
-			uint32_t index; 
-			memcpy(&index, args, sizeof (uint32_t)); 
-			memcpy(&g_MachineDataSegment[index], &Accumulator, sizeof(T)); 
-		} 
-		else if (addresingMode == ABSOLUTE_POINTER_MODE)
 		{
-			uint32_t index; 
-			memcpy(&index, args, sizeof (index)); 
-			memcpy(&index, &g_MachineDataSegment[index], sizeof(index));
-			memcpy(&g_MachineDataSegment[index], &Accumulator, sizeof(T));
+			if (addresingMode == ABSOLUTE_MODE) 
+			{ 
+				uint32_t index; 
+				memcpy(&index, args, sizeof (uint32_t)); 
+				memcpy(&g_MachineDataSegment[index], &Accumulator, sizeof(T)); 
+			} 
+			else if (addresingMode == ABSOLUTE_POINTER_MODE)
+			{
+				uint32_t index; 
+				memcpy(&index, args, sizeof (index)); 
+				memcpy(&index, &g_MachineDataSegment[index], sizeof(index));
+				memcpy(&g_MachineDataSegment[index], &Accumulator, sizeof(T));
+			}
+			auto i = (int*)malloc(sizeof(int));
+			free(i);
+			break;
 		}
-		break;
 	case IN_:
 	case OUT_: 
 		{
@@ -373,7 +380,6 @@ int main(int argc, char* argv[])
 		memcpy(&tmpLongDouble, &Accumulator, sizeof (long double));
 		memcpy(&tmpCharPtr, &Accumulator, sizeof (char));
 
-		// I don't the nature of it yet, but i need that "+2", lol
 #define OPS(SUFFIX, TYPE, STR, VAR) \
 		if ((uint8_t)operationCode > (uint8_t)SUFFIX ## _START) \
 		{ \
@@ -449,7 +455,6 @@ int main(int argc, char* argv[])
 					continue;
 				}
 				break;
-
 			/* variant 7 additions */
 			case PUSH:
 				{
@@ -460,6 +465,15 @@ int main(int argc, char* argv[])
 				{
 					Accumulator = Pop().cellData;
 				}
+				break;
+			case EXCH:
+				{
+
+				}
+				break;
+			case CALL:
+				break;
+			case RET:
 				break;
 			default:
 				PrintError("Unknown code operation", ProgramCounter);
@@ -496,6 +510,22 @@ void PrintError(const char* errorMessage, unsigned int instructionNumber)
 }
 
 void Push(TMemoryCell Data)
+{
+	STACKDATA data;
+	data.cellData = Data;
+	g_stackTop.emplace_back(data);
+}
+
+// Exchange stack[0] and stack[1] by default
+void Exch(int index = 1)
+{
+	STACKDATA data;
+	data.cellData = Data;
+	g_stackTop.emplace_back(data);
+}
+
+// Exchange stack[0] and Data
+void Exch(TMemoryCell &Data)
 {
 	STACKDATA data;
 	data.cellData = Data;

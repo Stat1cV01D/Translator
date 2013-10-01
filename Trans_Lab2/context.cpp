@@ -12,9 +12,26 @@ void TBlockContext::Init()
 
 void TBlockContext::Push()
 {
+	if (EarlyFunctionDefPush)
+	{
+		EarlyFunctionDefPush = false;
+	}
+	else
+	{
+		char SubBlockID[50];
+		itoa(GetCurrent()->curSubBlock, SubBlockID, 10);
+		TBlockContext *newContext = new TBlockContext(bl_context, GetCurrent()->GetBlockNamepace() + std::string(SubBlockID) + std::string(":"));
+		bl_context = newContext;
+	}
+}
+
+void TBlockContext::Push_FunctionParametersDef(std::string &funcName)
+{
+	EarlyFunctionDefPush = true;
+
 	char SubBlockID[50];
-	itoa(bl_context->curSubBlock, SubBlockID, 10);
-	TBlockContext *newContext = new TBlockContext(bl_context, GetCurrent()->GetBlockNamepace() + std::string(SubBlockID) + std::string(":"));
+	itoa(GetCurrent()->curSubBlock, SubBlockID, 10);
+	TBlockContext *newContext = new TBlockContext(bl_context, funcName + std::string(SubBlockID) + std::string(":"));
 	bl_context = newContext;
 }
 

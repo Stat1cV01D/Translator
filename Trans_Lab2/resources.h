@@ -13,14 +13,21 @@
 /* Сообщения об ошибках семантического анализатора */
 
 #define UNDECLARED_VARIABLE_ERROR		"undeclared variable"
+#define UNDECLARED_FUNCTION_ERROR		"undeclared function call"
 #define UNDECLARED_TYPE					"undeclared type"
 #define TYPES_INCOMPATIBLE_ERROR		"types incompatible"
 #define VARIABLE_REDEFINITION_ERROR		"redefinition of the variable"
+#define FUNCTION_REDEFINITION_ERROR		"redefinition of the function"
 #define UNEXPECTED_BREAK_ERROR			"unexpected break"
 #define UNEXPECTED_CONTINUE_ERROR		"unexpected continue"
+#define UNEXPECTED_RETURN_ERROR			"unexpected return outside of function"
 #define TYPE_REDEFINITION_ERROR			"type redefinition"
 #define INVALID_ASSIGN_L_VALUE			"expression on left of ':=' must be a base type variable"
 #define ERROR_DECLARATIONS_FIRST		"variable declarations should go before any statements in the block"
+#define FUNCTION_IN_FUNCTION			"can not declare function in function"
+#define FUNCTION_CALL_PAR_NUMBER_ERROR	"invalid function call parameters number"
+#define FUNCTION_INVALID_PAR_ERROR		"one of the parameters type does not match"
+#define FUNCTION_INVALID_RETURN_ERROR	"invalid return variable type"
 /* structs */
 #define UNDECLARED_STRUCT_FIELD			"undeclared struct field"
 #define STRUCT_FIELD_REDEFINITION		"struct field redefinition"

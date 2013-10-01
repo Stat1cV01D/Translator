@@ -102,7 +102,11 @@ enum TMLCOMMAND : uint8_t
 	/* Stack operations */
 	PUSH,
 	POP,
-	LAST_OPCODE = POP, 
+	EXCH,
+	/* Function call operations */
+	CALL,
+	RET,
+	LAST_OPCODE = RET, 
 };
 
 /* 256-bit memory cell */

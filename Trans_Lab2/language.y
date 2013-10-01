@@ -10,7 +10,9 @@
 #include <string.h>
 #include "parser.h"
 #include "AstUtils.h"
+#include "Function.h"
 #include "resources.h"
+#include "variable.h"
 #include "ast.h"
 #include "pt.h"
 #pragma warning(disable : 4003)
@@ -76,6 +78,7 @@ struct Node;
 %token <_node> TOK_BREAK
 %token <_node> TOK_CONTINUE
 %token <_node> TOK_GOTO
+%token <_node> TOK_RETURN
 %token <_node> TOK_STRUCT
 %token <_node> TOK_UNION
 %token <_node> TOK_SWITCH
@@ -99,11 +102,12 @@ struct Node;
 %left TOK_DOT
 
 %type <_node> start declaration_list stmnt stmnt_list stmnt_block_start stmnt_block 
-%type <_node> expression_statement expr_or_assignment expr struct_item identifier declaration_stmt struct_type
+%type <_node> expression_statement expr_or_assignment expr struct_item identifier declaration_stmt declaration_block struct_type
 %type <_node> if_stmt loop_decl switch_stmt print_stmt read_stmt assignment struct_def struct_head struct_body struct_tail
 %type <_node> loop_for_expr instruction_body loop_while_expr type array type_name left_assign_expr const
 %type <_node> switch_head case_list default case_stmt case_head case_body
 %type <_node> default_head for_decl while_decl do_while_decl
+%type <_node> lexemes parameter parameter_list parameter_type_list declarator function_def_head function_call function_def
 
 %code top
 {
@@ -146,6 +150,32 @@ TVariable *GetVariableForAssign(Node *node, YYLTYPE location)
 		return Context.getVar(node->ptNode->firstChild->text, 1, NULL, location);
 	}
 }
+
+std::vector<AstNode*> GetParametersList(StatementBlockAstNode *node)
+{
+	std::vector<AstNode*> result;
+
+	node->ProcessStatements(
+		[&result](AstNode *node) -> int
+		{
+			auto blockAstNode = dynamic_cast<StatementBlockAstNode*>(node);
+			if (blockAstNode != nullptr)
+			{
+				auto _result = GetParametersList(blockAstNode);
+				for(auto it = _result.begin(); it != _result.end(); it++)
+				{
+					result.emplace_back(*it);
+				}
+			}
+			else
+			{
+				result.emplace_back(node);
+			}
+			return 0;
+		}
+	);
+	return result;
+}
 %}
 
 %%
@@ -183,15 +213,15 @@ start :  /* empty */
 	;
 
 declaration_list: 
-	declaration_stmt TOK_ENDEXPR[end]
+	declaration_block TOK_ENDEXPR[end]
 	{
 		$$ = NULL;
 	}
-	| declaration_list declaration_stmt TOK_ENDEXPR[end] 
+	| declaration_list declaration_block TOK_ENDEXPR[end] 
 	{
 		$$ = NULL;
 	}
-	| declaration_stmt error
+	| declaration_block error
 	{
 		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_SEPARATOR, @error),
 				nullptr);
@@ -275,7 +305,130 @@ expression_statement:
 	}
 	;
 
+lexemes:
+	TOK_GOTO TOK_IDENTIFIER
+	{
+		char *labelName = $2->ptNode->text;
+		TLabel* label =  Context.GetLabel(labelName);
+		
+		if(label == NULL)
+		{
+			label = Context.MakeLabel(labelName);
+		}
+		label->SetUsedLine((@1).first_line);
+
+		$$ = createNode(new OperatorAstNode(OP_GOTO, new LabelAstNode(label)), 
+				createPtNodeWithChildren("stmnt", 2, $1->ptNode, $2->ptNode));
+	}
+	| 
+	TOK_BREAK
+	{
+		AstNode *astNode;
+		 
+		if(!Context.CanUseBreak())
+		{
+			astNode = new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, UNEXPECTED_BREAK_ERROR, @1);
+		}
+		else
+		{
+			TOperator *op = Context.OperatorStackTop();
+			TLabel *EndLabel;
+			switch(op->GetType())
+			{
+			case OT_FOR:
+			case OT_WHILE:
+			case OT_DO_WHILE:
+				EndLabel = ((TSimpleOperator *)op)->GetOutLabel(); 
+				break;
+			case OT_SWITCH:
+				EndLabel = ((TSwitchOperator *)op)->GetEndLabel();
+				break;
+			}
+			astNode = new OperatorAstNode(OP_BREAK, new LabelAstNode(EndLabel));
+		}
+		$$ = createNode(astNode, 
+				createPtNodeWithChildren("stmnt", 1, $1->ptNode));
+	}
+	| 
+	TOK_CONTINUE
+	{
+		AstNode *astNode;
+		if(!Context.CanUseContinue())
+		{
+			astNode = new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, UNEXPECTED_CONTINUE_ERROR, @1);
+		}
+		else
+		{
+			TOperator *op = Context.OperatorStackTop();
+			TLabel *StartLabel;
+			switch(op->GetType())
+			{
+			case OT_FOR:
+			case OT_WHILE:
+			case OT_DO_WHILE:
+				StartLabel = ((TSimpleOperator *)op)->GetEntranceLabel(); 
+				break;
+			}
+			astNode = new OperatorAstNode(OP_CONTINUE, new LabelAstNode(StartLabel));
+		}
+		$$ = createNode(astNode, 
+				createPtNodeWithChildren("stmnt", 1, $1->ptNode));
+	}
+	|
+	TOK_RETURN
+	{
+		AstNode *astNode;
+		if (!Context.OnFunctionDefinition())
+		{
+			astNode = new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, UNEXPECTED_RETURN_ERROR, @1);
+		}
+		else
+		{
+			auto funcDefOp = dynamic_cast<TFunctionOperator*>(Context.OperatorStackTop());
+			if (funcDefOp->GetResultType()->getID() != VOID_TYPE)
+				astNode = new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, FUNCTION_INVALID_RETURN_ERROR, @1);
+			else
+				astNode = new OperatorAstNode(OP_RETURN, nullptr);
+		}
+		$$ = createNode(astNode, 
+				createPtNodeWithChildren("stmnt", 1, $1->ptNode));
+	}
+	|
+	TOK_RETURN expr
+	{
+		AstNode *astNode;
+		if (!Context.OnFunctionDefinition())
+		{
+			astNode = new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, UNEXPECTED_RETURN_ERROR, @1);
+		}
+		else
+		{
+			auto funcDefOp = dynamic_cast<TFunctionOperator*>(Context.OperatorStackTop());
+			if (funcDefOp->GetResultType()->getID() != $2->astNode->GetResultType()->getID())
+				astNode = new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, FUNCTION_INVALID_RETURN_ERROR, @2);
+			else
+				astNode = new OperatorAstNode(OP_RETURN, $1->astNode);
+		}
+		$$ = createNode(astNode, 
+				createPtNodeWithChildren("stmnt", 2, $1->ptNode, $2->ptNode));
+	}
+	;
+
 stmnt: 
+	function_def
+	{
+		// Can't define function in function
+		if (Context.OnFunctionDefinition())
+		{
+			$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, FUNCTION_IN_FUNCTION, @1), 
+					nullptr);
+		}
+		else
+		{
+			$$ = $1;
+		}
+	}
+	|
 	expression_statement
 	{
 		$$ = $1;
@@ -304,21 +457,6 @@ stmnt:
 		$$ = createNode(astNode, 
 				createPtNodeWithChildren("stmnt", 2, $1->ptNode, $2->ptNode));
 	}
-	| 
-	TOK_GOTO TOK_IDENTIFIER TOK_ENDEXPR
-	{
-		char *labelName = $2->ptNode->text;
-		TLabel* label =  Context.GetLabel(labelName);
-		
-		if(label == NULL)
-		{
-			label = Context.MakeLabel(labelName);
-		}
-		label->SetUsedLine((@1).first_line);
-
-		$$ = createNode(new OperatorAstNode(OP_GOTO, new LabelAstNode(label)), 
-				createPtNodeWithChildren("stmnt", 3, $1->ptNode, $2->ptNode, $3->ptNode));
-	}
 	|
 	if_stmt
 	{
@@ -344,73 +482,29 @@ stmnt:
 	{
 		$$ = $1;
 	}
-	| 
-	TOK_BREAK TOK_ENDEXPR
+	|
+	lexemes TOK_ENDEXPR
 	{
-		AstNode *astNode;
-		 
-		if(!Context.CanUseBreak())
-		{
-			astNode = new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, UNEXPECTED_BREAK_ERROR, @1);
-		}
-		else
-		{
-			TOperator *op = Context.OperatorStackTop();
-			TLabel *EndLabel;
-			switch(op->GetType())
-			{
-			case OT_FOR:
-			case OT_WHILE:
-			case OT_DO_WHILE:
-				EndLabel = ((TSimpleOperator *)op)->GetOutLabel(); 
-				break;
-			case OT_SWITCH:
-				EndLabel = ((TSwitchOperator *)op)->GetEndLabel();
-				break;
-			}
-			astNode = new OperatorAstNode(OP_BREAK, new LabelAstNode(EndLabel));
-		}
-		$$ = createNode(astNode, 
-				createPtNodeWithChildren("stmnt", 2, $1->ptNode, $2->ptNode));
+		$$ = createNode($1->astNode, 
+				createPtNodeWithChildren("statement", 2, $1->ptNode, $2->ptNode));
 	}
 	| 
-	TOK_BREAK error
-	{
-		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_SEPARATOR, @error), 
-				nullptr);
-	}
-	| 
-	TOK_CONTINUE TOK_ENDEXPR
-	{
-		AstNode *astNode;
-		if(!Context.CanUseContinue())
-		{
-			astNode = new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, UNEXPECTED_CONTINUE_ERROR, @1);
-		}
-		else
-		{
-			TOperator *op = Context.OperatorStackTop();
-			TLabel *StartLabel;
-			switch(op->GetType())
-			{
-			case OT_FOR:
-			case OT_WHILE:
-			case OT_DO_WHILE:
-				StartLabel = ((TSimpleOperator *)op)->GetEntranceLabel(); 
-				break;
-			}
-			astNode = new OperatorAstNode(OP_CONTINUE, new LabelAstNode(StartLabel));
-		}
-		$$ = createNode(astNode, 
-				createPtNodeWithChildren("stmnt", 2, $1->ptNode, $2->ptNode));
-	}
-	| 
-	TOK_CONTINUE error
+	lexemes error
 	{
 		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_SEPARATOR, @error), 
 				nullptr);
 	}
 	;
+
+declaration_block
+	: declaration_stmt
+	{
+		$$ = $1;
+	}
+	| struct_def
+	{
+		$$ = $1;
+	}
 
 declaration_stmt:
 	type[decl] TOK_IDENTIFIER[id]
@@ -448,11 +542,6 @@ declaration_stmt:
 			$$ = createNode(new DeclIDAstNode($decl->astNode->GetResultType()->Clone()), 
 					createPtNodeWithChildren("stmnt", 2, $decl->ptNode, $id->ptNode));
 		}
-	}
-	| 
-	struct_def
-	{
-		$$ = $1;
 	}
 	;
 
@@ -802,6 +891,11 @@ expr :
 		$$ = $1;
 	}
 	|
+	function_call
+	{
+		$$ = $1;
+	}
+	|
 	expr[left] TOK_B_AND[op] expr[right]
 	{
 		$$ = CreateExpressionNode($op, true, $left, $right, @left, @right);
@@ -1110,6 +1204,163 @@ default_head: TOK_DEFAULT TOK_DOUBLEDOT	/* <s4> */
 
 		$$ = createNode(new LabelAstNode(label),
 				createPtNodeWithChildren("default_head", 2, $1->ptNode, $2->ptNode));
+	}
+	;
+
+parameter
+	: declaration_stmt
+	{
+		// function declaration
+		$$ = $1;
+	}
+	| TOK_IDENTIFIER
+	{
+		// function call
+		$$ = $1;
+	}
+
+
+parameter_list
+	: parameter
+	{
+		$$ = $1;
+	}
+	| parameter_list TOK_COMMA parameter
+	{
+		$$ = addStmntToBlock($1, $3);
+	}
+	;
+
+parameter_type_list
+	: parameter_list
+	{
+		$$ = $1;
+	}
+	;
+	//| parameter_list TOK_COMMA ELLIPSIS
+
+declarator
+	: TOK_OPENPAR parameter_type_list TOK_CLOSEPAR
+	{
+		$$ = createNode($2->astNode,
+				createPtNodeWithChildren("declarator", 3, $1->ptNode, $2->ptNode, $3->ptNode));
+	}
+	| TOK_OPENPAR TOK_CLOSEPAR
+	{
+		$$ = createNode(nullptr,
+				createPtNodeWithChildren("declarator", 2, $1->ptNode, $2->ptNode));
+	}
+	;
+
+function_call:
+	TOK_IDENTIFIER declarator
+	{
+		std::vector<TVariable*> callParameters;
+		if ($2->astNode != nullptr)
+		{
+			auto paramsList = GetParametersList(dynamic_cast<StatementBlockAstNode *>($2->astNode));
+			for(auto it = paramsList.begin(); it != paramsList.end(); it++)
+			{
+				callParameters.emplace_back(dynamic_cast<VarAstNode*>(*it)->GetTableReference());
+				delete (*it); // we don't need it anymore
+			}
+		}
+
+		std::string funcname($1->ptNode->text);
+
+		if (!Context.IsFunctionDefined(funcname))
+		{
+			$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, UNDECLARED_FUNCTION_ERROR, @2),
+					nullptr);
+		}
+		else
+		{
+			auto function = Context.GetFunction(funcname);
+			auto funcParameters = function->GetParameters();
+
+			$$ = nullptr;
+
+			if (callParameters.size() != funcParameters.size())
+			{
+				$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, FUNCTION_CALL_PAR_NUMBER_ERROR, @2),
+						nullptr);
+			}
+			else
+			{
+				auto it_f = funcParameters.begin();
+				auto it_c = callParameters.begin();
+
+				for (; it_f != funcParameters.end(); it_f++, it_c++)
+				{
+					if ((*it_f)->GetType()->getID() != (*it_c)->GetType()->getID())
+					{
+						$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, FUNCTION_INVALID_PAR_ERROR, @2),
+								nullptr);
+						break;
+					}
+				}
+
+				if ($$ == nullptr) // no errors
+				{
+					$$ = createNode(new FunctionCallAstNode(function, callParameters),
+							createPtNodeWithChildren("function_call", 2, $1->ptNode, $2->ptNode));
+					Context.AddFunction(function);
+				}
+			}
+		}
+	}
+	;
+
+function_def_head
+	: type TOK_IDENTIFIER
+	{
+		TLabel *callLabel = Context.GenerateNewLabel();
+		auto funcName = std::string($2->ptNode->text);
+
+		auto functionOp = new TFunctionOperator($1->astNode->GetResultType()->Clone(), funcName, callLabel);
+		Context.OperatorStackPush(functionOp);	
+
+		TBlockContext::Push_FunctionParametersDef(funcName);
+	}
+	;
+
+func_declarator
+	: declarator
+	{
+		std::vector<TVariable*> parameters;
+		if ($1->astNode != nullptr)
+		{
+			auto paramsList = GetParametersList(dynamic_cast<StatementBlockAstNode *>($1->astNode));
+			for(auto it = paramsList.begin(); it != paramsList.end(); it++)
+			{
+				parameters.emplace_back(dynamic_cast<VarAstNode*>(*it)->GetTableReference());
+				delete (*it); // we don't need it anymore
+			}
+		}
+		auto funcDefOp = dynamic_cast<TFunctionOperator*>(Context.OperatorStackTop());
+		funcDefOp->SetParametersList(parameters);
+
+		$$ = $1;
+	}
+	;
+
+function_def
+	: function_def_head func_declarator stmnt_block
+	{
+		auto funcDefOp = dynamic_cast<TFunctionOperator*>(Context.OperatorStackPop());
+		auto funcname = funcDefOp->GetName();
+
+		if (Context.IsFunctionDefined(funcname))
+		{
+			$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, FUNCTION_REDEFINITION_ERROR, @1),
+				nullptr);
+			delete funcDefOp;
+		}
+		else
+		{
+			$$ = createNode(new FunctionAstNode(funcDefOp, $3->astNode),
+					createPtNodeWithChildren("function_def", 3, $1->ptNode, $2->ptNode, $3->ptNode));
+		}
 	}
 	;
 

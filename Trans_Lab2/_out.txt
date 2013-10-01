@@ -1,7 +1,8 @@
 	Push	$c2
 	Push	$c1
+	$t3	=	$c0
 	Pop	$t4
-	$t4	=	$t4	*	$c10
+	$t4	=	$t4	*	$c3
 	$t3	=	$t3	+	$t4
 	Pop	$t4
 	$t3	=	$t4	+	$t3
@@ -9,8 +10,9 @@
 	$t3	=	$cCXVII
 	Push	$c2
 	Push	$c1
+	$t5	=	$c0
 	Pop	$t6
-	$t6	=	$t6	*	$c10
+	$t6	=	$t6	*	$c3
 	$t5	=	$t5	+	$t6
 	Pop	$t6
 	$t5	=	$t6	+	$t5
@@ -26,8 +28,9 @@ $L3:
 	iffalse	$t1	$L2
 	Push	$c1
 	Push	$idi
+	$t7	=	$c0
 	Pop	$t8
-	$t8	=	$t8	*	$c10
+	$t8	=	$t8	*	$c3
 	$t7	=	$t7	+	$t8
 	Pop	$t8
 	$t7	=	$t8	+	$t7
@@ -35,8 +38,9 @@ $L3:
 	$t7	=	$idi
 	Push	$c1
 	Push	$idi
+	$t9	=	$c0
 	Pop	$t10
-	$t10	=	$t10	*	$c10
+	$t10	=	$t10	*	$c3
 	$t9	=	$t9	+	$t10
 	Pop	$t10
 	$t9	=	$t10	+	$t9

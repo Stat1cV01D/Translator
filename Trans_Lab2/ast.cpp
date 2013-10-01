@@ -518,6 +518,11 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 			}
 		}
 		break;
+	case OP_RETURN:
+		{
+			output->WriteInstruction(RET);
+		}
+		break;
 	case OP_CASE:
 	case OP_LIST:
 	case OP_DEFAULT:
@@ -800,8 +805,18 @@ int ArrayAddressAstNode::Print3AC(TACWriter* output)
 	auto MulTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType(), true);
 	VarAstNode MulTmpVarNode(true, MulTmpVar);
 
-	auto loop_end = --sizes.end();
-	for (auto it = sizes.begin(); it != loop_end; it++)
+	//Адрес(table2[i,j]) =
+	//	Адрес(table2[low(1),low(1)]) +
+	//	(i) * (upp(2) + 1) +
+	//	(j)
+
+	// Set initial values
+	NumValueAstNode numZero(0);
+	OperatorAstNode nullOp(OP_ASSIGN, &SumTmpVarNode, &numZero);
+	output->CodeGen(&nullOp);
+
+	auto loop_end = sizes.begin();
+	for (auto it = --sizes.end(); it != loop_end; it--)
 	{
 		output->CodeGen(&MulTmpVarNode);
 		auto valName = output->GetLastUsedValueName();
@@ -816,7 +831,7 @@ int ArrayAddressAstNode::Print3AC(TACWriter* output)
 		output->CodeGen(&Plus);
 	}
 
-	// add last dimension addres with no multiplication!
+	// add last dimension address with no multiplication!
 	output->CodeGen(&MulTmpVarNode);
 	auto valName = output->GetLastUsedValueName();
 	output->CodeWriteFormat("\tPop\t%s\n", valName.c_str());
@@ -848,7 +863,7 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 	if (this->ArrayOffsetVarNode == nullptr)
 	{
 		auto SumTmpVar = output->GetContext()->GenerateNewTmpVar(new IntType());
-		this->ArrayOffsetVarNode = new VarAstNode(true, SumTmpVar);
+		ArrayOffsetVarNode = new VarAstNode(true, SumTmpVar);
 	}
 	if (this->MulTmpVarNode == nullptr)
 	{
@@ -856,16 +871,16 @@ int ArrayAddressAstNode::Serialize(TMLWriter* output)
 		this->MulTmpVarNode = new VarAstNode(true, MulTmpVar);
 	}
 
+	// Set initial values
+	NumValueAstNode numZero(0);
+	OperatorAstNode nullOp1(OP_ASSIGN, ArrayOffsetVarNode, &numZero);
+	output->Serialize(&nullOp1);
+
 	auto *varType = dynamic_cast<ArrayType*>(varNode->GetTableReference()->GetType());
 	auto sizes = varType->GetSizes();
 
-	ArrayOffsetVarNode->GetTableReference()->SetValue(0);
-	output->Serialize(ArrayOffsetVarNode);
-	MulTmpVarNode->GetTableReference()->SetValue(1);
-	output->Serialize(MulTmpVarNode);
-
-	auto loop_end = --sizes.end();
-	for (auto it = sizes.begin(); it != loop_end; it++)
+	auto loop_end = sizes.begin();
+	for (auto it = --sizes.end(); it != loop_end; it--)
 	{
 		// A = POP // current dimension address
 		// A = A * size
@@ -1010,5 +1025,42 @@ int SwitchAstNode::Serialize(TMLWriter* output)
 	LabelAstNode caseEndLabel(this->opData->GetEndLabel());
 	output->Serialize(&caseEndLabel);
 
+	return 0;
+}
+
+int FunctionAstNode::Print3AC(TACWriter* output)
+{
+	auto parametersList = functionData->GetParametersList();
+	for (auto it = parametersList.begin(); it != parametersList.end(); it++)
+	{
+		VarAstNode varNode(false, (*it));
+		output->CodeGen(&varNode);
+		auto varName = output->GetLastUsedValueName();
+		output->CodeWriteFormat("\tPop\t%s\n", varName.c_str());
+	}
+	auto valName = output->GetLastUsedValueName();
+	// NOTE: dimension values are generated into INT values!
+	output->CodeWriteFormat("\tPop\t%s\n", valName.c_str());
+
+	return 0;
+}
+int FunctionAstNode::PrintASTree(AstPrintInfo* output)
+{
+	auto typeName = functionData->GetResultType()->GetName();
+	auto funcName = functionData->GetName();
+	output->AstWriteFormat("%s %s(", typeName.c_str(), funcName.c_str());
+
+	auto parametersList = functionData->GetParameters();
+	auto it_end = --parametersList.end();
+	for (auto it = parametersList.begin(); it != it_end; it++)
+	{
+		output->AstWriteFormat("%s, ", (*it)->GetName());
+	}
+	output->AstWriteFormat("%s)\n", (*it_end)->GetName());
+
+	return 0;
+}
+int FunctionAstNode::Serialize(TMLWriter* output)
+{
 	return 0;
 }

@@ -36,7 +36,7 @@ protected:
 	THashTable<std::string, TVariable*> *g_VariableTable;
 	THashTable<std::string, BaseTypeInfo*> *g_TypeTable;
 	THashTable<std::string, TVariable*> *g_LiteralTable;
-	THashTable<std::string, Function*> *g_FunctionsTable;
+	THashTable<std::string, FunctionData*> *g_FunctionsTable;
 
 	OperatorStack OpStack;
 
@@ -53,7 +53,7 @@ public:
 			int	len = arg.size();
 			int i = 0;
 
-			// NOTE: for() loop doesn't work in global scoped lambdas 
+			// NOTE: for() loop doesn't work in global scoped lambdas for VS2010
 			// http://connect.microsoft.com/VisualStudio/feedback/details/693671
 			while(i < len)
 				sum += (uint32_t)(arg[i++]);
@@ -71,7 +71,7 @@ public:
 		g_VariableTable = new THashTable<std::string, TVariable*>(HashFunction, CompareFunction);
 		g_TypeTable = new THashTable<std::string, BaseTypeInfo*>(HashFunction, CompareFunction);
 		g_LiteralTable = new THashTable<std::string, TVariable*>(HashFunction, CompareFunction);
-		g_FunctionsTable = new THashTable<std::string, Function*>(HashFunction, CompareFunction);
+		g_FunctionsTable = new THashTable<std::string, FunctionData*>(HashFunction, CompareFunction);
 
 		m_LastLabelNumber = 0;
 		m_LastTmpIndex = 0;
@@ -187,7 +187,11 @@ public:
 
 	TLabel *GetLabel(char *name)
 	{
-		return g_labelTable->st_get(std::string(name));
+		auto labelName = std::string(name);
+		if (g_labelTable->st_exist(labelName))
+			return g_labelTable->st_get(labelName);
+		else
+			return nullptr;
 	}
 
 	StructType *GetUserType(char *name)
@@ -209,19 +213,6 @@ public:
 	bool OnUserTypeDefinition()
 	{
 		return (TopUserType() != nullptr);
-	}
-
-	bool OnFunctionDefinition()
-	{
-		bool result = false;
-		OpStack.ProcessOperatorsStack(
-			[=, &result](TOperator *op) -> bool
-			{
-				auto funcDefOp = dynamic_cast<TFunctionOperator*>(op);
-				return !(result = (funcDefOp != nullptr));
-			}
-			);
-		return result;
 	}
 
 	void VerifyLabelTable()
@@ -284,29 +275,6 @@ public:
 		}
 	}
 
-	// TODO: move this switch_tail grammar to AstNode's 3AC generation procedure!
-	void WriteCaseJumps()
-	{
-		auto switchOp = dynamic_cast<TSwitchOperator*>(OperatorStackTop());
-		if (nullptr != switchOp)
-		{
-			//TSwitchOperator *switchOp = Context.OperatorStackPop();
-			//CodegenGoto(g_Output3acFile, OP_GOTO, switchOp->endLabel, NULL);
-			//CodegenLabel(g_Output3acFile, switchOp->controlFlowLabel);
-
-			switchOp->ProcessCaseList(
-				[=](TCaseOperator* caseOp) -> bool
-			{
-				//AstNode *assignNode = HandleBinaryOperation(OP_EQ, switchOp->key, caseOp->keyVal);
-				//CodegenGoto(stream, OP_IFTRUE, caseOp->label, assignNode);
-			}	
-			);
-			//if(switchOp->defOp)
-			//	CodegenGoto(g_Output3acFile, OP_GOTO,switchOp->defOp->label, NULL);
-			//CodegenLabel(g_Output3acFile, switchOp->endLabel);
-		}
-	}
-
 	bool IsValidKeyValNode(AstNode *keyValNode)
 	{
 		return (keyValNode->IsOfType(INT_TYPE) && keyValNode->GetASTType() == CONST_NODE);
@@ -324,7 +292,7 @@ public:
 
 	bool IsCorrectOperatorInStack(enumOperatorType operatorType)
 	{
-		return (OperatorStackTop()->GetType() == operatorType);
+		return IsNodeOfType(operatorType);
 	}
 
 	bool IsNodeOfType(enumOperatorType operatorType)
@@ -440,6 +408,37 @@ public:
 			print_warning(strcatn(3, "Identifier \"", nameWithNs.c_str(), "\" is not initialized."), loc);
 		}
 		return var;
+	}
+
+	bool OnFunctionDefinition()
+	{
+		bool result = false;
+		OpStack.ProcessOperatorsStack(
+			[=, &result](TOperator *op) -> bool
+		{
+			auto funcDefOp = dynamic_cast<TFunctionOperator*>(op);
+			return !(result = (funcDefOp != nullptr));
+		}
+		);
+		return result;
+	}
+
+	bool IsFunctionDefined(std::string& funcName)
+	{
+		return g_FunctionsTable->st_exist(funcName);
+	}
+
+	FunctionData *GetFunction(std::string& funcName)
+	{
+		if (!IsFunctionDefined(funcName))
+			return nullptr;
+		else
+			return g_FunctionsTable->st_get(funcName);
+	}
+
+	void AddFunction(FunctionData *func)
+	{
+		g_FunctionsTable->st_put(func->GetName(), func);
 	}
 };
 

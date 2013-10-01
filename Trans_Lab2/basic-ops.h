@@ -47,6 +47,7 @@ typedef enum
 	OP_LIST,
 	OP_BREAK,
 	OP_CONTINUE,
+	OP_RETURN,
 	OP_SWITCH,
 	OP_CASE,
 	OP_DEFAULT,

@@ -84,17 +84,18 @@ struct Node;
      TOK_BREAK = 293,
      TOK_CONTINUE = 294,
      TOK_GOTO = 295,
-     TOK_STRUCT = 296,
-     TOK_UNION = 297,
-     TOK_SWITCH = 298,
-     TOK_CASE = 299,
-     TOK_DEFAULT = 300,
-     TOK_STRING_LITERAL = 301,
-     EXPR_ERROR = 302,
-     STMNT_BLOCK_ERROR = 303,
-     IF_WITHOUT_ELSE = 304,
-     NOTX = 305,
-     UMINUS = 306
+     TOK_RETURN = 296,
+     TOK_STRUCT = 297,
+     TOK_UNION = 298,
+     TOK_SWITCH = 299,
+     TOK_CASE = 300,
+     TOK_DEFAULT = 301,
+     TOK_STRING_LITERAL = 302,
+     EXPR_ERROR = 303,
+     STMNT_BLOCK_ERROR = 304,
+     IF_WITHOUT_ELSE = 305,
+     NOTX = 306,
+     UMINUS = 307
    };
 #endif
 

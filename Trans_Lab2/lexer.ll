@@ -127,6 +127,7 @@ do_decl				do
 {do_decl}			{ REACTION(do_decl,			TOK_DO_DECL) }
 
 print				{ REACTION(print,			TOK_PRINT) }
+return				{ REACTION(return,			TOK_RETURN) }
 break				{ REACTION(break,			TOK_BREAK) }
 continue			{ REACTION(continue,		TOK_CONTINUE) }
 goto				{ REACTION(goto,			TOK_GOTO) }
