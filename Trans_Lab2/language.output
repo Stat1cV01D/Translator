@@ -48,194 +48,197 @@ Grammar
    26        | TOK_BREAK
    27        | TOK_CONTINUE
    28        | TOK_RETURN
+   29        | TOK_RETURN expr
 
-   29 stmnt: function_def
-   30      | expression_statement
-   31      | TOK_IDENTIFIER TOK_DOUBLEDOT
-   32      | if_stmt
-   33      | loop_decl
-   34      | switch_stmt
-   35      | print_stmt
-   36      | read_stmt
-   37      | lexemes TOK_ENDEXPR
-   38      | lexemes error
+   30 stmnt: function_def
+   31      | expression_statement
+   32      | TOK_IDENTIFIER TOK_DOUBLEDOT
+   33      | if_stmt
+   34      | loop_decl
+   35      | switch_stmt
+   36      | print_stmt
+   37      | read_stmt
+   38      | lexemes TOK_ENDEXPR
+   39      | lexemes error
 
-   39 declaration_block: declaration_stmt
-   40                  | struct_def
+   40 declaration_block: declaration_stmt
+   41                  | struct_def
 
-   41 declaration_stmt: type TOK_IDENTIFIER
+   42 declaration_stmt: type TOK_IDENTIFIER
 
-   42 struct_def: struct_head struct_body struct_tail
+   43 struct_def: struct_head struct_body struct_tail
 
-   43 struct_head: struct_type TOK_IDENTIFIER
+   44 struct_head: struct_type TOK_IDENTIFIER
 
-   44 struct_type: TOK_STRUCT
-   45            | TOK_UNION
+   45 struct_type: TOK_STRUCT
+   46            | TOK_UNION
 
-   46 struct_body: TOK_OPENBR declaration_list
+   47 struct_body: TOK_OPENBR declaration_list
 
-   47 struct_tail: TOK_CLOSEBR
+   48 struct_tail: TOK_CLOSEBR
 
-   48 print_stmt: TOK_PRINT TOK_OPENPAR expr TOK_CLOSEPAR TOK_ENDEXPR
-   49           | TOK_PRINT error
-   50           | TOK_PRINT '(' expr error
-   51           | TOK_PRINT '(' expr ')' error
+   49 print_stmt: TOK_PRINT TOK_OPENPAR expr TOK_CLOSEPAR TOK_ENDEXPR
+   50           | TOK_PRINT error
+   51           | TOK_PRINT '(' expr error
+   52           | TOK_PRINT '(' expr ')' error
 
-   52 read_stmt: TOK_READ TOK_OPENPAR left_assign_expr TOK_CLOSEPAR TOK_ENDEXPR
+   53 read_stmt: TOK_READ TOK_OPENPAR left_assign_expr TOK_CLOSEPAR TOK_ENDEXPR
 
-   53 if_stmt: TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR instruction_body
-   54        | TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR instruction_body TOK_ELSE instruction_body
-   55        | TOK_IF TOK_OPENPAR expr error
+   54 if_stmt: TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR instruction_body
+   55        | TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR instruction_body TOK_ELSE instruction_body
+   56        | TOK_IF TOK_OPENPAR expr error
 
-   56 loop_decl: for_decl loop_for_expr instruction_body
-   57          | while_decl loop_while_expr instruction_body
-   58          | do_while_decl instruction_body TOK_WHILE_DECL loop_while_expr TOK_ENDEXPR
+   57 loop_decl: for_decl loop_for_expr instruction_body
+   58          | while_decl loop_while_expr instruction_body
+   59          | do_while_decl instruction_body TOK_WHILE_DECL loop_while_expr TOK_ENDEXPR
 
-   59 loop_while_expr: TOK_OPENPAR expr TOK_CLOSEPAR
+   60 loop_while_expr: TOK_OPENPAR expr TOK_CLOSEPAR
 
-   60 loop_for_expr: TOK_OPENPAR expression_statement expression_statement TOK_CLOSEPAR
-   61              | TOK_OPENPAR expression_statement expression_statement expr_or_assignment TOK_CLOSEPAR
+   61 loop_for_expr: TOK_OPENPAR expression_statement expression_statement TOK_CLOSEPAR
+   62              | TOK_OPENPAR expression_statement expression_statement expr_or_assignment TOK_CLOSEPAR
 
-   62 for_decl: TOK_FOR_DECL
+   63 for_decl: TOK_FOR_DECL
 
-   63 while_decl: TOK_WHILE_DECL
+   64 while_decl: TOK_WHILE_DECL
 
-   64 do_while_decl: TOK_DO_DECL
+   65 do_while_decl: TOK_DO_DECL
 
-   65 instruction_body: stmnt_block
-   66                 | stmnt
+   66 instruction_body: stmnt_block
+   67                 | stmnt
 
-   67 type: type_name array
+   68 type: type_name array
 
-   68 type_name: TOK_ROM_DECL
-   69          | TOK_FLOAT_DECL
-   70          | TOK_INT_DECL
-   71          | struct_type TOK_IDENTIFIER
+   69 type_name: TOK_ROM_DECL
+   70          | TOK_FLOAT_DECL
+   71          | TOK_INT_DECL
+   72          | struct_type TOK_IDENTIFIER
 
-   72 left_assign_expr: identifier
-   73                 | struct_item
+   73 left_assign_expr: identifier
+   74                 | struct_item
 
-   74 assignment: left_assign_expr TOK_ASSIGN_OP expr
+   75 assignment: left_assign_expr TOK_ASSIGN_OP expr
 
-   75 expr: left_assign_expr
-   76     | const
-   77     | function_call
-   78     | expr TOK_B_AND expr
-   79     | expr TOK_B_OR expr
-   80     | expr TOK_B_XOR expr
-   81     | TOK_B_NOT expr
-   82     | TOK_AR_MINUS expr
-   83     | expr TOK_AR_PLUS expr
-   84     | expr TOK_AR_MINUS expr
-   85     | expr TOK_AR_MUL expr
-   86     | expr TOK_AR_DIV expr
-   87     | expr TOK_AR_MOD expr
-   88     | expr TOK_COMP_OP expr
-   89     | TOK_OPENPAR expr error
-   90     | TOK_OPENPAR expr TOK_CLOSEPAR
+   76 expr: left_assign_expr
+   77     | const
+   78     | function_call
+   79     | expr TOK_B_AND expr
+   80     | expr TOK_B_OR expr
+   81     | expr TOK_B_XOR expr
+   82     | TOK_B_NOT expr
+   83     | TOK_AR_MINUS expr
+   84     | expr TOK_AR_PLUS expr
+   85     | expr TOK_AR_MINUS expr
+   86     | expr TOK_AR_MUL expr
+   87     | expr TOK_AR_DIV expr
+   88     | expr TOK_AR_MOD expr
+   89     | expr TOK_COMP_OP expr
+   90     | TOK_OPENPAR expr error
+   91     | TOK_OPENPAR expr TOK_CLOSEPAR
 
-   91 array: /* empty */
-   92      | TOK_OPENSQ expr TOK_CLOSESQ array
-   93      | TOK_OPENSQ error
-   94      | TOK_OPENSQ expr error
+   92 array: /* empty */
+   93      | TOK_OPENSQ expr TOK_CLOSESQ array
+   94      | TOK_OPENSQ error
+   95      | TOK_OPENSQ expr error
 
-   95 struct_item: identifier TOK_DOT TOK_IDENTIFIER
+   96 struct_item: identifier TOK_DOT TOK_IDENTIFIER
 
-   96 identifier: TOK_IDENTIFIER array
+   97 identifier: TOK_IDENTIFIER array
 
-   97 const: TOK_INT_CONST
-   98      | TOK_ROM_CONST
-   99      | TOK_FLOAT_CONST
-  100      | TOK_STRING_LITERAL
+   98 const: TOK_INT_CONST
+   99      | TOK_ROM_CONST
+  100      | TOK_FLOAT_CONST
+  101      | TOK_STRING_LITERAL
 
-  101 switch_stmt: switch_head case_list default TOK_CLOSEBR
-  102            | switch_head case_list TOK_CLOSEBR
+  102 switch_stmt: switch_head case_list default TOK_CLOSEBR
+  103            | switch_head case_list TOK_CLOSEBR
 
-  103 switch_head: TOK_SWITCH TOK_OPENPAR expr TOK_CLOSEPAR TOK_OPENBR
+  104 switch_head: TOK_SWITCH TOK_OPENPAR expr TOK_CLOSEPAR TOK_OPENBR
 
-  104 case_list: case_stmt
-  105          | case_stmt case_list
+  105 case_list: case_stmt
+  106          | case_stmt case_list
 
-  106 case_stmt: case_head case_body
+  107 case_stmt: case_head case_body
 
-  107 case_head: TOK_CASE expr TOK_DOUBLEDOT
+  108 case_head: TOK_CASE expr TOK_DOUBLEDOT
 
-  108 case_body: instruction_body
-  109          | case_stmt
+  109 case_body: instruction_body
+  110          | case_stmt
 
-  110 default: default_head instruction_body
+  111 default: default_head instruction_body
 
-  111 default_head: TOK_DEFAULT TOK_DOUBLEDOT
+  112 default_head: TOK_DEFAULT TOK_DOUBLEDOT
 
-  112 parameter: declaration_stmt
-  113          | TOK_IDENTIFIER
+  113 parameter: declaration_stmt
+  114          | expr
 
-  114 parameter_list: parameter
-  115               | parameter_list TOK_COMMA parameter
+  115 parameter_list: parameter
+  116               | parameter_list TOK_COMMA parameter
 
-  116 parameter_type_list: parameter_list
+  117 parameter_type_list: parameter_list
 
-  117 declarator: TOK_OPENPAR parameter_type_list TOK_CLOSEPAR
-  118           | TOK_OPENPAR TOK_CLOSEPAR
+  118 declarator: TOK_OPENPAR parameter_type_list TOK_CLOSEPAR
+  119           | TOK_OPENPAR TOK_CLOSEPAR
 
-  119 function_call: TOK_IDENTIFIER declarator
+  120 function_call: TOK_IDENTIFIER declarator
 
-  120 function_def_head: type TOK_IDENTIFIER
+  121 function_def_head: type TOK_IDENTIFIER
 
-  121 function_def: function_def_head declarator stmnt_block
+  122 func_declarator: declarator
+
+  123 function_def: function_def_head func_declarator stmnt_block
 
 
 Terminals, with rules where they appear
 
 $end (0) 0
-'(' (40) 50 51
-')' (41) 51
-error (256) 8 15 24 38 49 50 51 55 89 93 94
-TOK_IDENTIFIER (258) 25 31 41 43 71 95 96 113 119 120
-TOK_B_AND (259) 78
-TOK_B_OR (260) 79
-TOK_B_XOR (261) 80
-TOK_B_NOT (262) 81
-TOK_AR_PLUS (263) 83
-TOK_AR_MINUS (264) 82 84
-TOK_AR_MUL (265) 85
-TOK_AR_DIV (266) 86
-TOK_AR_MOD (267) 87
-TOK_ASSIGN_OP (268) 74
-TOK_COMP_OP (269) 88
-TOK_IF (270) 53 54 55
-TOK_ELSE (271) 54
-TOK_ENDEXPR (272) 6 7 22 23 37 48 52 58
-TOK_OPENPAR (273) 48 52 53 54 55 59 60 61 89 90 103 117 118
-TOK_CLOSEPAR (274) 48 52 53 54 59 60 61 90 103 117 118
-TOK_OPENBR (275) 12 46 103
-TOK_CLOSEBR (276) 14 17 19 47 101 102
-TOK_OPENSQ (277) 92 93 94
-TOK_CLOSESQ (278) 92
-TOK_DOT (279) 95
-TOK_COMMA (280) 115
-TOK_DOUBLEDOT (281) 31 107 111
-TOK_ROM_DECL (282) 68
-TOK_INT_DECL (283) 70
-TOK_FLOAT_DECL (284) 69
-TOK_FOR_DECL (285) 62
-TOK_WHILE_DECL (286) 58 63
-TOK_DO_DECL (287) 64
-TOK_ROM_CONST (288) 98
-TOK_INT_CONST (289) 97
-TOK_FLOAT_CONST (290) 99
-TOK_PRINT (291) 48 49 50 51
-TOK_READ (292) 52
+'(' (40) 51 52
+')' (41) 52
+error (256) 8 15 24 39 50 51 52 56 90 94 95
+TOK_IDENTIFIER (258) 25 32 42 44 72 96 97 120 121
+TOK_B_AND (259) 79
+TOK_B_OR (260) 80
+TOK_B_XOR (261) 81
+TOK_B_NOT (262) 82
+TOK_AR_PLUS (263) 84
+TOK_AR_MINUS (264) 83 85
+TOK_AR_MUL (265) 86
+TOK_AR_DIV (266) 87
+TOK_AR_MOD (267) 88
+TOK_ASSIGN_OP (268) 75
+TOK_COMP_OP (269) 89
+TOK_IF (270) 54 55 56
+TOK_ELSE (271) 55
+TOK_ENDEXPR (272) 6 7 22 23 38 49 53 59
+TOK_OPENPAR (273) 49 53 54 55 56 60 61 62 90 91 104 118 119
+TOK_CLOSEPAR (274) 49 53 54 55 60 61 62 91 104 118 119
+TOK_OPENBR (275) 12 47 104
+TOK_CLOSEBR (276) 14 17 19 48 102 103
+TOK_OPENSQ (277) 93 94 95
+TOK_CLOSESQ (278) 93
+TOK_DOT (279) 96
+TOK_COMMA (280) 116
+TOK_DOUBLEDOT (281) 32 108 112
+TOK_ROM_DECL (282) 69
+TOK_INT_DECL (283) 71
+TOK_FLOAT_DECL (284) 70
+TOK_FOR_DECL (285) 63
+TOK_WHILE_DECL (286) 59 64
+TOK_DO_DECL (287) 65
+TOK_ROM_CONST (288) 99
+TOK_INT_CONST (289) 98
+TOK_FLOAT_CONST (290) 100
+TOK_PRINT (291) 49 50 51 52
+TOK_READ (292) 53
 TOK_BREAK (293) 26
 TOK_CONTINUE (294) 27
 TOK_GOTO (295) 25
-TOK_RETURN (296) 28
-TOK_STRUCT (297) 44
-TOK_UNION (298) 45
-TOK_SWITCH (299) 103
-TOK_CASE (300) 107
-TOK_DEFAULT (301) 111
-TOK_STRING_LITERAL (302) 100
+TOK_RETURN (296) 28 29
+TOK_STRUCT (297) 45
+TOK_UNION (298) 46
+TOK_SWITCH (299) 104
+TOK_CASE (300) 108
+TOK_DEFAULT (301) 112
+TOK_STRING_LITERAL (302) 101
 EXPR_ERROR (303)
 STMNT_BLOCK_ERROR (304)
 IF_WITHOUT_ELSE (305)
@@ -250,7 +253,7 @@ $accept (55)
 start (56)
     on left: 1 2 3 4 5, on right: 0
 declaration_list (57)
-    on left: 6 7 8, on right: 2 3 5 7 17 19 46
+    on left: 6 7 8, on right: 2 3 5 7 17 19 47
 stmnt_list (58)
     on left: 9 10, on right: 2 4 5 10 14 15 19
 stmnt_block_start (59)
@@ -258,7 +261,7 @@ stmnt_block_start (59)
 $@1 (60)
     on left: 11, on right: 12
 stmnt_block (61)
-    on left: 14 15 17 19, on right: 65 121
+    on left: 14 15 17 19, on right: 66 123
 $@2 (62)
     on left: 13, on right: 14
 $@3 (63)
@@ -266,97 +269,99 @@ $@3 (63)
 $@4 (64)
     on left: 18, on right: 19
 expr_or_assignment (65)
-    on left: 20 21, on right: 23 61
+    on left: 20 21, on right: 23 62
 expression_statement (66)
-    on left: 22 23 24, on right: 30 60 61
+    on left: 22 23 24, on right: 31 61 62
 lexemes (67)
-    on left: 25 26 27 28, on right: 37 38
+    on left: 25 26 27 28 29, on right: 38 39
 stmnt (68)
-    on left: 29 30 31 32 33 34 35 36 37 38, on right: 9 10 66
+    on left: 30 31 32 33 34 35 36 37 38 39, on right: 9 10 67
 declaration_block (69)
-    on left: 39 40, on right: 6 7 8
+    on left: 40 41, on right: 6 7 8
 declaration_stmt (70)
-    on left: 41, on right: 39 112
+    on left: 42, on right: 40 113
 struct_def (71)
-    on left: 42, on right: 40
+    on left: 43, on right: 41
 struct_head (72)
-    on left: 43, on right: 42
+    on left: 44, on right: 43
 struct_type (73)
-    on left: 44 45, on right: 43 71
+    on left: 45 46, on right: 44 72
 struct_body (74)
-    on left: 46, on right: 42
+    on left: 47, on right: 43
 struct_tail (75)
-    on left: 47, on right: 42
+    on left: 48, on right: 43
 print_stmt (76)
-    on left: 48 49 50 51, on right: 35
+    on left: 49 50 51 52, on right: 36
 read_stmt (77)
-    on left: 52, on right: 36
+    on left: 53, on right: 37
 if_stmt (78)
-    on left: 53 54 55, on right: 32
+    on left: 54 55 56, on right: 33
 loop_decl (79)
-    on left: 56 57 58, on right: 33
+    on left: 57 58 59, on right: 34
 loop_while_expr (80)
-    on left: 59, on right: 57 58
+    on left: 60, on right: 58 59
 loop_for_expr (81)
-    on left: 60 61, on right: 56
+    on left: 61 62, on right: 57
 for_decl (82)
-    on left: 62, on right: 56
-while_decl (83)
     on left: 63, on right: 57
-do_while_decl (84)
+while_decl (83)
     on left: 64, on right: 58
+do_while_decl (84)
+    on left: 65, on right: 59
 instruction_body (85)
-    on left: 65 66, on right: 53 54 56 57 58 108 110
+    on left: 66 67, on right: 54 55 57 58 59 109 111
 type (86)
-    on left: 67, on right: 41 120
+    on left: 68, on right: 42 121
 type_name (87)
-    on left: 68 69 70 71, on right: 67
+    on left: 69 70 71 72, on right: 68
 left_assign_expr (88)
-    on left: 72 73, on right: 52 74 75
+    on left: 73 74, on right: 53 75 76
 assignment (89)
-    on left: 74, on right: 21
+    on left: 75, on right: 21
 expr (90)
-    on left: 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90, on right:
-    20 24 48 50 51 53 54 55 59 74 78 79 80 81 82 83 84 85 86 87 88
-    89 90 92 94 103 107
+    on left: 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91, on right:
+    20 24 29 49 51 52 54 55 56 60 75 79 80 81 82 83 84 85 86 87 88
+    89 90 91 93 95 104 108 114
 array (91)
-    on left: 91 92 93 94, on right: 67 92 96
+    on left: 92 93 94 95, on right: 68 93 97
 struct_item (92)
-    on left: 95, on right: 73
+    on left: 96, on right: 74
 identifier (93)
-    on left: 96, on right: 72 95
+    on left: 97, on right: 73 96
 const (94)
-    on left: 97 98 99 100, on right: 76
+    on left: 98 99 100 101, on right: 77
 switch_stmt (95)
-    on left: 101 102, on right: 34
+    on left: 102 103, on right: 35
 switch_head (96)
-    on left: 103, on right: 101 102
+    on left: 104, on right: 102 103
 case_list (97)
-    on left: 104 105, on right: 101 102 105
+    on left: 105 106, on right: 102 103 106
 case_stmt (98)
-    on left: 106, on right: 104 105 109
+    on left: 107, on right: 105 106 110
 case_head (99)
-    on left: 107, on right: 106
+    on left: 108, on right: 107
 case_body (100)
-    on left: 108 109, on right: 106
+    on left: 109 110, on right: 107
 default (101)
-    on left: 110, on right: 101
+    on left: 111, on right: 102
 default_head (102)
-    on left: 111, on right: 110
+    on left: 112, on right: 111
 parameter (103)
-    on left: 112 113, on right: 114 115
+    on left: 113 114, on right: 115 116
 parameter_list (104)
-    on left: 114 115, on right: 115 116
+    on left: 115 116, on right: 116 117
 parameter_type_list (105)
-    on left: 116, on right: 117
+    on left: 117, on right: 118
 declarator (106)
-    on left: 117 118, on right: 119 121
+    on left: 118 119, on right: 120 122
 function_call (107)
-    on left: 119, on right: 77
+    on left: 120, on right: 78
 function_def_head (108)
-    on left: 120, on right: 121
-function_def (109)
-    on left: 121, on right: 29
+    on left: 121, on right: 123
+func_declarator (109)
+    on left: 122, on right: 123
+function_def (110)
+    on left: 123, on right: 30
 
 
 state 0
@@ -427,15 +432,15 @@ state 0
 
 state 1
 
-   31 stmnt: TOK_IDENTIFIER . TOK_DOUBLEDOT
-   96 identifier: TOK_IDENTIFIER . array
-  119 function_call: TOK_IDENTIFIER . declarator
+   32 stmnt: TOK_IDENTIFIER . TOK_DOUBLEDOT
+   97 identifier: TOK_IDENTIFIER . array
+  120 function_call: TOK_IDENTIFIER . declarator
 
     TOK_OPENPAR    shift, and go to state 58
     TOK_OPENSQ     shift, and go to state 59
     TOK_DOUBLEDOT  shift, and go to state 60
 
-    $default  reduce using rule 91 (array)
+    $default  reduce using rule 92 (array)
 
     array       go to state 61
     declarator  go to state 62
@@ -443,7 +448,7 @@ state 1
 
 state 2
 
-   81 expr: TOK_B_NOT . expr
+   82 expr: TOK_B_NOT . expr
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -464,7 +469,7 @@ state 2
 
 state 3
 
-   82 expr: TOK_AR_MINUS . expr
+   83 expr: TOK_AR_MINUS . expr
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -485,9 +490,9 @@ state 3
 
 state 4
 
-   53 if_stmt: TOK_IF . TOK_OPENPAR expr TOK_CLOSEPAR instruction_body
-   54        | TOK_IF . TOK_OPENPAR expr TOK_CLOSEPAR instruction_body TOK_ELSE instruction_body
-   55        | TOK_IF . TOK_OPENPAR expr error
+   54 if_stmt: TOK_IF . TOK_OPENPAR expr TOK_CLOSEPAR instruction_body
+   55        | TOK_IF . TOK_OPENPAR expr TOK_CLOSEPAR instruction_body TOK_ELSE instruction_body
+   56        | TOK_IF . TOK_OPENPAR expr error
 
     TOK_OPENPAR  shift, and go to state 67
 
@@ -501,8 +506,8 @@ state 5
 
 state 6
 
-   89 expr: TOK_OPENPAR . expr error
-   90     | TOK_OPENPAR . expr TOK_CLOSEPAR
+   90 expr: TOK_OPENPAR . expr error
+   91     | TOK_OPENPAR . expr TOK_CLOSEPAR
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -523,73 +528,73 @@ state 6
 
 state 7
 
-   68 type_name: TOK_ROM_DECL .
-
-    $default  reduce using rule 68 (type_name)
-
-
-state 8
-
-   70 type_name: TOK_INT_DECL .
-
-    $default  reduce using rule 70 (type_name)
-
-
-state 9
-
-   69 type_name: TOK_FLOAT_DECL .
+   69 type_name: TOK_ROM_DECL .
 
     $default  reduce using rule 69 (type_name)
 
 
+state 8
+
+   71 type_name: TOK_INT_DECL .
+
+    $default  reduce using rule 71 (type_name)
+
+
+state 9
+
+   70 type_name: TOK_FLOAT_DECL .
+
+    $default  reduce using rule 70 (type_name)
+
+
 state 10
 
-   62 for_decl: TOK_FOR_DECL .
+   63 for_decl: TOK_FOR_DECL .
 
-    $default  reduce using rule 62 (for_decl)
+    $default  reduce using rule 63 (for_decl)
 
 
 state 11
 
-   63 while_decl: TOK_WHILE_DECL .
+   64 while_decl: TOK_WHILE_DECL .
 
-    $default  reduce using rule 63 (while_decl)
+    $default  reduce using rule 64 (while_decl)
 
 
 state 12
 
-   64 do_while_decl: TOK_DO_DECL .
+   65 do_while_decl: TOK_DO_DECL .
 
-    $default  reduce using rule 64 (do_while_decl)
+    $default  reduce using rule 65 (do_while_decl)
 
 
 state 13
 
-   98 const: TOK_ROM_CONST .
-
-    $default  reduce using rule 98 (const)
-
-
-state 14
-
-   97 const: TOK_INT_CONST .
-
-    $default  reduce using rule 97 (const)
-
-
-state 15
-
-   99 const: TOK_FLOAT_CONST .
+   99 const: TOK_ROM_CONST .
 
     $default  reduce using rule 99 (const)
 
 
+state 14
+
+   98 const: TOK_INT_CONST .
+
+    $default  reduce using rule 98 (const)
+
+
+state 15
+
+  100 const: TOK_FLOAT_CONST .
+
+    $default  reduce using rule 100 (const)
+
+
 state 16
 
-   48 print_stmt: TOK_PRINT . TOK_OPENPAR expr TOK_CLOSEPAR TOK_ENDEXPR
-   49           | TOK_PRINT . error
-   50           | TOK_PRINT . '(' expr error
-   51           | TOK_PRINT . '(' expr ')' error
+   49 print_stmt: TOK_PRINT . TOK_OPENPAR expr TOK_CLOSEPAR TOK_ENDEXPR
+   50           | TOK_PRINT . error
+   51           | TOK_PRINT . '(' expr error
+   52           | TOK_PRINT . '(' expr ')' error
 
     error        shift, and go to state 69
     TOK_OPENPAR  shift, and go to state 70
@@ -598,7 +603,7 @@ state 16
 
 state 17
 
-   52 read_stmt: TOK_READ . TOK_OPENPAR left_assign_expr TOK_CLOSEPAR TOK_ENDEXPR
+   53 read_stmt: TOK_READ . TOK_OPENPAR left_assign_expr TOK_CLOSEPAR TOK_ENDEXPR
 
     TOK_OPENPAR  shift, and go to state 72
 
@@ -627,43 +632,60 @@ state 20
 state 21
 
    28 lexemes: TOK_RETURN .
+   29        | TOK_RETURN . expr
+
+    TOK_IDENTIFIER      shift, and go to state 63
+    TOK_B_NOT           shift, and go to state 2
+    TOK_AR_MINUS        shift, and go to state 3
+    TOK_OPENPAR         shift, and go to state 6
+    TOK_ROM_CONST       shift, and go to state 13
+    TOK_INT_CONST       shift, and go to state 14
+    TOK_FLOAT_CONST     shift, and go to state 15
+    TOK_STRING_LITERAL  shift, and go to state 25
 
     $default  reduce using rule 28 (lexemes)
+
+    left_assign_expr  go to state 64
+    expr              go to state 74
+    struct_item       go to state 50
+    identifier        go to state 51
+    const             go to state 52
+    function_call     go to state 55
 
 
 state 22
 
-   44 struct_type: TOK_STRUCT .
-
-    $default  reduce using rule 44 (struct_type)
-
-
-state 23
-
-   45 struct_type: TOK_UNION .
+   45 struct_type: TOK_STRUCT .
 
     $default  reduce using rule 45 (struct_type)
 
 
+state 23
+
+   46 struct_type: TOK_UNION .
+
+    $default  reduce using rule 46 (struct_type)
+
+
 state 24
 
-  103 switch_head: TOK_SWITCH . TOK_OPENPAR expr TOK_CLOSEPAR TOK_OPENBR
+  104 switch_head: TOK_SWITCH . TOK_OPENPAR expr TOK_CLOSEPAR TOK_OPENBR
 
-    TOK_OPENPAR  shift, and go to state 74
+    TOK_OPENPAR  shift, and go to state 75
 
 
 state 25
 
-  100 const: TOK_STRING_LITERAL .
+  101 const: TOK_STRING_LITERAL .
 
-    $default  reduce using rule 100 (const)
+    $default  reduce using rule 101 (const)
 
 
 state 26
 
     0 $accept: start . $end
 
-    $end  shift, and go to state 75
+    $end  shift, and go to state 76
 
 
 state 27
@@ -700,12 +722,12 @@ state 27
 
     $default  reduce using rule 3 (start)
 
-    stmnt_list            go to state 76
+    stmnt_list            go to state 77
     expr_or_assignment    go to state 29
     expression_statement  go to state 30
     lexemes               go to state 31
     stmnt                 go to state 32
-    declaration_block     go to state 77
+    declaration_block     go to state 78
     declaration_stmt      go to state 34
     struct_def            go to state 35
     struct_head           go to state 36
@@ -766,11 +788,11 @@ state 28
 
     $default  reduce using rule 4 (start)
 
-    declaration_list      go to state 78
+    declaration_list      go to state 79
     expr_or_assignment    go to state 29
     expression_statement  go to state 30
     lexemes               go to state 31
-    stmnt                 go to state 79
+    stmnt                 go to state 80
     declaration_block     go to state 33
     declaration_stmt      go to state 34
     struct_def            go to state 35
@@ -802,23 +824,23 @@ state 29
 
    23 expression_statement: expr_or_assignment . TOK_ENDEXPR
 
-    TOK_ENDEXPR  shift, and go to state 80
+    TOK_ENDEXPR  shift, and go to state 81
 
 
 state 30
 
-   30 stmnt: expression_statement .
+   31 stmnt: expression_statement .
 
-    $default  reduce using rule 30 (stmnt)
+    $default  reduce using rule 31 (stmnt)
 
 
 state 31
 
-   37 stmnt: lexemes . TOK_ENDEXPR
-   38      | lexemes . error
+   38 stmnt: lexemes . TOK_ENDEXPR
+   39      | lexemes . error
 
-    error        shift, and go to state 81
-    TOK_ENDEXPR  shift, and go to state 82
+    error        shift, and go to state 82
+    TOK_ENDEXPR  shift, and go to state 83
 
 
 state 32
@@ -833,90 +855,90 @@ state 33
     6 declaration_list: declaration_block . TOK_ENDEXPR
     8                 | declaration_block . error
 
-    error        shift, and go to state 83
-    TOK_ENDEXPR  shift, and go to state 84
+    error        shift, and go to state 84
+    TOK_ENDEXPR  shift, and go to state 85
 
 
 state 34
 
-   39 declaration_block: declaration_stmt .
-
-    $default  reduce using rule 39 (declaration_block)
-
-
-state 35
-
-   40 declaration_block: struct_def .
+   40 declaration_block: declaration_stmt .
 
     $default  reduce using rule 40 (declaration_block)
 
 
+state 35
+
+   41 declaration_block: struct_def .
+
+    $default  reduce using rule 41 (declaration_block)
+
+
 state 36
 
-   42 struct_def: struct_head . struct_body struct_tail
+   43 struct_def: struct_head . struct_body struct_tail
 
-    TOK_OPENBR  shift, and go to state 85
+    TOK_OPENBR  shift, and go to state 86
 
-    struct_body  go to state 86
+    struct_body  go to state 87
 
 
 state 37
 
-   43 struct_head: struct_type . TOK_IDENTIFIER
-   71 type_name: struct_type . TOK_IDENTIFIER
+   44 struct_head: struct_type . TOK_IDENTIFIER
+   72 type_name: struct_type . TOK_IDENTIFIER
 
-    TOK_IDENTIFIER  shift, and go to state 87
+    TOK_IDENTIFIER  shift, and go to state 88
 
 
 state 38
 
-   35 stmnt: print_stmt .
-
-    $default  reduce using rule 35 (stmnt)
-
-
-state 39
-
-   36 stmnt: read_stmt .
+   36 stmnt: print_stmt .
 
     $default  reduce using rule 36 (stmnt)
 
 
+state 39
+
+   37 stmnt: read_stmt .
+
+    $default  reduce using rule 37 (stmnt)
+
+
 state 40
 
-   32 stmnt: if_stmt .
-
-    $default  reduce using rule 32 (stmnt)
-
-
-state 41
-
-   33 stmnt: loop_decl .
+   33 stmnt: if_stmt .
 
     $default  reduce using rule 33 (stmnt)
 
 
+state 41
+
+   34 stmnt: loop_decl .
+
+    $default  reduce using rule 34 (stmnt)
+
+
 state 42
 
-   56 loop_decl: for_decl . loop_for_expr instruction_body
+   57 loop_decl: for_decl . loop_for_expr instruction_body
 
-    TOK_OPENPAR  shift, and go to state 88
+    TOK_OPENPAR  shift, and go to state 89
 
-    loop_for_expr  go to state 89
+    loop_for_expr  go to state 90
 
 
 state 43
 
-   57 loop_decl: while_decl . loop_while_expr instruction_body
+   58 loop_decl: while_decl . loop_while_expr instruction_body
 
-    TOK_OPENPAR  shift, and go to state 90
+    TOK_OPENPAR  shift, and go to state 91
 
-    loop_while_expr  go to state 91
+    loop_while_expr  go to state 92
 
 
 state 44
 
-   58 loop_decl: do_while_decl . instruction_body TOK_WHILE_DECL loop_while_expr TOK_ENDEXPR
+   59 loop_decl: do_while_decl . instruction_body TOK_WHILE_DECL loop_while_expr TOK_ENDEXPR
 
     TOK_IDENTIFIER      shift, and go to state 1
     TOK_B_NOT           shift, and go to state 2
@@ -924,7 +946,7 @@ state 44
     TOK_IF              shift, and go to state 4
     TOK_ENDEXPR         shift, and go to state 5
     TOK_OPENPAR         shift, and go to state 6
-    TOK_OPENBR          shift, and go to state 92
+    TOK_OPENBR          shift, and go to state 93
     TOK_ROM_DECL        shift, and go to state 7
     TOK_INT_DECL        shift, and go to state 8
     TOK_FLOAT_DECL      shift, and go to state 9
@@ -945,13 +967,13 @@ state 44
     TOK_SWITCH          shift, and go to state 24
     TOK_STRING_LITERAL  shift, and go to state 25
 
-    stmnt_block_start     go to state 93
-    stmnt_block           go to state 94
+    stmnt_block_start     go to state 94
+    stmnt_block           go to state 95
     expr_or_assignment    go to state 29
     expression_statement  go to state 30
     lexemes               go to state 31
-    stmnt                 go to state 95
-    struct_type           go to state 96
+    stmnt                 go to state 96
+    struct_type           go to state 97
     print_stmt            go to state 38
     read_stmt             go to state 39
     if_stmt               go to state 40
@@ -959,8 +981,8 @@ state 44
     for_decl              go to state 42
     while_decl            go to state 43
     do_while_decl         go to state 44
-    instruction_body      go to state 97
-    type                  go to state 98
+    instruction_body      go to state 98
+    type                  go to state 99
     type_name             go to state 46
     left_assign_expr      go to state 47
     assignment            go to state 48
@@ -977,31 +999,31 @@ state 44
 
 state 45
 
-   41 declaration_stmt: type . TOK_IDENTIFIER
-  120 function_def_head: type . TOK_IDENTIFIER
+   42 declaration_stmt: type . TOK_IDENTIFIER
+  121 function_def_head: type . TOK_IDENTIFIER
 
-    TOK_IDENTIFIER  shift, and go to state 99
+    TOK_IDENTIFIER  shift, and go to state 100
 
 
 state 46
 
-   67 type: type_name . array
+   68 type: type_name . array
 
     TOK_OPENSQ  shift, and go to state 59
 
-    $default  reduce using rule 91 (array)
+    $default  reduce using rule 92 (array)
 
-    array  go to state 100
+    array  go to state 101
 
 
 state 47
 
-   74 assignment: left_assign_expr . TOK_ASSIGN_OP expr
-   75 expr: left_assign_expr .
+   75 assignment: left_assign_expr . TOK_ASSIGN_OP expr
+   76 expr: left_assign_expr .
 
-    TOK_ASSIGN_OP  shift, and go to state 101
+    TOK_ASSIGN_OP  shift, and go to state 102
 
-    $default  reduce using rule 75 (expr)
+    $default  reduce using rule 76 (expr)
 
 
 state 48
@@ -1015,125 +1037,139 @@ state 49
 
    20 expr_or_assignment: expr .
    24 expression_statement: expr . error
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
 
-    error         shift, and go to state 102
-    TOK_B_AND     shift, and go to state 103
-    TOK_B_OR      shift, and go to state 104
-    TOK_B_XOR     shift, and go to state 105
-    TOK_AR_PLUS   shift, and go to state 106
-    TOK_AR_MINUS  shift, and go to state 107
-    TOK_AR_MUL    shift, and go to state 108
-    TOK_AR_DIV    shift, and go to state 109
-    TOK_AR_MOD    shift, and go to state 110
-    TOK_COMP_OP   shift, and go to state 111
+    error         shift, and go to state 103
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+    TOK_AR_MOD    shift, and go to state 111
+    TOK_COMP_OP   shift, and go to state 112
 
     TOK_ENDEXPR  reduce using rule 20 (expr_or_assignment)
 
 
 state 50
 
-   73 left_assign_expr: struct_item .
+   74 left_assign_expr: struct_item .
 
-    $default  reduce using rule 73 (left_assign_expr)
+    $default  reduce using rule 74 (left_assign_expr)
 
 
 state 51
 
-   72 left_assign_expr: identifier .
-   95 struct_item: identifier . TOK_DOT TOK_IDENTIFIER
+   73 left_assign_expr: identifier .
+   96 struct_item: identifier . TOK_DOT TOK_IDENTIFIER
 
-    TOK_DOT  shift, and go to state 112
+    TOK_DOT  shift, and go to state 113
 
-    $default  reduce using rule 72 (left_assign_expr)
+    $default  reduce using rule 73 (left_assign_expr)
 
 
 state 52
 
-   76 expr: const .
-
-    $default  reduce using rule 76 (expr)
-
-
-state 53
-
-   34 stmnt: switch_stmt .
-
-    $default  reduce using rule 34 (stmnt)
-
-
-state 54
-
-  101 switch_stmt: switch_head . case_list default TOK_CLOSEBR
-  102            | switch_head . case_list TOK_CLOSEBR
-
-    TOK_CASE  shift, and go to state 113
-
-    case_list  go to state 114
-    case_stmt  go to state 115
-    case_head  go to state 116
-
-
-state 55
-
-   77 expr: function_call .
+   77 expr: const .
 
     $default  reduce using rule 77 (expr)
 
 
+state 53
+
+   35 stmnt: switch_stmt .
+
+    $default  reduce using rule 35 (stmnt)
+
+
+state 54
+
+  102 switch_stmt: switch_head . case_list default TOK_CLOSEBR
+  103            | switch_head . case_list TOK_CLOSEBR
+
+    TOK_CASE  shift, and go to state 114
+
+    case_list  go to state 115
+    case_stmt  go to state 116
+    case_head  go to state 117
+
+
+state 55
+
+   78 expr: function_call .
+
+    $default  reduce using rule 78 (expr)
+
+
 state 56
 
-  121 function_def: function_def_head . declarator stmnt_block
+  123 function_def: function_def_head . func_declarator stmnt_block
 
     TOK_OPENPAR  shift, and go to state 58
 
-    declarator  go to state 117
+    declarator       go to state 118
+    func_declarator  go to state 119
 
 
 state 57
 
-   29 stmnt: function_def .
+   30 stmnt: function_def .
 
-    $default  reduce using rule 29 (stmnt)
+    $default  reduce using rule 30 (stmnt)
 
 
 state 58
 
-  117 declarator: TOK_OPENPAR . parameter_type_list TOK_CLOSEPAR
-  118           | TOK_OPENPAR . TOK_CLOSEPAR
+  118 declarator: TOK_OPENPAR . parameter_type_list TOK_CLOSEPAR
+  119           | TOK_OPENPAR . TOK_CLOSEPAR
 
-    TOK_IDENTIFIER  shift, and go to state 118
-    TOK_CLOSEPAR    shift, and go to state 119
-    TOK_ROM_DECL    shift, and go to state 7
-    TOK_INT_DECL    shift, and go to state 8
-    TOK_FLOAT_DECL  shift, and go to state 9
-    TOK_STRUCT      shift, and go to state 22
-    TOK_UNION       shift, and go to state 23
+    TOK_IDENTIFIER      shift, and go to state 63
+    TOK_B_NOT           shift, and go to state 2
+    TOK_AR_MINUS        shift, and go to state 3
+    TOK_OPENPAR         shift, and go to state 6
+    TOK_CLOSEPAR        shift, and go to state 120
+    TOK_ROM_DECL        shift, and go to state 7
+    TOK_INT_DECL        shift, and go to state 8
+    TOK_FLOAT_DECL      shift, and go to state 9
+    TOK_ROM_CONST       shift, and go to state 13
+    TOK_INT_CONST       shift, and go to state 14
+    TOK_FLOAT_CONST     shift, and go to state 15
+    TOK_STRUCT          shift, and go to state 22
+    TOK_UNION           shift, and go to state 23
+    TOK_STRING_LITERAL  shift, and go to state 25
 
-    declaration_stmt     go to state 120
-    struct_type          go to state 96
-    type                 go to state 121
+    declaration_stmt     go to state 121
+    struct_type          go to state 97
+    type                 go to state 122
     type_name            go to state 46
-    parameter            go to state 122
-    parameter_list       go to state 123
-    parameter_type_list  go to state 124
+    left_assign_expr     go to state 64
+    expr                 go to state 123
+    struct_item          go to state 50
+    identifier           go to state 51
+    const                go to state 52
+    parameter            go to state 124
+    parameter_list       go to state 125
+    parameter_type_list  go to state 126
+    function_call        go to state 55
 
 
 state 59
 
-   92 array: TOK_OPENSQ . expr TOK_CLOSESQ array
-   93      | TOK_OPENSQ . error
-   94      | TOK_OPENSQ . expr error
+   93 array: TOK_OPENSQ . expr TOK_CLOSESQ array
+   94      | TOK_OPENSQ . error
+   95      | TOK_OPENSQ . expr error
 
-    error               shift, and go to state 125
+    error               shift, and go to state 127
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
     TOK_AR_MINUS        shift, and go to state 3
@@ -1144,7 +1180,7 @@ state 59
     TOK_STRING_LITERAL  shift, and go to state 25
 
     left_assign_expr  go to state 64
-    expr              go to state 126
+    expr              go to state 128
     struct_item       go to state 50
     identifier        go to state 51
     const             go to state 52
@@ -1153,34 +1189,34 @@ state 59
 
 state 60
 
-   31 stmnt: TOK_IDENTIFIER TOK_DOUBLEDOT .
+   32 stmnt: TOK_IDENTIFIER TOK_DOUBLEDOT .
 
-    $default  reduce using rule 31 (stmnt)
+    $default  reduce using rule 32 (stmnt)
 
 
 state 61
 
-   96 identifier: TOK_IDENTIFIER array .
+   97 identifier: TOK_IDENTIFIER array .
 
-    $default  reduce using rule 96 (identifier)
+    $default  reduce using rule 97 (identifier)
 
 
 state 62
 
-  119 function_call: TOK_IDENTIFIER declarator .
+  120 function_call: TOK_IDENTIFIER declarator .
 
-    $default  reduce using rule 119 (function_call)
+    $default  reduce using rule 120 (function_call)
 
 
 state 63
 
-   96 identifier: TOK_IDENTIFIER . array
-  119 function_call: TOK_IDENTIFIER . declarator
+   97 identifier: TOK_IDENTIFIER . array
+  120 function_call: TOK_IDENTIFIER . declarator
 
     TOK_OPENPAR  shift, and go to state 58
     TOK_OPENSQ   shift, and go to state 59
 
-    $default  reduce using rule 91 (array)
+    $default  reduce using rule 92 (array)
 
     array       go to state 61
     declarator  go to state 62
@@ -1188,48 +1224,48 @@ state 63
 
 state 64
 
-   75 expr: left_assign_expr .
+   76 expr: left_assign_expr .
 
-    $default  reduce using rule 75 (expr)
+    $default  reduce using rule 76 (expr)
 
 
 state 65
 
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   81     | TOK_B_NOT expr .
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
-
-    $default  reduce using rule 81 (expr)
-
-
-state 66
-
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   82     | TOK_AR_MINUS expr .
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   82     | TOK_B_NOT expr .
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
 
     $default  reduce using rule 82 (expr)
 
 
+state 66
+
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   83     | TOK_AR_MINUS expr .
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
+
+    $default  reduce using rule 83 (expr)
+
+
 state 67
 
-   53 if_stmt: TOK_IF TOK_OPENPAR . expr TOK_CLOSEPAR instruction_body
-   54        | TOK_IF TOK_OPENPAR . expr TOK_CLOSEPAR instruction_body TOK_ELSE instruction_body
-   55        | TOK_IF TOK_OPENPAR . expr error
+   54 if_stmt: TOK_IF TOK_OPENPAR . expr TOK_CLOSEPAR instruction_body
+   55        | TOK_IF TOK_OPENPAR . expr TOK_CLOSEPAR instruction_body TOK_ELSE instruction_body
+   56        | TOK_IF TOK_OPENPAR . expr error
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -1241,7 +1277,7 @@ state 67
     TOK_STRING_LITERAL  shift, and go to state 25
 
     left_assign_expr  go to state 64
-    expr              go to state 127
+    expr              go to state 129
     struct_item       go to state 50
     identifier        go to state 51
     const             go to state 52
@@ -1250,41 +1286,41 @@ state 67
 
 state 68
 
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
-   89     | TOK_OPENPAR expr . error
-   90     | TOK_OPENPAR expr . TOK_CLOSEPAR
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
+   90     | TOK_OPENPAR expr . error
+   91     | TOK_OPENPAR expr . TOK_CLOSEPAR
 
-    error         shift, and go to state 128
-    TOK_B_AND     shift, and go to state 103
-    TOK_B_OR      shift, and go to state 104
-    TOK_B_XOR     shift, and go to state 105
-    TOK_AR_PLUS   shift, and go to state 106
-    TOK_AR_MINUS  shift, and go to state 107
-    TOK_AR_MUL    shift, and go to state 108
-    TOK_AR_DIV    shift, and go to state 109
-    TOK_AR_MOD    shift, and go to state 110
-    TOK_COMP_OP   shift, and go to state 111
-    TOK_CLOSEPAR  shift, and go to state 129
+    error         shift, and go to state 130
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+    TOK_AR_MOD    shift, and go to state 111
+    TOK_COMP_OP   shift, and go to state 112
+    TOK_CLOSEPAR  shift, and go to state 131
 
 
 state 69
 
-   49 print_stmt: TOK_PRINT error .
+   50 print_stmt: TOK_PRINT error .
 
-    $default  reduce using rule 49 (print_stmt)
+    $default  reduce using rule 50 (print_stmt)
 
 
 state 70
 
-   48 print_stmt: TOK_PRINT TOK_OPENPAR . expr TOK_CLOSEPAR TOK_ENDEXPR
+   49 print_stmt: TOK_PRINT TOK_OPENPAR . expr TOK_CLOSEPAR TOK_ENDEXPR
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -1296,7 +1332,7 @@ state 70
     TOK_STRING_LITERAL  shift, and go to state 25
 
     left_assign_expr  go to state 64
-    expr              go to state 130
+    expr              go to state 132
     struct_item       go to state 50
     identifier        go to state 51
     const             go to state 52
@@ -1305,8 +1341,8 @@ state 70
 
 state 71
 
-   50 print_stmt: TOK_PRINT '(' . expr error
-   51           | TOK_PRINT '(' . expr ')' error
+   51 print_stmt: TOK_PRINT '(' . expr error
+   52           | TOK_PRINT '(' . expr ')' error
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -1318,7 +1354,7 @@ state 71
     TOK_STRING_LITERAL  shift, and go to state 25
 
     left_assign_expr  go to state 64
-    expr              go to state 131
+    expr              go to state 133
     struct_item       go to state 50
     identifier        go to state 51
     const             go to state 52
@@ -1327,11 +1363,11 @@ state 71
 
 state 72
 
-   52 read_stmt: TOK_READ TOK_OPENPAR . left_assign_expr TOK_CLOSEPAR TOK_ENDEXPR
+   53 read_stmt: TOK_READ TOK_OPENPAR . left_assign_expr TOK_CLOSEPAR TOK_ENDEXPR
 
-    TOK_IDENTIFIER  shift, and go to state 132
+    TOK_IDENTIFIER  shift, and go to state 134
 
-    left_assign_expr  go to state 133
+    left_assign_expr  go to state 135
     struct_item       go to state 50
     identifier        go to state 51
 
@@ -1345,7 +1381,33 @@ state 73
 
 state 74
 
-  103 switch_head: TOK_SWITCH TOK_OPENPAR . expr TOK_CLOSEPAR TOK_OPENBR
+   29 lexemes: TOK_RETURN expr .
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
+
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+    TOK_AR_MOD    shift, and go to state 111
+    TOK_COMP_OP   shift, and go to state 112
+
+    $default  reduce using rule 29 (lexemes)
+
+
+state 75
+
+  104 switch_head: TOK_SWITCH TOK_OPENPAR . expr TOK_CLOSEPAR TOK_OPENBR
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -1357,21 +1419,21 @@ state 74
     TOK_STRING_LITERAL  shift, and go to state 25
 
     left_assign_expr  go to state 64
-    expr              go to state 134
+    expr              go to state 136
     struct_item       go to state 50
     identifier        go to state 51
     const             go to state 52
     function_call     go to state 55
 
 
-state 75
+state 76
 
     0 $accept: start $end .
 
     $default  accept
 
 
-state 76
+state 77
 
     2 start: declaration_list stmnt_list .
    10 stmnt_list: stmnt_list . stmnt
@@ -1407,8 +1469,8 @@ state 76
     expr_or_assignment    go to state 29
     expression_statement  go to state 30
     lexemes               go to state 31
-    stmnt                 go to state 79
-    struct_type           go to state 96
+    stmnt                 go to state 80
+    struct_type           go to state 97
     print_stmt            go to state 38
     read_stmt             go to state 39
     if_stmt               go to state 40
@@ -1416,7 +1478,7 @@ state 76
     for_decl              go to state 42
     while_decl            go to state 43
     do_while_decl         go to state 44
-    type                  go to state 98
+    type                  go to state 99
     type_name             go to state 46
     left_assign_expr      go to state 47
     assignment            go to state 48
@@ -1431,14 +1493,14 @@ state 76
     function_def          go to state 57
 
 
-state 77
+state 78
 
     7 declaration_list: declaration_list declaration_block . TOK_ENDEXPR
 
-    TOK_ENDEXPR  shift, and go to state 135
+    TOK_ENDEXPR  shift, and go to state 137
 
 
-state 78
+state 79
 
     5 start: stmnt_list declaration_list .
     7 declaration_list: declaration_list . declaration_block TOK_ENDEXPR
@@ -1451,60 +1513,60 @@ state 78
 
     $default  reduce using rule 5 (start)
 
-    declaration_block  go to state 77
+    declaration_block  go to state 78
     declaration_stmt   go to state 34
     struct_def         go to state 35
     struct_head        go to state 36
     struct_type        go to state 37
-    type               go to state 121
+    type               go to state 122
     type_name          go to state 46
 
 
-state 79
+state 80
 
    10 stmnt_list: stmnt_list stmnt .
 
     $default  reduce using rule 10 (stmnt_list)
 
 
-state 80
+state 81
 
    23 expression_statement: expr_or_assignment TOK_ENDEXPR .
 
     $default  reduce using rule 23 (expression_statement)
 
 
-state 81
+state 82
 
-   38 stmnt: lexemes error .
+   39 stmnt: lexemes error .
+
+    $default  reduce using rule 39 (stmnt)
+
+
+state 83
+
+   38 stmnt: lexemes TOK_ENDEXPR .
 
     $default  reduce using rule 38 (stmnt)
 
 
-state 82
-
-   37 stmnt: lexemes TOK_ENDEXPR .
-
-    $default  reduce using rule 37 (stmnt)
-
-
-state 83
+state 84
 
     8 declaration_list: declaration_block error .
 
     $default  reduce using rule 8 (declaration_list)
 
 
-state 84
+state 85
 
     6 declaration_list: declaration_block TOK_ENDEXPR .
 
     $default  reduce using rule 6 (declaration_list)
 
 
-state 85
+state 86
 
-   46 struct_body: TOK_OPENBR . declaration_list
+   47 struct_body: TOK_OPENBR . declaration_list
 
     TOK_ROM_DECL    shift, and go to state 7
     TOK_INT_DECL    shift, and go to state 8
@@ -1512,38 +1574,38 @@ state 85
     TOK_STRUCT      shift, and go to state 22
     TOK_UNION       shift, and go to state 23
 
-    declaration_list   go to state 136
+    declaration_list   go to state 138
     declaration_block  go to state 33
     declaration_stmt   go to state 34
     struct_def         go to state 35
     struct_head        go to state 36
     struct_type        go to state 37
-    type               go to state 121
+    type               go to state 122
     type_name          go to state 46
-
-
-state 86
-
-   42 struct_def: struct_head struct_body . struct_tail
-
-    TOK_CLOSEBR  shift, and go to state 137
-
-    struct_tail  go to state 138
 
 
 state 87
 
-   43 struct_head: struct_type TOK_IDENTIFIER .
-   71 type_name: struct_type TOK_IDENTIFIER .
+   43 struct_def: struct_head struct_body . struct_tail
 
-    TOK_OPENBR  reduce using rule 43 (struct_head)
-    $default    reduce using rule 71 (type_name)
+    TOK_CLOSEBR  shift, and go to state 139
+
+    struct_tail  go to state 140
 
 
 state 88
 
-   60 loop_for_expr: TOK_OPENPAR . expression_statement expression_statement TOK_CLOSEPAR
-   61              | TOK_OPENPAR . expression_statement expression_statement expr_or_assignment TOK_CLOSEPAR
+   44 struct_head: struct_type TOK_IDENTIFIER .
+   72 type_name: struct_type TOK_IDENTIFIER .
+
+    TOK_OPENBR  reduce using rule 44 (struct_head)
+    $default    reduce using rule 72 (type_name)
+
+
+state 89
+
+   61 loop_for_expr: TOK_OPENPAR . expression_statement expression_statement TOK_CLOSEPAR
+   62              | TOK_OPENPAR . expression_statement expression_statement expr_or_assignment TOK_CLOSEPAR
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -1556,7 +1618,7 @@ state 88
     TOK_STRING_LITERAL  shift, and go to state 25
 
     expr_or_assignment    go to state 29
-    expression_statement  go to state 139
+    expression_statement  go to state 141
     left_assign_expr      go to state 47
     assignment            go to state 48
     expr                  go to state 49
@@ -1566,9 +1628,9 @@ state 88
     function_call         go to state 55
 
 
-state 89
+state 90
 
-   56 loop_decl: for_decl loop_for_expr . instruction_body
+   57 loop_decl: for_decl loop_for_expr . instruction_body
 
     TOK_IDENTIFIER      shift, and go to state 1
     TOK_B_NOT           shift, and go to state 2
@@ -1576,7 +1638,7 @@ state 89
     TOK_IF              shift, and go to state 4
     TOK_ENDEXPR         shift, and go to state 5
     TOK_OPENPAR         shift, and go to state 6
-    TOK_OPENBR          shift, and go to state 92
+    TOK_OPENBR          shift, and go to state 93
     TOK_ROM_DECL        shift, and go to state 7
     TOK_INT_DECL        shift, and go to state 8
     TOK_FLOAT_DECL      shift, and go to state 9
@@ -1597,13 +1659,13 @@ state 89
     TOK_SWITCH          shift, and go to state 24
     TOK_STRING_LITERAL  shift, and go to state 25
 
-    stmnt_block_start     go to state 93
-    stmnt_block           go to state 94
+    stmnt_block_start     go to state 94
+    stmnt_block           go to state 95
     expr_or_assignment    go to state 29
     expression_statement  go to state 30
     lexemes               go to state 31
-    stmnt                 go to state 95
-    struct_type           go to state 96
+    stmnt                 go to state 96
+    struct_type           go to state 97
     print_stmt            go to state 38
     read_stmt             go to state 39
     if_stmt               go to state 40
@@ -1611,8 +1673,8 @@ state 89
     for_decl              go to state 42
     while_decl            go to state 43
     do_while_decl         go to state 44
-    instruction_body      go to state 140
-    type                  go to state 98
+    instruction_body      go to state 142
+    type                  go to state 99
     type_name             go to state 46
     left_assign_expr      go to state 47
     assignment            go to state 48
@@ -1627,9 +1689,9 @@ state 89
     function_def          go to state 57
 
 
-state 90
+state 91
 
-   59 loop_while_expr: TOK_OPENPAR . expr TOK_CLOSEPAR
+   60 loop_while_expr: TOK_OPENPAR . expr TOK_CLOSEPAR
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -1641,16 +1703,16 @@ state 90
     TOK_STRING_LITERAL  shift, and go to state 25
 
     left_assign_expr  go to state 64
-    expr              go to state 141
+    expr              go to state 143
     struct_item       go to state 50
     identifier        go to state 51
     const             go to state 52
     function_call     go to state 55
 
 
-state 91
+state 92
 
-   57 loop_decl: while_decl loop_while_expr . instruction_body
+   58 loop_decl: while_decl loop_while_expr . instruction_body
 
     TOK_IDENTIFIER      shift, and go to state 1
     TOK_B_NOT           shift, and go to state 2
@@ -1658,7 +1720,7 @@ state 91
     TOK_IF              shift, and go to state 4
     TOK_ENDEXPR         shift, and go to state 5
     TOK_OPENPAR         shift, and go to state 6
-    TOK_OPENBR          shift, and go to state 92
+    TOK_OPENBR          shift, and go to state 93
     TOK_ROM_DECL        shift, and go to state 7
     TOK_INT_DECL        shift, and go to state 8
     TOK_FLOAT_DECL      shift, and go to state 9
@@ -1679,13 +1741,13 @@ state 91
     TOK_SWITCH          shift, and go to state 24
     TOK_STRING_LITERAL  shift, and go to state 25
 
-    stmnt_block_start     go to state 93
-    stmnt_block           go to state 94
+    stmnt_block_start     go to state 94
+    stmnt_block           go to state 95
     expr_or_assignment    go to state 29
     expression_statement  go to state 30
     lexemes               go to state 31
-    stmnt                 go to state 95
-    struct_type           go to state 96
+    stmnt                 go to state 96
+    struct_type           go to state 97
     print_stmt            go to state 38
     read_stmt             go to state 39
     if_stmt               go to state 40
@@ -1693,8 +1755,8 @@ state 91
     for_decl              go to state 42
     while_decl            go to state 43
     do_while_decl         go to state 44
-    instruction_body      go to state 142
-    type                  go to state 98
+    instruction_body      go to state 144
+    type                  go to state 99
     type_name             go to state 46
     left_assign_expr      go to state 47
     assignment            go to state 48
@@ -1709,16 +1771,16 @@ state 91
     function_def          go to state 57
 
 
-state 92
+state 93
 
    12 stmnt_block_start: TOK_OPENBR . $@1
 
     $default  reduce using rule 11 ($@1)
 
-    $@1  go to state 143
+    $@1  go to state 145
 
 
-state 93
+state 94
 
    14 stmnt_block: stmnt_block_start . stmnt_list TOK_CLOSEBR $@2
    15            | stmnt_block_start . stmnt_list error
@@ -1751,8 +1813,8 @@ state 93
     TOK_SWITCH          shift, and go to state 24
     TOK_STRING_LITERAL  shift, and go to state 25
 
-    declaration_list      go to state 144
-    stmnt_list            go to state 145
+    declaration_list      go to state 146
+    stmnt_list            go to state 147
     expr_or_assignment    go to state 29
     expression_statement  go to state 30
     lexemes               go to state 31
@@ -1784,109 +1846,60 @@ state 93
     function_def          go to state 57
 
 
-state 94
-
-   65 instruction_body: stmnt_block .
-
-    $default  reduce using rule 65 (instruction_body)
-
-
 state 95
 
-   66 instruction_body: stmnt .
+   66 instruction_body: stmnt_block .
 
     $default  reduce using rule 66 (instruction_body)
 
 
 state 96
 
-   71 type_name: struct_type . TOK_IDENTIFIER
+   67 instruction_body: stmnt .
 
-    TOK_IDENTIFIER  shift, and go to state 146
+    $default  reduce using rule 67 (instruction_body)
 
 
 state 97
 
-   58 loop_decl: do_while_decl instruction_body . TOK_WHILE_DECL loop_while_expr TOK_ENDEXPR
-
-    TOK_WHILE_DECL  shift, and go to state 147
-
-
-state 98
-
-  120 function_def_head: type . TOK_IDENTIFIER
+   72 type_name: struct_type . TOK_IDENTIFIER
 
     TOK_IDENTIFIER  shift, and go to state 148
 
 
+state 98
+
+   59 loop_decl: do_while_decl instruction_body . TOK_WHILE_DECL loop_while_expr TOK_ENDEXPR
+
+    TOK_WHILE_DECL  shift, and go to state 149
+
+
 state 99
 
-   41 declaration_stmt: type TOK_IDENTIFIER .
-  120 function_def_head: type TOK_IDENTIFIER .
+  121 function_def_head: type . TOK_IDENTIFIER
 
-    TOK_OPENPAR  reduce using rule 120 (function_def_head)
-    $default     reduce using rule 41 (declaration_stmt)
+    TOK_IDENTIFIER  shift, and go to state 150
 
 
 state 100
 
-   67 type: type_name array .
+   42 declaration_stmt: type TOK_IDENTIFIER .
+  121 function_def_head: type TOK_IDENTIFIER .
 
-    $default  reduce using rule 67 (type)
+    TOK_OPENPAR  reduce using rule 121 (function_def_head)
+    $default     reduce using rule 42 (declaration_stmt)
 
 
 state 101
 
-   74 assignment: left_assign_expr TOK_ASSIGN_OP . expr
+   68 type: type_name array .
 
-    TOK_IDENTIFIER      shift, and go to state 63
-    TOK_B_NOT           shift, and go to state 2
-    TOK_AR_MINUS        shift, and go to state 3
-    TOK_OPENPAR         shift, and go to state 6
-    TOK_ROM_CONST       shift, and go to state 13
-    TOK_INT_CONST       shift, and go to state 14
-    TOK_FLOAT_CONST     shift, and go to state 15
-    TOK_STRING_LITERAL  shift, and go to state 25
-
-    left_assign_expr  go to state 64
-    expr              go to state 149
-    struct_item       go to state 50
-    identifier        go to state 51
-    const             go to state 52
-    function_call     go to state 55
+    $default  reduce using rule 68 (type)
 
 
 state 102
 
-   24 expression_statement: expr error .
-
-    $default  reduce using rule 24 (expression_statement)
-
-
-state 103
-
-   78 expr: expr TOK_B_AND . expr
-
-    TOK_IDENTIFIER      shift, and go to state 63
-    TOK_B_NOT           shift, and go to state 2
-    TOK_AR_MINUS        shift, and go to state 3
-    TOK_OPENPAR         shift, and go to state 6
-    TOK_ROM_CONST       shift, and go to state 13
-    TOK_INT_CONST       shift, and go to state 14
-    TOK_FLOAT_CONST     shift, and go to state 15
-    TOK_STRING_LITERAL  shift, and go to state 25
-
-    left_assign_expr  go to state 64
-    expr              go to state 150
-    struct_item       go to state 50
-    identifier        go to state 51
-    const             go to state 52
-    function_call     go to state 55
-
-
-state 104
-
-   79 expr: expr TOK_B_OR . expr
+   75 assignment: left_assign_expr TOK_ASSIGN_OP . expr
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -1905,9 +1918,16 @@ state 104
     function_call     go to state 55
 
 
-state 105
+state 103
 
-   80 expr: expr TOK_B_XOR . expr
+   24 expression_statement: expr error .
+
+    $default  reduce using rule 24 (expression_statement)
+
+
+state 104
+
+   79 expr: expr TOK_B_AND . expr
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -1926,9 +1946,9 @@ state 105
     function_call     go to state 55
 
 
-state 106
+state 105
 
-   83 expr: expr TOK_AR_PLUS . expr
+   80 expr: expr TOK_B_OR . expr
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -1947,9 +1967,9 @@ state 106
     function_call     go to state 55
 
 
-state 107
+state 106
 
-   84 expr: expr TOK_AR_MINUS . expr
+   81 expr: expr TOK_B_XOR . expr
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -1968,9 +1988,9 @@ state 107
     function_call     go to state 55
 
 
-state 108
+state 107
 
-   85 expr: expr TOK_AR_MUL . expr
+   84 expr: expr TOK_AR_PLUS . expr
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -1989,9 +2009,9 @@ state 108
     function_call     go to state 55
 
 
-state 109
+state 108
 
-   86 expr: expr TOK_AR_DIV . expr
+   85 expr: expr TOK_AR_MINUS . expr
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -2010,9 +2030,9 @@ state 109
     function_call     go to state 55
 
 
-state 110
+state 109
 
-   87 expr: expr TOK_AR_MOD . expr
+   86 expr: expr TOK_AR_MUL . expr
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -2031,9 +2051,9 @@ state 110
     function_call     go to state 55
 
 
-state 111
+state 110
 
-   88 expr: expr TOK_COMP_OP . expr
+   87 expr: expr TOK_AR_DIV . expr
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -2052,16 +2072,30 @@ state 111
     function_call     go to state 55
 
 
+state 111
+
+   88 expr: expr TOK_AR_MOD . expr
+
+    TOK_IDENTIFIER      shift, and go to state 63
+    TOK_B_NOT           shift, and go to state 2
+    TOK_AR_MINUS        shift, and go to state 3
+    TOK_OPENPAR         shift, and go to state 6
+    TOK_ROM_CONST       shift, and go to state 13
+    TOK_INT_CONST       shift, and go to state 14
+    TOK_FLOAT_CONST     shift, and go to state 15
+    TOK_STRING_LITERAL  shift, and go to state 25
+
+    left_assign_expr  go to state 64
+    expr              go to state 159
+    struct_item       go to state 50
+    identifier        go to state 51
+    const             go to state 52
+    function_call     go to state 55
+
+
 state 112
 
-   95 struct_item: identifier TOK_DOT . TOK_IDENTIFIER
-
-    TOK_IDENTIFIER  shift, and go to state 159
-
-
-state 113
-
-  107 case_head: TOK_CASE . expr TOK_DOUBLEDOT
+   89 expr: expr TOK_COMP_OP . expr
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -2080,35 +2114,63 @@ state 113
     function_call     go to state 55
 
 
+state 113
+
+   96 struct_item: identifier TOK_DOT . TOK_IDENTIFIER
+
+    TOK_IDENTIFIER  shift, and go to state 161
+
+
 state 114
 
-  101 switch_stmt: switch_head case_list . default TOK_CLOSEBR
-  102            | switch_head case_list . TOK_CLOSEBR
+  108 case_head: TOK_CASE . expr TOK_DOUBLEDOT
 
-    TOK_CLOSEBR  shift, and go to state 161
-    TOK_DEFAULT  shift, and go to state 162
+    TOK_IDENTIFIER      shift, and go to state 63
+    TOK_B_NOT           shift, and go to state 2
+    TOK_AR_MINUS        shift, and go to state 3
+    TOK_OPENPAR         shift, and go to state 6
+    TOK_ROM_CONST       shift, and go to state 13
+    TOK_INT_CONST       shift, and go to state 14
+    TOK_FLOAT_CONST     shift, and go to state 15
+    TOK_STRING_LITERAL  shift, and go to state 25
 
-    default       go to state 163
-    default_head  go to state 164
+    left_assign_expr  go to state 64
+    expr              go to state 162
+    struct_item       go to state 50
+    identifier        go to state 51
+    const             go to state 52
+    function_call     go to state 55
 
 
 state 115
 
-  104 case_list: case_stmt .
-  105          | case_stmt . case_list
+  102 switch_stmt: switch_head case_list . default TOK_CLOSEBR
+  103            | switch_head case_list . TOK_CLOSEBR
 
-    TOK_CASE  shift, and go to state 113
+    TOK_CLOSEBR  shift, and go to state 163
+    TOK_DEFAULT  shift, and go to state 164
 
-    $default  reduce using rule 104 (case_list)
-
-    case_list  go to state 165
-    case_stmt  go to state 115
-    case_head  go to state 116
+    default       go to state 165
+    default_head  go to state 166
 
 
 state 116
 
-  106 case_stmt: case_head . case_body
+  105 case_list: case_stmt .
+  106          | case_stmt . case_list
+
+    TOK_CASE  shift, and go to state 114
+
+    $default  reduce using rule 105 (case_list)
+
+    case_list  go to state 167
+    case_stmt  go to state 116
+    case_head  go to state 117
+
+
+state 117
+
+  107 case_stmt: case_head . case_body
 
     TOK_IDENTIFIER      shift, and go to state 1
     TOK_B_NOT           shift, and go to state 2
@@ -2116,7 +2178,7 @@ state 116
     TOK_IF              shift, and go to state 4
     TOK_ENDEXPR         shift, and go to state 5
     TOK_OPENPAR         shift, and go to state 6
-    TOK_OPENBR          shift, and go to state 92
+    TOK_OPENBR          shift, and go to state 93
     TOK_ROM_DECL        shift, and go to state 7
     TOK_INT_DECL        shift, and go to state 8
     TOK_FLOAT_DECL      shift, and go to state 9
@@ -2135,16 +2197,16 @@ state 116
     TOK_STRUCT          shift, and go to state 22
     TOK_UNION           shift, and go to state 23
     TOK_SWITCH          shift, and go to state 24
-    TOK_CASE            shift, and go to state 113
+    TOK_CASE            shift, and go to state 114
     TOK_STRING_LITERAL  shift, and go to state 25
 
-    stmnt_block_start     go to state 93
-    stmnt_block           go to state 94
+    stmnt_block_start     go to state 94
+    stmnt_block           go to state 95
     expr_or_assignment    go to state 29
     expression_statement  go to state 30
     lexemes               go to state 31
-    stmnt                 go to state 95
-    struct_type           go to state 96
+    stmnt                 go to state 96
+    struct_type           go to state 97
     print_stmt            go to state 38
     read_stmt             go to state 39
     if_stmt               go to state 40
@@ -2152,8 +2214,8 @@ state 116
     for_decl              go to state 42
     while_decl            go to state 43
     do_while_decl         go to state 44
-    instruction_body      go to state 166
-    type                  go to state 98
+    instruction_body      go to state 168
+    type                  go to state 99
     type_name             go to state 46
     left_assign_expr      go to state 47
     assignment            go to state 48
@@ -2163,258 +2225,284 @@ state 116
     const                 go to state 52
     switch_stmt           go to state 53
     switch_head           go to state 54
-    case_stmt             go to state 167
-    case_head             go to state 116
-    case_body             go to state 168
+    case_stmt             go to state 169
+    case_head             go to state 117
+    case_body             go to state 170
     function_call         go to state 55
     function_def_head     go to state 56
     function_def          go to state 57
 
 
-state 117
-
-  121 function_def: function_def_head declarator . stmnt_block
-
-    TOK_OPENBR  shift, and go to state 92
-
-    stmnt_block_start  go to state 93
-    stmnt_block        go to state 169
-
-
 state 118
 
-  113 parameter: TOK_IDENTIFIER .
+  122 func_declarator: declarator .
 
-    $default  reduce using rule 113 (parameter)
+    $default  reduce using rule 122 (func_declarator)
 
 
 state 119
 
-  118 declarator: TOK_OPENPAR TOK_CLOSEPAR .
+  123 function_def: function_def_head func_declarator . stmnt_block
 
-    $default  reduce using rule 118 (declarator)
+    TOK_OPENBR  shift, and go to state 93
+
+    stmnt_block_start  go to state 94
+    stmnt_block        go to state 171
 
 
 state 120
 
-  112 parameter: declaration_stmt .
+  119 declarator: TOK_OPENPAR TOK_CLOSEPAR .
 
-    $default  reduce using rule 112 (parameter)
+    $default  reduce using rule 119 (declarator)
 
 
 state 121
 
-   41 declaration_stmt: type . TOK_IDENTIFIER
+  113 parameter: declaration_stmt .
 
-    TOK_IDENTIFIER  shift, and go to state 170
+    $default  reduce using rule 113 (parameter)
 
 
 state 122
 
-  114 parameter_list: parameter .
+   42 declaration_stmt: type . TOK_IDENTIFIER
 
-    $default  reduce using rule 114 (parameter_list)
+    TOK_IDENTIFIER  shift, and go to state 172
 
 
 state 123
 
-  115 parameter_list: parameter_list . TOK_COMMA parameter
-  116 parameter_type_list: parameter_list .
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
+  114 parameter: expr .
 
-    TOK_COMMA  shift, and go to state 171
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+    TOK_AR_MOD    shift, and go to state 111
+    TOK_COMP_OP   shift, and go to state 112
 
-    $default  reduce using rule 116 (parameter_type_list)
+    $default  reduce using rule 114 (parameter)
 
 
 state 124
 
-  117 declarator: TOK_OPENPAR parameter_type_list . TOK_CLOSEPAR
+  115 parameter_list: parameter .
 
-    TOK_CLOSEPAR  shift, and go to state 172
+    $default  reduce using rule 115 (parameter_list)
 
 
 state 125
 
-   93 array: TOK_OPENSQ error .
+  116 parameter_list: parameter_list . TOK_COMMA parameter
+  117 parameter_type_list: parameter_list .
 
-    $default  reduce using rule 93 (array)
+    TOK_COMMA  shift, and go to state 173
+
+    $default  reduce using rule 117 (parameter_type_list)
 
 
 state 126
 
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
-   92 array: TOK_OPENSQ expr . TOK_CLOSESQ array
-   94      | TOK_OPENSQ expr . error
+  118 declarator: TOK_OPENPAR parameter_type_list . TOK_CLOSEPAR
 
-    error         shift, and go to state 173
-    TOK_B_AND     shift, and go to state 103
-    TOK_B_OR      shift, and go to state 104
-    TOK_B_XOR     shift, and go to state 105
-    TOK_AR_PLUS   shift, and go to state 106
-    TOK_AR_MINUS  shift, and go to state 107
-    TOK_AR_MUL    shift, and go to state 108
-    TOK_AR_DIV    shift, and go to state 109
-    TOK_AR_MOD    shift, and go to state 110
-    TOK_COMP_OP   shift, and go to state 111
-    TOK_CLOSESQ   shift, and go to state 174
+    TOK_CLOSEPAR  shift, and go to state 174
 
 
 state 127
 
-   53 if_stmt: TOK_IF TOK_OPENPAR expr . TOK_CLOSEPAR instruction_body
-   54        | TOK_IF TOK_OPENPAR expr . TOK_CLOSEPAR instruction_body TOK_ELSE instruction_body
-   55        | TOK_IF TOK_OPENPAR expr . error
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+   94 array: TOK_OPENSQ error .
 
-    error         shift, and go to state 175
-    TOK_B_AND     shift, and go to state 103
-    TOK_B_OR      shift, and go to state 104
-    TOK_B_XOR     shift, and go to state 105
-    TOK_AR_PLUS   shift, and go to state 106
-    TOK_AR_MINUS  shift, and go to state 107
-    TOK_AR_MUL    shift, and go to state 108
-    TOK_AR_DIV    shift, and go to state 109
-    TOK_AR_MOD    shift, and go to state 110
-    TOK_COMP_OP   shift, and go to state 111
-    TOK_CLOSEPAR  shift, and go to state 176
+    $default  reduce using rule 94 (array)
 
 
 state 128
 
-   89 expr: TOK_OPENPAR expr error .
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
+   93 array: TOK_OPENSQ expr . TOK_CLOSESQ array
+   95      | TOK_OPENSQ expr . error
 
-    $default  reduce using rule 89 (expr)
+    error         shift, and go to state 175
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+    TOK_AR_MOD    shift, and go to state 111
+    TOK_COMP_OP   shift, and go to state 112
+    TOK_CLOSESQ   shift, and go to state 176
 
 
 state 129
 
-   90 expr: TOK_OPENPAR expr TOK_CLOSEPAR .
+   54 if_stmt: TOK_IF TOK_OPENPAR expr . TOK_CLOSEPAR instruction_body
+   55        | TOK_IF TOK_OPENPAR expr . TOK_CLOSEPAR instruction_body TOK_ELSE instruction_body
+   56        | TOK_IF TOK_OPENPAR expr . error
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
 
-    $default  reduce using rule 90 (expr)
+    error         shift, and go to state 177
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+    TOK_AR_MOD    shift, and go to state 111
+    TOK_COMP_OP   shift, and go to state 112
+    TOK_CLOSEPAR  shift, and go to state 178
 
 
 state 130
 
-   48 print_stmt: TOK_PRINT TOK_OPENPAR expr . TOK_CLOSEPAR TOK_ENDEXPR
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+   90 expr: TOK_OPENPAR expr error .
 
-    TOK_B_AND     shift, and go to state 103
-    TOK_B_OR      shift, and go to state 104
-    TOK_B_XOR     shift, and go to state 105
-    TOK_AR_PLUS   shift, and go to state 106
-    TOK_AR_MINUS  shift, and go to state 107
-    TOK_AR_MUL    shift, and go to state 108
-    TOK_AR_DIV    shift, and go to state 109
-    TOK_AR_MOD    shift, and go to state 110
-    TOK_COMP_OP   shift, and go to state 111
-    TOK_CLOSEPAR  shift, and go to state 177
+    $default  reduce using rule 90 (expr)
 
 
 state 131
 
-   50 print_stmt: TOK_PRINT '(' expr . error
-   51           | TOK_PRINT '(' expr . ')' error
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+   91 expr: TOK_OPENPAR expr TOK_CLOSEPAR .
 
-    error         shift, and go to state 178
-    TOK_B_AND     shift, and go to state 103
-    TOK_B_OR      shift, and go to state 104
-    TOK_B_XOR     shift, and go to state 105
-    TOK_AR_PLUS   shift, and go to state 106
-    TOK_AR_MINUS  shift, and go to state 107
-    TOK_AR_MUL    shift, and go to state 108
-    TOK_AR_DIV    shift, and go to state 109
-    TOK_AR_MOD    shift, and go to state 110
-    TOK_COMP_OP   shift, and go to state 111
-    ')'           shift, and go to state 179
+    $default  reduce using rule 91 (expr)
 
 
 state 132
 
-   96 identifier: TOK_IDENTIFIER . array
+   49 print_stmt: TOK_PRINT TOK_OPENPAR expr . TOK_CLOSEPAR TOK_ENDEXPR
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
 
-    TOK_OPENSQ  shift, and go to state 59
-
-    $default  reduce using rule 91 (array)
-
-    array  go to state 61
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+    TOK_AR_MOD    shift, and go to state 111
+    TOK_COMP_OP   shift, and go to state 112
+    TOK_CLOSEPAR  shift, and go to state 179
 
 
 state 133
 
-   52 read_stmt: TOK_READ TOK_OPENPAR left_assign_expr . TOK_CLOSEPAR TOK_ENDEXPR
+   51 print_stmt: TOK_PRINT '(' expr . error
+   52           | TOK_PRINT '(' expr . ')' error
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
 
-    TOK_CLOSEPAR  shift, and go to state 180
+    error         shift, and go to state 180
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+    TOK_AR_MOD    shift, and go to state 111
+    TOK_COMP_OP   shift, and go to state 112
+    ')'           shift, and go to state 181
 
 
 state 134
 
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
-  103 switch_head: TOK_SWITCH TOK_OPENPAR expr . TOK_CLOSEPAR TOK_OPENBR
+   97 identifier: TOK_IDENTIFIER . array
 
-    TOK_B_AND     shift, and go to state 103
-    TOK_B_OR      shift, and go to state 104
-    TOK_B_XOR     shift, and go to state 105
-    TOK_AR_PLUS   shift, and go to state 106
-    TOK_AR_MINUS  shift, and go to state 107
-    TOK_AR_MUL    shift, and go to state 108
-    TOK_AR_DIV    shift, and go to state 109
-    TOK_AR_MOD    shift, and go to state 110
-    TOK_COMP_OP   shift, and go to state 111
-    TOK_CLOSEPAR  shift, and go to state 181
+    TOK_OPENSQ  shift, and go to state 59
+
+    $default  reduce using rule 92 (array)
+
+    array  go to state 61
 
 
 state 135
+
+   53 read_stmt: TOK_READ TOK_OPENPAR left_assign_expr . TOK_CLOSEPAR TOK_ENDEXPR
+
+    TOK_CLOSEPAR  shift, and go to state 182
+
+
+state 136
+
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
+  104 switch_head: TOK_SWITCH TOK_OPENPAR expr . TOK_CLOSEPAR TOK_OPENBR
+
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+    TOK_AR_MOD    shift, and go to state 111
+    TOK_COMP_OP   shift, and go to state 112
+    TOK_CLOSEPAR  shift, and go to state 183
+
+
+state 137
 
     7 declaration_list: declaration_list declaration_block TOK_ENDEXPR .
 
     $default  reduce using rule 7 (declaration_list)
 
 
-state 136
+state 138
 
     7 declaration_list: declaration_list . declaration_block TOK_ENDEXPR
-   46 struct_body: TOK_OPENBR declaration_list .
+   47 struct_body: TOK_OPENBR declaration_list .
 
     TOK_ROM_DECL    shift, and go to state 7
     TOK_INT_DECL    shift, and go to state 8
@@ -2422,35 +2510,35 @@ state 136
     TOK_STRUCT      shift, and go to state 22
     TOK_UNION       shift, and go to state 23
 
-    $default  reduce using rule 46 (struct_body)
+    $default  reduce using rule 47 (struct_body)
 
-    declaration_block  go to state 77
+    declaration_block  go to state 78
     declaration_stmt   go to state 34
     struct_def         go to state 35
     struct_head        go to state 36
     struct_type        go to state 37
-    type               go to state 121
+    type               go to state 122
     type_name          go to state 46
-
-
-state 137
-
-   47 struct_tail: TOK_CLOSEBR .
-
-    $default  reduce using rule 47 (struct_tail)
-
-
-state 138
-
-   42 struct_def: struct_head struct_body struct_tail .
-
-    $default  reduce using rule 42 (struct_def)
 
 
 state 139
 
-   60 loop_for_expr: TOK_OPENPAR expression_statement . expression_statement TOK_CLOSEPAR
-   61              | TOK_OPENPAR expression_statement . expression_statement expr_or_assignment TOK_CLOSEPAR
+   48 struct_tail: TOK_CLOSEBR .
+
+    $default  reduce using rule 48 (struct_tail)
+
+
+state 140
+
+   43 struct_def: struct_head struct_body struct_tail .
+
+    $default  reduce using rule 43 (struct_def)
+
+
+state 141
+
+   61 loop_for_expr: TOK_OPENPAR expression_statement . expression_statement TOK_CLOSEPAR
+   62              | TOK_OPENPAR expression_statement . expression_statement expr_or_assignment TOK_CLOSEPAR
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
@@ -2463,7 +2551,7 @@ state 139
     TOK_STRING_LITERAL  shift, and go to state 25
 
     expr_or_assignment    go to state 29
-    expression_statement  go to state 182
+    expression_statement  go to state 184
     left_assign_expr      go to state 47
     assignment            go to state 48
     expr                  go to state 49
@@ -2473,53 +2561,53 @@ state 139
     function_call         go to state 55
 
 
-state 140
-
-   56 loop_decl: for_decl loop_for_expr instruction_body .
-
-    $default  reduce using rule 56 (loop_decl)
-
-
-state 141
-
-   59 loop_while_expr: TOK_OPENPAR expr . TOK_CLOSEPAR
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
-
-    TOK_B_AND     shift, and go to state 103
-    TOK_B_OR      shift, and go to state 104
-    TOK_B_XOR     shift, and go to state 105
-    TOK_AR_PLUS   shift, and go to state 106
-    TOK_AR_MINUS  shift, and go to state 107
-    TOK_AR_MUL    shift, and go to state 108
-    TOK_AR_DIV    shift, and go to state 109
-    TOK_AR_MOD    shift, and go to state 110
-    TOK_COMP_OP   shift, and go to state 111
-    TOK_CLOSEPAR  shift, and go to state 183
-
-
 state 142
 
-   57 loop_decl: while_decl loop_while_expr instruction_body .
+   57 loop_decl: for_decl loop_for_expr instruction_body .
 
     $default  reduce using rule 57 (loop_decl)
 
 
 state 143
 
+   60 loop_while_expr: TOK_OPENPAR expr . TOK_CLOSEPAR
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
+
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+    TOK_AR_MOD    shift, and go to state 111
+    TOK_COMP_OP   shift, and go to state 112
+    TOK_CLOSEPAR  shift, and go to state 185
+
+
+state 144
+
+   58 loop_decl: while_decl loop_while_expr instruction_body .
+
+    $default  reduce using rule 58 (loop_decl)
+
+
+state 145
+
    12 stmnt_block_start: TOK_OPENBR $@1 .
 
     $default  reduce using rule 12 (stmnt_block_start)
 
 
-state 144
+state 146
 
     7 declaration_list: declaration_list . declaration_block TOK_ENDEXPR
    17 stmnt_block: stmnt_block_start declaration_list . TOK_CLOSEBR $@3
@@ -2531,7 +2619,7 @@ state 144
     TOK_IF              shift, and go to state 4
     TOK_ENDEXPR         shift, and go to state 5
     TOK_OPENPAR         shift, and go to state 6
-    TOK_CLOSEBR         shift, and go to state 184
+    TOK_CLOSEBR         shift, and go to state 186
     TOK_ROM_DECL        shift, and go to state 7
     TOK_INT_DECL        shift, and go to state 8
     TOK_FLOAT_DECL      shift, and go to state 9
@@ -2552,12 +2640,12 @@ state 144
     TOK_SWITCH          shift, and go to state 24
     TOK_STRING_LITERAL  shift, and go to state 25
 
-    stmnt_list            go to state 185
+    stmnt_list            go to state 187
     expr_or_assignment    go to state 29
     expression_statement  go to state 30
     lexemes               go to state 31
     stmnt                 go to state 32
-    declaration_block     go to state 77
+    declaration_block     go to state 78
     declaration_stmt      go to state 34
     struct_def            go to state 35
     struct_head           go to state 36
@@ -2584,20 +2672,20 @@ state 144
     function_def          go to state 57
 
 
-state 145
+state 147
 
    10 stmnt_list: stmnt_list . stmnt
    14 stmnt_block: stmnt_block_start stmnt_list . TOK_CLOSEBR $@2
    15            | stmnt_block_start stmnt_list . error
 
-    error               shift, and go to state 186
+    error               shift, and go to state 188
     TOK_IDENTIFIER      shift, and go to state 1
     TOK_B_NOT           shift, and go to state 2
     TOK_AR_MINUS        shift, and go to state 3
     TOK_IF              shift, and go to state 4
     TOK_ENDEXPR         shift, and go to state 5
     TOK_OPENPAR         shift, and go to state 6
-    TOK_CLOSEBR         shift, and go to state 187
+    TOK_CLOSEBR         shift, and go to state 189
     TOK_ROM_DECL        shift, and go to state 7
     TOK_INT_DECL        shift, and go to state 8
     TOK_FLOAT_DECL      shift, and go to state 9
@@ -2621,8 +2709,8 @@ state 145
     expr_or_assignment    go to state 29
     expression_statement  go to state 30
     lexemes               go to state 31
-    stmnt                 go to state 79
-    struct_type           go to state 96
+    stmnt                 go to state 80
+    struct_type           go to state 97
     print_stmt            go to state 38
     read_stmt             go to state 39
     if_stmt               go to state 40
@@ -2630,7 +2718,7 @@ state 145
     for_decl              go to state 42
     while_decl            go to state 43
     do_while_decl         go to state 44
-    type                  go to state 98
+    type                  go to state 99
     type_name             go to state 46
     left_assign_expr      go to state 47
     assignment            go to state 48
@@ -2643,444 +2731,290 @@ state 145
     function_call         go to state 55
     function_def_head     go to state 56
     function_def          go to state 57
-
-
-state 146
-
-   71 type_name: struct_type TOK_IDENTIFIER .
-
-    $default  reduce using rule 71 (type_name)
-
-
-state 147
-
-   58 loop_decl: do_while_decl instruction_body TOK_WHILE_DECL . loop_while_expr TOK_ENDEXPR
-
-    TOK_OPENPAR  shift, and go to state 90
-
-    loop_while_expr  go to state 188
 
 
 state 148
 
-  120 function_def_head: type TOK_IDENTIFIER .
+   72 type_name: struct_type TOK_IDENTIFIER .
 
-    $default  reduce using rule 120 (function_def_head)
+    $default  reduce using rule 72 (type_name)
 
 
 state 149
 
-   74 assignment: left_assign_expr TOK_ASSIGN_OP expr .
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+   59 loop_decl: do_while_decl instruction_body TOK_WHILE_DECL . loop_while_expr TOK_ENDEXPR
 
-    TOK_B_AND     shift, and go to state 103
-    TOK_B_OR      shift, and go to state 104
-    TOK_B_XOR     shift, and go to state 105
-    TOK_AR_PLUS   shift, and go to state 106
-    TOK_AR_MINUS  shift, and go to state 107
-    TOK_AR_MUL    shift, and go to state 108
-    TOK_AR_DIV    shift, and go to state 109
-    TOK_AR_MOD    shift, and go to state 110
-    TOK_COMP_OP   shift, and go to state 111
+    TOK_OPENPAR  shift, and go to state 91
 
-    $default  reduce using rule 74 (assignment)
+    loop_while_expr  go to state 190
 
 
 state 150
 
-   78 expr: expr . TOK_B_AND expr
-   78     | expr TOK_B_AND expr .
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+  121 function_def_head: type TOK_IDENTIFIER .
 
-    $default  reduce using rule 78 (expr)
+    $default  reduce using rule 121 (function_def_head)
 
 
 state 151
 
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   79     | expr TOK_B_OR expr .
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+   75 assignment: left_assign_expr TOK_ASSIGN_OP expr .
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
 
-    TOK_B_AND   shift, and go to state 103
-    TOK_AR_MUL  shift, and go to state 108
-    TOK_AR_DIV  shift, and go to state 109
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+    TOK_AR_MOD    shift, and go to state 111
+    TOK_COMP_OP   shift, and go to state 112
 
-    $default  reduce using rule 79 (expr)
+    $default  reduce using rule 75 (assignment)
 
 
 state 152
 
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   80     | expr TOK_B_XOR expr .
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+   79 expr: expr . TOK_B_AND expr
+   79     | expr TOK_B_AND expr .
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
 
-    TOK_B_AND   shift, and go to state 103
-    TOK_AR_MUL  shift, and go to state 108
-    TOK_AR_DIV  shift, and go to state 109
-
-    $default  reduce using rule 80 (expr)
+    $default  reduce using rule 79 (expr)
 
 
 state 153
 
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   83     | expr TOK_AR_PLUS expr .
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   80     | expr TOK_B_OR expr .
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
 
-    TOK_B_AND   shift, and go to state 103
-    TOK_AR_MUL  shift, and go to state 108
-    TOK_AR_DIV  shift, and go to state 109
+    TOK_B_AND   shift, and go to state 104
+    TOK_AR_MUL  shift, and go to state 109
+    TOK_AR_DIV  shift, and go to state 110
 
-    $default  reduce using rule 83 (expr)
+    $default  reduce using rule 80 (expr)
 
 
 state 154
 
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   84     | expr TOK_AR_MINUS expr .
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   81     | expr TOK_B_XOR expr .
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
 
-    TOK_B_AND   shift, and go to state 103
-    TOK_AR_MUL  shift, and go to state 108
-    TOK_AR_DIV  shift, and go to state 109
+    TOK_B_AND   shift, and go to state 104
+    TOK_AR_MUL  shift, and go to state 109
+    TOK_AR_DIV  shift, and go to state 110
 
-    $default  reduce using rule 84 (expr)
+    $default  reduce using rule 81 (expr)
 
 
 state 155
 
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   85     | expr TOK_AR_MUL expr .
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   84     | expr TOK_AR_PLUS expr .
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
 
-    $default  reduce using rule 85 (expr)
+    TOK_B_AND   shift, and go to state 104
+    TOK_AR_MUL  shift, and go to state 109
+    TOK_AR_DIV  shift, and go to state 110
+
+    $default  reduce using rule 84 (expr)
 
 
 state 156
 
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   86     | expr TOK_AR_DIV expr .
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   85     | expr TOK_AR_MINUS expr .
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
 
-    $default  reduce using rule 86 (expr)
+    TOK_B_AND   shift, and go to state 104
+    TOK_AR_MUL  shift, and go to state 109
+    TOK_AR_DIV  shift, and go to state 110
+
+    $default  reduce using rule 85 (expr)
 
 
 state 157
 
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   87     | expr TOK_AR_MOD expr .
-   88     | expr . TOK_COMP_OP expr
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   86     | expr TOK_AR_MUL expr .
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
 
-    TOK_B_AND     shift, and go to state 103
-    TOK_B_OR      shift, and go to state 104
-    TOK_B_XOR     shift, and go to state 105
-    TOK_AR_PLUS   shift, and go to state 106
-    TOK_AR_MINUS  shift, and go to state 107
-    TOK_AR_MUL    shift, and go to state 108
-    TOK_AR_DIV    shift, and go to state 109
-
-    $default  reduce using rule 87 (expr)
+    $default  reduce using rule 86 (expr)
 
 
 state 158
 
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
-   88     | expr TOK_COMP_OP expr .
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   87     | expr TOK_AR_DIV expr .
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
 
-    TOK_B_AND     shift, and go to state 103
-    TOK_B_OR      shift, and go to state 104
-    TOK_B_XOR     shift, and go to state 105
-    TOK_AR_PLUS   shift, and go to state 106
-    TOK_AR_MINUS  shift, and go to state 107
-    TOK_AR_MUL    shift, and go to state 108
-    TOK_AR_DIV    shift, and go to state 109
-    TOK_AR_MOD    shift, and go to state 110
-
-    $default  reduce using rule 88 (expr)
+    $default  reduce using rule 87 (expr)
 
 
 state 159
 
-   95 struct_item: identifier TOK_DOT TOK_IDENTIFIER .
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   88     | expr TOK_AR_MOD expr .
+   89     | expr . TOK_COMP_OP expr
 
-    $default  reduce using rule 95 (struct_item)
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+
+    $default  reduce using rule 88 (expr)
 
 
 state 160
 
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
-  107 case_head: TOK_CASE expr . TOK_DOUBLEDOT
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
+   89     | expr TOK_COMP_OP expr .
 
-    TOK_B_AND      shift, and go to state 103
-    TOK_B_OR       shift, and go to state 104
-    TOK_B_XOR      shift, and go to state 105
-    TOK_AR_PLUS    shift, and go to state 106
-    TOK_AR_MINUS   shift, and go to state 107
-    TOK_AR_MUL     shift, and go to state 108
-    TOK_AR_DIV     shift, and go to state 109
-    TOK_AR_MOD     shift, and go to state 110
-    TOK_COMP_OP    shift, and go to state 111
-    TOK_DOUBLEDOT  shift, and go to state 189
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+    TOK_AR_MOD    shift, and go to state 111
+
+    $default  reduce using rule 89 (expr)
 
 
 state 161
 
-  102 switch_stmt: switch_head case_list TOK_CLOSEBR .
+   96 struct_item: identifier TOK_DOT TOK_IDENTIFIER .
 
-    $default  reduce using rule 102 (switch_stmt)
+    $default  reduce using rule 96 (struct_item)
 
 
 state 162
 
-  111 default_head: TOK_DEFAULT . TOK_DOUBLEDOT
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
+  108 case_head: TOK_CASE expr . TOK_DOUBLEDOT
 
-    TOK_DOUBLEDOT  shift, and go to state 190
+    TOK_B_AND      shift, and go to state 104
+    TOK_B_OR       shift, and go to state 105
+    TOK_B_XOR      shift, and go to state 106
+    TOK_AR_PLUS    shift, and go to state 107
+    TOK_AR_MINUS   shift, and go to state 108
+    TOK_AR_MUL     shift, and go to state 109
+    TOK_AR_DIV     shift, and go to state 110
+    TOK_AR_MOD     shift, and go to state 111
+    TOK_COMP_OP    shift, and go to state 112
+    TOK_DOUBLEDOT  shift, and go to state 191
 
 
 state 163
 
-  101 switch_stmt: switch_head case_list default . TOK_CLOSEBR
+  103 switch_stmt: switch_head case_list TOK_CLOSEBR .
 
-    TOK_CLOSEBR  shift, and go to state 191
+    $default  reduce using rule 103 (switch_stmt)
 
 
 state 164
 
-  110 default: default_head . instruction_body
+  112 default_head: TOK_DEFAULT . TOK_DOUBLEDOT
 
-    TOK_IDENTIFIER      shift, and go to state 1
-    TOK_B_NOT           shift, and go to state 2
-    TOK_AR_MINUS        shift, and go to state 3
-    TOK_IF              shift, and go to state 4
-    TOK_ENDEXPR         shift, and go to state 5
-    TOK_OPENPAR         shift, and go to state 6
-    TOK_OPENBR          shift, and go to state 92
-    TOK_ROM_DECL        shift, and go to state 7
-    TOK_INT_DECL        shift, and go to state 8
-    TOK_FLOAT_DECL      shift, and go to state 9
-    TOK_FOR_DECL        shift, and go to state 10
-    TOK_WHILE_DECL      shift, and go to state 11
-    TOK_DO_DECL         shift, and go to state 12
-    TOK_ROM_CONST       shift, and go to state 13
-    TOK_INT_CONST       shift, and go to state 14
-    TOK_FLOAT_CONST     shift, and go to state 15
-    TOK_PRINT           shift, and go to state 16
-    TOK_READ            shift, and go to state 17
-    TOK_BREAK           shift, and go to state 18
-    TOK_CONTINUE        shift, and go to state 19
-    TOK_GOTO            shift, and go to state 20
-    TOK_RETURN          shift, and go to state 21
-    TOK_STRUCT          shift, and go to state 22
-    TOK_UNION           shift, and go to state 23
-    TOK_SWITCH          shift, and go to state 24
-    TOK_STRING_LITERAL  shift, and go to state 25
-
-    stmnt_block_start     go to state 93
-    stmnt_block           go to state 94
-    expr_or_assignment    go to state 29
-    expression_statement  go to state 30
-    lexemes               go to state 31
-    stmnt                 go to state 95
-    struct_type           go to state 96
-    print_stmt            go to state 38
-    read_stmt             go to state 39
-    if_stmt               go to state 40
-    loop_decl             go to state 41
-    for_decl              go to state 42
-    while_decl            go to state 43
-    do_while_decl         go to state 44
-    instruction_body      go to state 192
-    type                  go to state 98
-    type_name             go to state 46
-    left_assign_expr      go to state 47
-    assignment            go to state 48
-    expr                  go to state 49
-    struct_item           go to state 50
-    identifier            go to state 51
-    const                 go to state 52
-    switch_stmt           go to state 53
-    switch_head           go to state 54
-    function_call         go to state 55
-    function_def_head     go to state 56
-    function_def          go to state 57
+    TOK_DOUBLEDOT  shift, and go to state 192
 
 
 state 165
 
-  105 case_list: case_stmt case_list .
+  102 switch_stmt: switch_head case_list default . TOK_CLOSEBR
 
-    $default  reduce using rule 105 (case_list)
+    TOK_CLOSEBR  shift, and go to state 193
 
 
 state 166
 
-  108 case_body: instruction_body .
-
-    $default  reduce using rule 108 (case_body)
-
-
-state 167
-
-  109 case_body: case_stmt .
-
-    $default  reduce using rule 109 (case_body)
-
-
-state 168
-
-  106 case_stmt: case_head case_body .
-
-    $default  reduce using rule 106 (case_stmt)
-
-
-state 169
-
-  121 function_def: function_def_head declarator stmnt_block .
-
-    $default  reduce using rule 121 (function_def)
-
-
-state 170
-
-   41 declaration_stmt: type TOK_IDENTIFIER .
-
-    $default  reduce using rule 41 (declaration_stmt)
-
-
-state 171
-
-  115 parameter_list: parameter_list TOK_COMMA . parameter
-
-    TOK_IDENTIFIER  shift, and go to state 118
-    TOK_ROM_DECL    shift, and go to state 7
-    TOK_INT_DECL    shift, and go to state 8
-    TOK_FLOAT_DECL  shift, and go to state 9
-    TOK_STRUCT      shift, and go to state 22
-    TOK_UNION       shift, and go to state 23
-
-    declaration_stmt  go to state 120
-    struct_type       go to state 96
-    type              go to state 121
-    type_name         go to state 46
-    parameter         go to state 193
-
-
-state 172
-
-  117 declarator: TOK_OPENPAR parameter_type_list TOK_CLOSEPAR .
-
-    $default  reduce using rule 117 (declarator)
-
-
-state 173
-
-   94 array: TOK_OPENSQ expr error .
-
-    $default  reduce using rule 94 (array)
-
-
-state 174
-
-   92 array: TOK_OPENSQ expr TOK_CLOSESQ . array
-
-    TOK_OPENSQ  shift, and go to state 59
-
-    $default  reduce using rule 91 (array)
-
-    array  go to state 194
-
-
-state 175
-
-   55 if_stmt: TOK_IF TOK_OPENPAR expr error .
-
-    $default  reduce using rule 55 (if_stmt)
-
-
-state 176
-
-   53 if_stmt: TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR . instruction_body
-   54        | TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR . instruction_body TOK_ELSE instruction_body
+  111 default: default_head . instruction_body
 
     TOK_IDENTIFIER      shift, and go to state 1
     TOK_B_NOT           shift, and go to state 2
@@ -3088,7 +3022,7 @@ state 176
     TOK_IF              shift, and go to state 4
     TOK_ENDEXPR         shift, and go to state 5
     TOK_OPENPAR         shift, and go to state 6
-    TOK_OPENBR          shift, and go to state 92
+    TOK_OPENBR          shift, and go to state 93
     TOK_ROM_DECL        shift, and go to state 7
     TOK_INT_DECL        shift, and go to state 8
     TOK_FLOAT_DECL      shift, and go to state 9
@@ -3109,13 +3043,13 @@ state 176
     TOK_SWITCH          shift, and go to state 24
     TOK_STRING_LITERAL  shift, and go to state 25
 
-    stmnt_block_start     go to state 93
-    stmnt_block           go to state 94
+    stmnt_block_start     go to state 94
+    stmnt_block           go to state 95
     expr_or_assignment    go to state 29
     expression_statement  go to state 30
     lexemes               go to state 31
-    stmnt                 go to state 95
-    struct_type           go to state 96
+    stmnt                 go to state 96
+    struct_type           go to state 97
     print_stmt            go to state 38
     read_stmt             go to state 39
     if_stmt               go to state 40
@@ -3123,8 +3057,8 @@ state 176
     for_decl              go to state 42
     while_decl            go to state 43
     do_while_decl         go to state 44
-    instruction_body      go to state 195
-    type                  go to state 98
+    instruction_body      go to state 194
+    type                  go to state 99
     type_name             go to state 46
     left_assign_expr      go to state 47
     assignment            go to state 48
@@ -3139,83 +3073,250 @@ state 176
     function_def          go to state 57
 
 
-state 177
+state 167
 
-   48 print_stmt: TOK_PRINT TOK_OPENPAR expr TOK_CLOSEPAR . TOK_ENDEXPR
+  106 case_list: case_stmt case_list .
 
-    TOK_ENDEXPR  shift, and go to state 196
-
-
-state 178
-
-   50 print_stmt: TOK_PRINT '(' expr error .
-
-    $default  reduce using rule 50 (print_stmt)
+    $default  reduce using rule 106 (case_list)
 
 
-state 179
+state 168
 
-   51 print_stmt: TOK_PRINT '(' expr ')' . error
+  109 case_body: instruction_body .
 
-    error  shift, and go to state 197
-
-
-state 180
-
-   52 read_stmt: TOK_READ TOK_OPENPAR left_assign_expr TOK_CLOSEPAR . TOK_ENDEXPR
-
-    TOK_ENDEXPR  shift, and go to state 198
+    $default  reduce using rule 109 (case_body)
 
 
-state 181
+state 169
 
-  103 switch_head: TOK_SWITCH TOK_OPENPAR expr TOK_CLOSEPAR . TOK_OPENBR
+  110 case_body: case_stmt .
 
-    TOK_OPENBR  shift, and go to state 199
+    $default  reduce using rule 110 (case_body)
 
 
-state 182
+state 170
 
-   60 loop_for_expr: TOK_OPENPAR expression_statement expression_statement . TOK_CLOSEPAR
-   61              | TOK_OPENPAR expression_statement expression_statement . expr_or_assignment TOK_CLOSEPAR
+  107 case_stmt: case_head case_body .
+
+    $default  reduce using rule 107 (case_stmt)
+
+
+state 171
+
+  123 function_def: function_def_head func_declarator stmnt_block .
+
+    $default  reduce using rule 123 (function_def)
+
+
+state 172
+
+   42 declaration_stmt: type TOK_IDENTIFIER .
+
+    $default  reduce using rule 42 (declaration_stmt)
+
+
+state 173
+
+  116 parameter_list: parameter_list TOK_COMMA . parameter
 
     TOK_IDENTIFIER      shift, and go to state 63
     TOK_B_NOT           shift, and go to state 2
     TOK_AR_MINUS        shift, and go to state 3
     TOK_OPENPAR         shift, and go to state 6
-    TOK_CLOSEPAR        shift, and go to state 200
+    TOK_ROM_DECL        shift, and go to state 7
+    TOK_INT_DECL        shift, and go to state 8
+    TOK_FLOAT_DECL      shift, and go to state 9
+    TOK_ROM_CONST       shift, and go to state 13
+    TOK_INT_CONST       shift, and go to state 14
+    TOK_FLOAT_CONST     shift, and go to state 15
+    TOK_STRUCT          shift, and go to state 22
+    TOK_UNION           shift, and go to state 23
+    TOK_STRING_LITERAL  shift, and go to state 25
+
+    declaration_stmt  go to state 121
+    struct_type       go to state 97
+    type              go to state 122
+    type_name         go to state 46
+    left_assign_expr  go to state 64
+    expr              go to state 123
+    struct_item       go to state 50
+    identifier        go to state 51
+    const             go to state 52
+    parameter         go to state 195
+    function_call     go to state 55
+
+
+state 174
+
+  118 declarator: TOK_OPENPAR parameter_type_list TOK_CLOSEPAR .
+
+    $default  reduce using rule 118 (declarator)
+
+
+state 175
+
+   95 array: TOK_OPENSQ expr error .
+
+    $default  reduce using rule 95 (array)
+
+
+state 176
+
+   93 array: TOK_OPENSQ expr TOK_CLOSESQ . array
+
+    TOK_OPENSQ  shift, and go to state 59
+
+    $default  reduce using rule 92 (array)
+
+    array  go to state 196
+
+
+state 177
+
+   56 if_stmt: TOK_IF TOK_OPENPAR expr error .
+
+    $default  reduce using rule 56 (if_stmt)
+
+
+state 178
+
+   54 if_stmt: TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR . instruction_body
+   55        | TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR . instruction_body TOK_ELSE instruction_body
+
+    TOK_IDENTIFIER      shift, and go to state 1
+    TOK_B_NOT           shift, and go to state 2
+    TOK_AR_MINUS        shift, and go to state 3
+    TOK_IF              shift, and go to state 4
+    TOK_ENDEXPR         shift, and go to state 5
+    TOK_OPENPAR         shift, and go to state 6
+    TOK_OPENBR          shift, and go to state 93
+    TOK_ROM_DECL        shift, and go to state 7
+    TOK_INT_DECL        shift, and go to state 8
+    TOK_FLOAT_DECL      shift, and go to state 9
+    TOK_FOR_DECL        shift, and go to state 10
+    TOK_WHILE_DECL      shift, and go to state 11
+    TOK_DO_DECL         shift, and go to state 12
+    TOK_ROM_CONST       shift, and go to state 13
+    TOK_INT_CONST       shift, and go to state 14
+    TOK_FLOAT_CONST     shift, and go to state 15
+    TOK_PRINT           shift, and go to state 16
+    TOK_READ            shift, and go to state 17
+    TOK_BREAK           shift, and go to state 18
+    TOK_CONTINUE        shift, and go to state 19
+    TOK_GOTO            shift, and go to state 20
+    TOK_RETURN          shift, and go to state 21
+    TOK_STRUCT          shift, and go to state 22
+    TOK_UNION           shift, and go to state 23
+    TOK_SWITCH          shift, and go to state 24
+    TOK_STRING_LITERAL  shift, and go to state 25
+
+    stmnt_block_start     go to state 94
+    stmnt_block           go to state 95
+    expr_or_assignment    go to state 29
+    expression_statement  go to state 30
+    lexemes               go to state 31
+    stmnt                 go to state 96
+    struct_type           go to state 97
+    print_stmt            go to state 38
+    read_stmt             go to state 39
+    if_stmt               go to state 40
+    loop_decl             go to state 41
+    for_decl              go to state 42
+    while_decl            go to state 43
+    do_while_decl         go to state 44
+    instruction_body      go to state 197
+    type                  go to state 99
+    type_name             go to state 46
+    left_assign_expr      go to state 47
+    assignment            go to state 48
+    expr                  go to state 49
+    struct_item           go to state 50
+    identifier            go to state 51
+    const                 go to state 52
+    switch_stmt           go to state 53
+    switch_head           go to state 54
+    function_call         go to state 55
+    function_def_head     go to state 56
+    function_def          go to state 57
+
+
+state 179
+
+   49 print_stmt: TOK_PRINT TOK_OPENPAR expr TOK_CLOSEPAR . TOK_ENDEXPR
+
+    TOK_ENDEXPR  shift, and go to state 198
+
+
+state 180
+
+   51 print_stmt: TOK_PRINT '(' expr error .
+
+    $default  reduce using rule 51 (print_stmt)
+
+
+state 181
+
+   52 print_stmt: TOK_PRINT '(' expr ')' . error
+
+    error  shift, and go to state 199
+
+
+state 182
+
+   53 read_stmt: TOK_READ TOK_OPENPAR left_assign_expr TOK_CLOSEPAR . TOK_ENDEXPR
+
+    TOK_ENDEXPR  shift, and go to state 200
+
+
+state 183
+
+  104 switch_head: TOK_SWITCH TOK_OPENPAR expr TOK_CLOSEPAR . TOK_OPENBR
+
+    TOK_OPENBR  shift, and go to state 201
+
+
+state 184
+
+   61 loop_for_expr: TOK_OPENPAR expression_statement expression_statement . TOK_CLOSEPAR
+   62              | TOK_OPENPAR expression_statement expression_statement . expr_or_assignment TOK_CLOSEPAR
+
+    TOK_IDENTIFIER      shift, and go to state 63
+    TOK_B_NOT           shift, and go to state 2
+    TOK_AR_MINUS        shift, and go to state 3
+    TOK_OPENPAR         shift, and go to state 6
+    TOK_CLOSEPAR        shift, and go to state 202
     TOK_ROM_CONST       shift, and go to state 13
     TOK_INT_CONST       shift, and go to state 14
     TOK_FLOAT_CONST     shift, and go to state 15
     TOK_STRING_LITERAL  shift, and go to state 25
 
-    expr_or_assignment  go to state 201
+    expr_or_assignment  go to state 203
     left_assign_expr    go to state 47
     assignment          go to state 48
-    expr                go to state 202
+    expr                go to state 204
     struct_item         go to state 50
     identifier          go to state 51
     const               go to state 52
     function_call       go to state 55
 
 
-state 183
+state 185
 
-   59 loop_while_expr: TOK_OPENPAR expr TOK_CLOSEPAR .
+   60 loop_while_expr: TOK_OPENPAR expr TOK_CLOSEPAR .
 
-    $default  reduce using rule 59 (loop_while_expr)
+    $default  reduce using rule 60 (loop_while_expr)
 
 
-state 184
+state 186
 
    17 stmnt_block: stmnt_block_start declaration_list TOK_CLOSEBR . $@3
 
     $default  reduce using rule 16 ($@3)
 
-    $@3  go to state 203
+    $@3  go to state 205
 
 
-state 185
+state 187
 
    10 stmnt_list: stmnt_list . stmnt
    19 stmnt_block: stmnt_block_start declaration_list stmnt_list . TOK_CLOSEBR $@4
@@ -3226,7 +3327,7 @@ state 185
     TOK_IF              shift, and go to state 4
     TOK_ENDEXPR         shift, and go to state 5
     TOK_OPENPAR         shift, and go to state 6
-    TOK_CLOSEBR         shift, and go to state 204
+    TOK_CLOSEBR         shift, and go to state 206
     TOK_ROM_DECL        shift, and go to state 7
     TOK_INT_DECL        shift, and go to state 8
     TOK_FLOAT_DECL      shift, and go to state 9
@@ -3250,8 +3351,8 @@ state 185
     expr_or_assignment    go to state 29
     expression_statement  go to state 30
     lexemes               go to state 31
-    stmnt                 go to state 79
-    struct_type           go to state 96
+    stmnt                 go to state 80
+    struct_type           go to state 97
     print_stmt            go to state 38
     read_stmt             go to state 39
     if_stmt               go to state 40
@@ -3259,7 +3360,7 @@ state 185
     for_decl              go to state 42
     while_decl            go to state 43
     do_while_decl         go to state 44
-    type                  go to state 98
+    type                  go to state 99
     type_name             go to state 46
     left_assign_expr      go to state 47
     assignment            go to state 48
@@ -3274,182 +3375,182 @@ state 185
     function_def          go to state 57
 
 
-state 186
+state 188
 
    15 stmnt_block: stmnt_block_start stmnt_list error .
 
     $default  reduce using rule 15 (stmnt_block)
 
 
-state 187
+state 189
 
    14 stmnt_block: stmnt_block_start stmnt_list TOK_CLOSEBR . $@2
 
     $default  reduce using rule 13 ($@2)
 
-    $@2  go to state 205
-
-
-state 188
-
-   58 loop_decl: do_while_decl instruction_body TOK_WHILE_DECL loop_while_expr . TOK_ENDEXPR
-
-    TOK_ENDEXPR  shift, and go to state 206
-
-
-state 189
-
-  107 case_head: TOK_CASE expr TOK_DOUBLEDOT .
-
-    $default  reduce using rule 107 (case_head)
+    $@2  go to state 207
 
 
 state 190
 
-  111 default_head: TOK_DEFAULT TOK_DOUBLEDOT .
+   59 loop_decl: do_while_decl instruction_body TOK_WHILE_DECL loop_while_expr . TOK_ENDEXPR
 
-    $default  reduce using rule 111 (default_head)
+    TOK_ENDEXPR  shift, and go to state 208
 
 
 state 191
 
-  101 switch_stmt: switch_head case_list default TOK_CLOSEBR .
+  108 case_head: TOK_CASE expr TOK_DOUBLEDOT .
 
-    $default  reduce using rule 101 (switch_stmt)
+    $default  reduce using rule 108 (case_head)
 
 
 state 192
 
-  110 default: default_head instruction_body .
+  112 default_head: TOK_DEFAULT TOK_DOUBLEDOT .
 
-    $default  reduce using rule 110 (default)
+    $default  reduce using rule 112 (default_head)
 
 
 state 193
 
-  115 parameter_list: parameter_list TOK_COMMA parameter .
+  102 switch_stmt: switch_head case_list default TOK_CLOSEBR .
 
-    $default  reduce using rule 115 (parameter_list)
+    $default  reduce using rule 102 (switch_stmt)
 
 
 state 194
 
-   92 array: TOK_OPENSQ expr TOK_CLOSESQ array .
+  111 default: default_head instruction_body .
 
-    $default  reduce using rule 92 (array)
+    $default  reduce using rule 111 (default)
 
 
 state 195
 
-   53 if_stmt: TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR instruction_body .
-   54        | TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR instruction_body . TOK_ELSE instruction_body
+  116 parameter_list: parameter_list TOK_COMMA parameter .
 
-    TOK_ELSE  shift, and go to state 207
-
-    $default  reduce using rule 53 (if_stmt)
+    $default  reduce using rule 116 (parameter_list)
 
 
 state 196
 
-   48 print_stmt: TOK_PRINT TOK_OPENPAR expr TOK_CLOSEPAR TOK_ENDEXPR .
+   93 array: TOK_OPENSQ expr TOK_CLOSESQ array .
 
-    $default  reduce using rule 48 (print_stmt)
+    $default  reduce using rule 93 (array)
 
 
 state 197
 
-   51 print_stmt: TOK_PRINT '(' expr ')' error .
+   54 if_stmt: TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR instruction_body .
+   55        | TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR instruction_body . TOK_ELSE instruction_body
 
-    $default  reduce using rule 51 (print_stmt)
+    TOK_ELSE  shift, and go to state 209
+
+    $default  reduce using rule 54 (if_stmt)
 
 
 state 198
 
-   52 read_stmt: TOK_READ TOK_OPENPAR left_assign_expr TOK_CLOSEPAR TOK_ENDEXPR .
+   49 print_stmt: TOK_PRINT TOK_OPENPAR expr TOK_CLOSEPAR TOK_ENDEXPR .
 
-    $default  reduce using rule 52 (read_stmt)
+    $default  reduce using rule 49 (print_stmt)
 
 
 state 199
 
-  103 switch_head: TOK_SWITCH TOK_OPENPAR expr TOK_CLOSEPAR TOK_OPENBR .
+   52 print_stmt: TOK_PRINT '(' expr ')' error .
 
-    $default  reduce using rule 103 (switch_head)
+    $default  reduce using rule 52 (print_stmt)
 
 
 state 200
 
-   60 loop_for_expr: TOK_OPENPAR expression_statement expression_statement TOK_CLOSEPAR .
+   53 read_stmt: TOK_READ TOK_OPENPAR left_assign_expr TOK_CLOSEPAR TOK_ENDEXPR .
 
-    $default  reduce using rule 60 (loop_for_expr)
+    $default  reduce using rule 53 (read_stmt)
 
 
 state 201
 
-   61 loop_for_expr: TOK_OPENPAR expression_statement expression_statement expr_or_assignment . TOK_CLOSEPAR
+  104 switch_head: TOK_SWITCH TOK_OPENPAR expr TOK_CLOSEPAR TOK_OPENBR .
 
-    TOK_CLOSEPAR  shift, and go to state 208
+    $default  reduce using rule 104 (switch_head)
 
 
 state 202
 
-   20 expr_or_assignment: expr .
-   78 expr: expr . TOK_B_AND expr
-   79     | expr . TOK_B_OR expr
-   80     | expr . TOK_B_XOR expr
-   83     | expr . TOK_AR_PLUS expr
-   84     | expr . TOK_AR_MINUS expr
-   85     | expr . TOK_AR_MUL expr
-   86     | expr . TOK_AR_DIV expr
-   87     | expr . TOK_AR_MOD expr
-   88     | expr . TOK_COMP_OP expr
+   61 loop_for_expr: TOK_OPENPAR expression_statement expression_statement TOK_CLOSEPAR .
 
-    TOK_B_AND     shift, and go to state 103
-    TOK_B_OR      shift, and go to state 104
-    TOK_B_XOR     shift, and go to state 105
-    TOK_AR_PLUS   shift, and go to state 106
-    TOK_AR_MINUS  shift, and go to state 107
-    TOK_AR_MUL    shift, and go to state 108
-    TOK_AR_DIV    shift, and go to state 109
-    TOK_AR_MOD    shift, and go to state 110
-    TOK_COMP_OP   shift, and go to state 111
+    $default  reduce using rule 61 (loop_for_expr)
+
+
+state 203
+
+   62 loop_for_expr: TOK_OPENPAR expression_statement expression_statement expr_or_assignment . TOK_CLOSEPAR
+
+    TOK_CLOSEPAR  shift, and go to state 210
+
+
+state 204
+
+   20 expr_or_assignment: expr .
+   79 expr: expr . TOK_B_AND expr
+   80     | expr . TOK_B_OR expr
+   81     | expr . TOK_B_XOR expr
+   84     | expr . TOK_AR_PLUS expr
+   85     | expr . TOK_AR_MINUS expr
+   86     | expr . TOK_AR_MUL expr
+   87     | expr . TOK_AR_DIV expr
+   88     | expr . TOK_AR_MOD expr
+   89     | expr . TOK_COMP_OP expr
+
+    TOK_B_AND     shift, and go to state 104
+    TOK_B_OR      shift, and go to state 105
+    TOK_B_XOR     shift, and go to state 106
+    TOK_AR_PLUS   shift, and go to state 107
+    TOK_AR_MINUS  shift, and go to state 108
+    TOK_AR_MUL    shift, and go to state 109
+    TOK_AR_DIV    shift, and go to state 110
+    TOK_AR_MOD    shift, and go to state 111
+    TOK_COMP_OP   shift, and go to state 112
 
     $default  reduce using rule 20 (expr_or_assignment)
 
 
-state 203
+state 205
 
    17 stmnt_block: stmnt_block_start declaration_list TOK_CLOSEBR $@3 .
 
     $default  reduce using rule 17 (stmnt_block)
 
 
-state 204
+state 206
 
    19 stmnt_block: stmnt_block_start declaration_list stmnt_list TOK_CLOSEBR . $@4
 
     $default  reduce using rule 18 ($@4)
 
-    $@4  go to state 209
+    $@4  go to state 211
 
 
-state 205
+state 207
 
    14 stmnt_block: stmnt_block_start stmnt_list TOK_CLOSEBR $@2 .
 
     $default  reduce using rule 14 (stmnt_block)
 
 
-state 206
+state 208
 
-   58 loop_decl: do_while_decl instruction_body TOK_WHILE_DECL loop_while_expr TOK_ENDEXPR .
+   59 loop_decl: do_while_decl instruction_body TOK_WHILE_DECL loop_while_expr TOK_ENDEXPR .
 
-    $default  reduce using rule 58 (loop_decl)
+    $default  reduce using rule 59 (loop_decl)
 
 
-state 207
+state 209
 
-   54 if_stmt: TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR instruction_body TOK_ELSE . instruction_body
+   55 if_stmt: TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR instruction_body TOK_ELSE . instruction_body
 
     TOK_IDENTIFIER      shift, and go to state 1
     TOK_B_NOT           shift, and go to state 2
@@ -3457,7 +3558,7 @@ state 207
     TOK_IF              shift, and go to state 4
     TOK_ENDEXPR         shift, and go to state 5
     TOK_OPENPAR         shift, and go to state 6
-    TOK_OPENBR          shift, and go to state 92
+    TOK_OPENBR          shift, and go to state 93
     TOK_ROM_DECL        shift, and go to state 7
     TOK_INT_DECL        shift, and go to state 8
     TOK_FLOAT_DECL      shift, and go to state 9
@@ -3478,13 +3579,13 @@ state 207
     TOK_SWITCH          shift, and go to state 24
     TOK_STRING_LITERAL  shift, and go to state 25
 
-    stmnt_block_start     go to state 93
-    stmnt_block           go to state 94
+    stmnt_block_start     go to state 94
+    stmnt_block           go to state 95
     expr_or_assignment    go to state 29
     expression_statement  go to state 30
     lexemes               go to state 31
-    stmnt                 go to state 95
-    struct_type           go to state 96
+    stmnt                 go to state 96
+    struct_type           go to state 97
     print_stmt            go to state 38
     read_stmt             go to state 39
     if_stmt               go to state 40
@@ -3492,8 +3593,8 @@ state 207
     for_decl              go to state 42
     while_decl            go to state 43
     do_while_decl         go to state 44
-    instruction_body      go to state 210
-    type                  go to state 98
+    instruction_body      go to state 212
+    type                  go to state 99
     type_name             go to state 46
     left_assign_expr      go to state 47
     assignment            go to state 48
@@ -3508,22 +3609,22 @@ state 207
     function_def          go to state 57
 
 
-state 208
+state 210
 
-   61 loop_for_expr: TOK_OPENPAR expression_statement expression_statement expr_or_assignment TOK_CLOSEPAR .
+   62 loop_for_expr: TOK_OPENPAR expression_statement expression_statement expr_or_assignment TOK_CLOSEPAR .
 
-    $default  reduce using rule 61 (loop_for_expr)
+    $default  reduce using rule 62 (loop_for_expr)
 
 
-state 209
+state 211
 
    19 stmnt_block: stmnt_block_start declaration_list stmnt_list TOK_CLOSEBR $@4 .
 
     $default  reduce using rule 19 (stmnt_block)
 
 
-state 210
+state 212
 
-   54 if_stmt: TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR instruction_body TOK_ELSE instruction_body .
+   55 if_stmt: TOK_IF TOK_OPENPAR expr TOK_CLOSEPAR instruction_body TOK_ELSE instruction_body .
 
-    $default  reduce using rule 54 (if_stmt)
+    $default  reduce using rule 55 (if_stmt)

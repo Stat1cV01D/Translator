@@ -23,6 +23,11 @@ std::vector<int> g_stackAddress;
 
 TMachineStatus        PSW;
 
+void Exch(int index = 1);
+void Exch(TMemoryCell &_Data);
+void PushAddress(int address);
+int PopAddress();
+
 template<typename T> T GetValue(MachineInstruction MI)
 {
 	T result;
@@ -560,7 +565,7 @@ void Push(TMemoryCell Data)
 }
 
 // Exchange stack top and stack [top-1] by default
-void Exch(int index = 1)
+void Exch(int index)
 {
 	STACKDATA Data;
 	Data = g_stackTop[ g_stackTop.size() - 1 - index ];

@@ -411,13 +411,22 @@ public:
 
 	typedef std::tr1::function<bool (TVariable *)> BlockVarCallbackFunc;
 
-	void ProcessCurrentBlockVariables(TFunctionOperator *funcOp, BlockVarCallbackFunc func)
+	void ProcessFunctionBlockVariables(TFunctionOperator *funcOp, BlockVarCallbackFunc func)
 	{
 		// might not very optimal: we'll have to find all variables in all blocks
 		// instead of allocating the block-dependent varibles separately
-		auto blockNameSpace = func->GetBlockNameSpace();
-		g_VariablesTable->
-
+		auto blockNameSpace = funcOp->GetBlockNameSpace();
+		g_VariableTable->ProcessHashTable(
+			[&func, &blockNameSpace](TVariable* &var) -> bool
+			{
+				if (var->GetName().find_first_of(blockNameSpace) != std::string::npos)
+				{
+					return func(var);
+				}
+				else
+					return true;
+			}
+		);
 	}
 
 	bool OnFunctionDefinition()
@@ -785,7 +794,7 @@ protected:
 	
 	int VarFSeek(int pos, std::ios::seek_dir mode)
 	{
-		//2, ios::end
+		//2, std::ios::end
 		varBuffer.seekp(pos, mode);
 		return varBuffer.tellp();
 	}
@@ -959,7 +968,6 @@ public:
 			for (auto it = label->jumpList.begin(); it != label->jumpList.end(); ++it)
 			{
 				long int offset;
-				// TODO: i should be initialized?
 				MachineInstruction i;
 				int jumpIndex = (*it)->GetIndex();
 				offset = 
@@ -980,7 +988,6 @@ public:
 		TMLWriteHeader();
 		// Write data segment 
 		TMLFillDataSegment();
-
 	}
 };
 
@@ -989,7 +996,6 @@ public:
 class PtPrintInfo: public AstWriter
 {
 protected:
-
 	void print_ptNode(const PtNode *ptNode)
 	{
 		print_tab();
@@ -1018,11 +1024,10 @@ public:
 
 	void PtWriteFormat(const char *FormatString, ...)
 	{
-		// TODO [SV] 14.08.13 16:09: check the correctness here!
 		va_list args;
 		va_start(args, FormatString);
 		print_tab();
-		WriteFormat(FormatString, args);
+		WriteFormatVA(FormatString, args);
 	}
 
 	void PtWriteLine(const char *code)
@@ -1031,4 +1036,3 @@ public:
 		WriteLine(code);
 	}
 };
-

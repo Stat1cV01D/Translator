@@ -10,7 +10,6 @@
 #include <string.h>
 #include "parser.h"
 #include "AstUtils.h"
-#include "Function.h"
 #include "resources.h"
 #include "variable.h"
 #include "ast.h"
@@ -107,7 +106,8 @@ struct Node;
 %type <_node> loop_for_expr instruction_body loop_while_expr type array type_name left_assign_expr const
 %type <_node> switch_head case_list default case_stmt case_head case_body
 %type <_node> default_head for_decl while_decl do_while_decl
-%type <_node> lexemes parameter parameter_list parameter_type_list declarator function_def_head function_call function_def
+%type <_node> lexemes parameter parameter_list parameter_type_list func_declarator 
+%type <_node> declarator function_def_head function_call function_def
 
 %code top
 {
@@ -1213,7 +1213,7 @@ parameter
 		// function declaration
 		$$ = $1;
 	}
-	| TOK_IDENTIFIER
+	| expr
 	{
 		// function call
 		$$ = $1;
@@ -1255,14 +1255,13 @@ declarator
 function_call:
 	TOK_IDENTIFIER declarator
 	{
-		std::vector<TVariable*> callParameters;
+		std::vector<AstNode*> callParameters; 
 		if ($2->astNode != nullptr)
 		{
 			auto paramsList = GetParametersList(dynamic_cast<StatementBlockAstNode *>($2->astNode));
 			for(auto it = paramsList.begin(); it != paramsList.end(); it++)
 			{
-				callParameters.emplace_back(dynamic_cast<VarAstNode*>(*it)->GetTableReference());
-				delete (*it); // we don't need it anymore
+				callParameters.emplace_back(*it);
 			}
 		}
 
@@ -1276,7 +1275,7 @@ function_call:
 		else
 		{
 			auto function = Context.GetFunction(funcname);
-			auto funcParameters = function->GetParameters();
+			auto funcParameters = function->GetParametersList();
 
 			$$ = nullptr;
 
@@ -1292,7 +1291,7 @@ function_call:
 
 				for (; it_f != funcParameters.end(); it_f++, it_c++)
 				{
-					if ((*it_f)->GetType()->getID() != (*it_c)->GetType()->getID())
+					if ((*it_f)->GetType()->getID() != (*it_c)->GetResultType()->getID())
 					{
 						$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, FUNCTION_INVALID_PAR_ERROR, @2),
 								nullptr);

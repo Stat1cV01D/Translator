@@ -2,6 +2,7 @@
 #include <vector>
 #include <functional>
 #include "BaseTypeClass.h"
+#include "variable.h"
 
 class AstNode;
 class TLabel;

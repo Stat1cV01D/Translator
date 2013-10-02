@@ -1030,9 +1030,11 @@ int SwitchAstNode::Serialize(TMLWriter* output)
 
 int FunctionAstNode::Print3AC(TACWriter* output)
 {
+	auto exitLabel = output->GetContext()->GenerateNewLabel();
 	auto parametersList = functionData->GetParametersList();
 	if (parametersList.size() > 0)
 	{
+		// NOTE: last pushed var (parametersList[0]) might be the result var
 		VarAstNode varNode(false, parametersList[0]);
 		output->CodeGen(&varNode);
 		auto varName = output->GetLastUsedValueName();
@@ -1052,21 +1054,66 @@ int FunctionAstNode::Print3AC(TACWriter* output)
 		output->CodeWriteFormat("\tExch\t%d\n", i);
 	}
 	
-	output->GetContext()->ProcessBlockVariables(
+	// Get all variables in the function block (and sub-blocks)
+	std::vector<TVariable*> blockVars;
+	output->GetContext()->ProcessFunctionBlockVariables(this->functionData,
+		[&blockVars](TVariable* var) -> bool
+		{
+			blockVars.emplace_back(var);
+			return true;
+		}
+	);
 
-		);
+	for (auto it = blockVars.begin(); it != blockVars.end(); it++)
+	{
+		output->CodeWriteFormat("\tPush\t%s\n", (*it)->GetName());
+	}
 
-	output->CodeWriteFormat("\tPush\t%s\n", valName.c_str());
+	output->CodeGen(this->statementsBlock);
 
+	LabelAstNode exitLabelNode(exitLabel);
+	output->CodeGen(&exitLabelNode);
+
+	for (auto it = --blockVars.end(); it >= blockVars.begin(); it--)
+	{
+		output->CodeWriteFormat("\tPop\t%s\n", (*it)->GetName());
+	}
+
+	// Now we gotta reverse iterate vector<TVariable*> for
+	// the cosequent pop's
+	if (parametersList.size() > 0)
+	{
+		int i = 1;
+		for (auto it = --parametersList.end(); it != parametersList.begin(); it--)
+		{
+			VarAstNode varNode(false, (*it));
+			output->CodeGen(&varNode);
+			auto varName = output->GetLastUsedValueName();
+			output->CodeWriteFormat("\tPop\t%s\n", varName.c_str());
+		}
+
+		VarAstNode varNode(false, (parametersList[0]));
+		output->CodeGen(&varNode);
+		auto varName = output->GetLastUsedValueName();	
+		if (GetResultType()->getID() != VOID_TYPE)
+		{
+			output->CodeWriteFormat("\tExch\t%s\n", varName.c_str());
+		}
+		else
+		{
+			output->CodeWriteFormat("\tPop\t%s\n", varName.c_str());
+		}
+	}
+	output->CodeWriteFormat("\tReturn\n\n"); // NOTE: double '\n' !
 	return 0;
 }
 int FunctionAstNode::PrintASTree(AstPrintInfo* output)
 {
 	auto typeName = functionData->GetResultType()->GetName();
 	auto funcName = functionData->GetName();
-	output->AstWriteFormat("%s %s(", typeName.c_str(), funcName.c_str());
+	output->AstWriteFormat("function: %s %s(", typeName.c_str(), funcName.c_str());
 
-	auto parametersList = functionData->GetParameters();
+	auto parametersList = functionData->GetParametersList();
 	auto it_end = --parametersList.end();
 	for (auto it = parametersList.begin(); it != it_end; it++)
 	{
@@ -1077,6 +1124,66 @@ int FunctionAstNode::PrintASTree(AstPrintInfo* output)
 	return 0;
 }
 int FunctionAstNode::Serialize(TMLWriter* output)
+{
+	return 0;
+}
+
+int FunctionCallAstNode::Print3AC(TACWriter* output)
+{
+	auto typeName = GetResultType()->GetName();
+	auto funcName = functionData->GetName();
+	
+	for (auto it = this->parametersList.begin(); it != this->parametersList.end(); it++)
+	{
+		output->CodeGen((*it));
+		auto valName = output->GetLastUsedValueName();
+		output->CodeWriteFormat("\tPush\t%s\n", valName.c_str());
+	}
+
+	TVariable *resultVar = output->GetContext()->GenerateNewTmpVar(GetResultType()->Clone(), true);
+	VarAstNode resultVarNode(true, resultVar);
+		
+	if (GetResultType()->getID() != VOID_TYPE)
+	{
+		output->CodeGen(&resultVarNode);
+		auto valName = output->GetLastUsedValueName();
+		output->CodeWriteFormat("\tPush\t%s\n", valName.c_str());
+	}
+
+	output->CodeWriteFormat("\tCall %s\n", funcName.c_str());
+	
+	if (GetResultType()->getID() != VOID_TYPE)
+	{
+		output->CodeGen(&resultVarNode);
+		auto valName = output->GetLastUsedValueName();
+		output->CodeWriteFormat("\tPop\t%s\n", valName.c_str());
+	}
+	output->SetLastUsedValueName(resultVarNode.GetValueHolderName());
+	
+	return 0;
+}
+int FunctionCallAstNode::PrintASTree(AstPrintInfo* output)
+{
+	auto funcTypeName = functionData->GetResultType()->GetName();
+	auto funcName = functionData->GetName();
+	output->AstWriteFormat("call: %s %s(", funcTypeName.c_str(), funcName.c_str());
+
+	auto parametersList = functionData->GetParametersList();
+	auto it_end = --parametersList.end();
+	for (auto it = parametersList.begin(); it != it_end; it++)
+	{
+		auto varTypeName = (*it)->GetType()->GetName();
+		auto varName = (*it)->GetName();
+		output->AstWriteFormat("%s %s, ", varTypeName.c_str(), varName.c_str());
+	}
+
+	auto varTypeName = (*it_end)->GetType()->GetName();
+	auto varName = (*it_end)->GetName();
+	output->AstWriteFormat("%s %s)\n", varTypeName.c_str(), varName.c_str());
+
+	return 0;
+}
+int FunctionCallAstNode::Serialize(TMLWriter* output)
 {
 	return 0;
 }

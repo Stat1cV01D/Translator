@@ -15,7 +15,7 @@ private:
 	//std::vector<TBlockContext*> children;
 
 	TBlockContext(TBlockContext *parent, std::string& name)
-		: children()
+		//: children()
 	{
 		this->parent = parent;
 		//parent->children.emplace_back(this);

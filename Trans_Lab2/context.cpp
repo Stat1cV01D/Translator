@@ -4,6 +4,7 @@
 #include "common.h"
 
 TBlockContext *TBlockContext::bl_context = nullptr;
+bool TBlockContext::EarlyFunctionDefPush = false;
 
 void TBlockContext::Init()
 {

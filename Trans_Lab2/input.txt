@@ -1,6 +1,13 @@
 rom[10][3] b;
 int i;
 
+void func(int i)
+{
+	int bla;
+	bla = 0;
+	print(bla+1);
+}
+
 b[1][2] = CXVII;
 print(b[1][2]);
 

@@ -8,7 +8,6 @@
 #include "basic-ops.h"
 #include "types.h"
 #include "variable.h"
-#include "Function.h"
 #pragma warning(disable : 4996)
 #pragma warning(disable : 4482)
 #include "Operators.h"
@@ -802,18 +801,18 @@ public:
 class FunctionCallAstNode: public AstNode
 {
 	TFunctionOperator *functionData;
-	std::vector<TVariable*> parametersList;
+	std::vector<AstNode *> parametersList;
 public:
-	FunctionCallAstNode(TFunctionOperator *_functionData, std::vector<TVariable*> _parametersList)
+	FunctionCallAstNode(TFunctionOperator *_functionData, std::vector<AstNode *> &_parametersList)
 		: AstNode(FUNCTION_CALL_NODE, _functionData->GetResultType()->Clone())
 		, parametersList(_parametersList)
 	{
 		this->functionData = _functionData;
 	}
 
-	virtual int Print3AC(TACWriter* output) { return 0; }
-	virtual int PrintASTree(AstPrintInfo* output) { return 0; }
-	virtual int Serialize(TMLWriter* output) { return 0; }
+	virtual int Print3AC(TACWriter* output);
+	virtual int PrintASTree(AstPrintInfo* output);
+	virtual int Serialize(TMLWriter* output);
 };
 
 #endif // AST_H_INCLUDED
