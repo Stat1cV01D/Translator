@@ -1031,6 +1031,10 @@ int SwitchAstNode::Serialize(TMLWriter* output)
 int FunctionAstNode::Print3AC(TACWriter* output)
 {
 	auto exitLabel = output->GetContext()->GenerateNewLabel();
+	
+	LabelAstNode startLabelNode(this->functionData->GetStart());
+	output->CodeGen(&startLabelNode);
+
 	auto parametersList = functionData->GetParametersList();
 	if (parametersList.size() > 0)
 	{
@@ -1066,7 +1070,8 @@ int FunctionAstNode::Print3AC(TACWriter* output)
 
 	for (auto it = blockVars.begin(); it != blockVars.end(); it++)
 	{
-		output->CodeWriteFormat("\tPush\t%s\n", (*it)->GetName());
+		auto blockVarName = (*it)->GetName();
+		output->CodeWriteFormat("\tPush\t%s\n", blockVarName.c_str());
 	}
 
 	output->CodeGen(this->statementsBlock);
@@ -1074,9 +1079,12 @@ int FunctionAstNode::Print3AC(TACWriter* output)
 	LabelAstNode exitLabelNode(exitLabel);
 	output->CodeGen(&exitLabelNode);
 
-	for (auto it = --blockVars.end(); it >= blockVars.begin(); it--)
+	for (auto it = --blockVars.end(); ; it--)
 	{
-		output->CodeWriteFormat("\tPop\t%s\n", (*it)->GetName());
+		auto blockVarName = (*it)->GetName();
+		output->CodeWriteFormat("\tPop\t%s\n", blockVarName.c_str());
+		if (it == blockVars.begin())
+			break;
 	}
 
 	// Now we gotta reverse iterate vector<TVariable*> for
