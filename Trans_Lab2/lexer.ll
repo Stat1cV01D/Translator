@@ -65,6 +65,7 @@ float_const			({digit}+\.{digit}*)|({digit}*\.{digit}+)
 rom_decl			rom
 int_decl			int
 float_decl			float
+void_decl			void
 string_literal		L?\"(\\.|[^\\"])*\"
 
 for_decl			for
@@ -122,6 +123,8 @@ do_decl				do
 {rom_decl}			{ REACTION(rom_decl,		TOK_ROM_DECL) }
 {int_decl}			{ REACTION(int_decl,		TOK_INT_DECL) }
 {float_decl}		{ REACTION(float_decl,		TOK_FLOAT_DECL) }
+{void_decl}			{ REACTION(void_decl,		TOK_VOID_DECL) }
+
 {for_decl}			{ REACTION(for_decl,		TOK_FOR_DECL) }
 {while_decl}		{ REACTION(while_decl,		TOK_WHILE_DECL) }
 {do_decl}			{ REACTION(do_decl,			TOK_DO_DECL) }

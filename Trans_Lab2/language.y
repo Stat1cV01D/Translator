@@ -63,6 +63,7 @@ struct Node;
 %token <_node> TOK_ROM_DECL
 %token <_node> TOK_INT_DECL
 %token <_node> TOK_FLOAT_DECL
+%token <_node> TOK_VOID_DECL
 
 %token <_node> TOK_FOR_DECL
 %token <_node> TOK_WHILE_DECL
@@ -151,29 +152,38 @@ TVariable *GetVariableForAssign(Node *node, YYLTYPE location)
 	}
 }
 
-std::vector<AstNode*> GetParametersList(StatementBlockAstNode *node)
+std::vector<AstNode*> GetParametersList(AstNode *_node)
 {
 	std::vector<AstNode*> result;
-
-	node->ProcessStatements(
-		[&result](AstNode *node) -> int
-		{
-			auto blockAstNode = dynamic_cast<StatementBlockAstNode*>(node);
-			if (blockAstNode != nullptr)
+	auto node = dynamic_cast<StatementBlockAstNode *>(_node);
+	if (node == nullptr)
+	{
+		// means we only got one parameter
+		result.emplace_back(_node);
+	}
+	else	
+	{
+		node->ProcessStatements(
+			[&result](AstNode *node) -> int
 			{
-				auto _result = GetParametersList(blockAstNode);
-				for(auto it = _result.begin(); it != _result.end(); it++)
+				auto blockAstNode = dynamic_cast<StatementBlockAstNode*>(node);
+				if (blockAstNode != nullptr)
 				{
-					result.emplace_back(*it);
+					auto _result = GetParametersList(blockAstNode);
+					for(auto it = _result.begin(); it != _result.end(); it++)
+					{
+						result.emplace_back(*it);
+					}
 				}
+				else
+				{
+					result.emplace_back(node);
+				}
+				return 0;
 			}
-			else
-			{
-				result.emplace_back(node);
-			}
-			return 0;
-		}
-	);
+		);
+	}
+		
 	return result;
 }
 %}
@@ -509,11 +519,11 @@ declaration_block
 declaration_stmt:
 	type[decl] TOK_IDENTIFIER[id]
 	{
-		char *typeName = $id->ptNode->text;
+		char *varName = $id->ptNode->text;
 		$$ = nullptr;
 		if(Context.OnUserTypeDefinition())
 		{
-			//if(!Context.IsBaseType(typeName))
+			//if(!Context.IsBaseType(varName))
 			//{
 			//	$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, USER_TYPE_STRUCT_FIELD, @id),
 			//			nullptr);
@@ -521,25 +531,23 @@ declaration_stmt:
 			//else
 			{
 				auto userType = dynamic_cast<StructType*>(Context.TopUserType());
-				if(userType->IsFieldDefined(std::string(typeName)))
+				if(userType->IsFieldDefined(std::string(varName)))
 				{
 					$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, STRUCT_FIELD_REDEFINITION, @id),
 							nullptr);
 				}
 				else
 				{
-					userType->AddField($decl->astNode->GetResultType()->Clone(), typeName);
+					userType->AddField($decl->astNode->GetResultType()->Clone(), varName);
+					$$ = createNode(new DeclIDAstNode($decl->astNode->GetResultType()->Clone()), 
+							createPtNodeWithChildren("stmnt", 2, $decl->ptNode, $id->ptNode));
 				}
 			}
 		}
 		else
 		{
-			Context.DeclVar(typeName, $decl->astNode->GetResultType()->Clone(), @id);
-		}
-		
-		if ($$ == nullptr)
-		{
-			$$ = createNode(new DeclIDAstNode($decl->astNode->GetResultType()->Clone()), 
+			auto Var = Context.DeclVar(varName, $decl->astNode->GetResultType()->Clone(), @id);
+			$$ = createNode(new VarAstNode(false, Var), 
 					createPtNodeWithChildren("stmnt", 2, $decl->ptNode, $id->ptNode));
 		}
 	}
@@ -761,7 +769,7 @@ instruction_body:
 type:
 	type_name[t] array[array_decl]
 	{
-		DimensionAstNode *dimNode = dynamic_cast<DimensionAstNode*>($array_decl->astNode);
+		auto dimNode = dynamic_cast<DimensionAstNode*>($array_decl->astNode);
 		if (dimNode->GetExpr() == nullptr)
 		{
 			$$ = $t;
@@ -815,6 +823,12 @@ type_name:
 	TOK_INT_DECL[decl]
 	{
         $$ = createNode(new DeclIDAstNode(new IntType()), 
+				createPtNodeWithChildren("type", 1, $decl->ptNode));
+	}
+	|
+	TOK_VOID_DECL[decl]
+	{
+        $$ = createNode(new DeclIDAstNode(new VoidType()), 
 				createPtNodeWithChildren("type", 1, $decl->ptNode));
 	}
 	| 
@@ -1258,7 +1272,7 @@ function_call:
 		std::vector<AstNode*> callParameters; 
 		if ($2->astNode != nullptr)
 		{
-			auto paramsList = GetParametersList(dynamic_cast<StatementBlockAstNode *>($2->astNode));
+			auto paramsList = GetParametersList($2->astNode);
 			for(auto it = paramsList.begin(); it != paramsList.end(); it++)
 			{
 				callParameters.emplace_back(*it);
@@ -1328,19 +1342,30 @@ func_declarator
 	: declarator
 	{
 		std::vector<TVariable*> parameters;
+		$$ = nullptr;
 		if ($1->astNode != nullptr)
 		{
-			auto paramsList = GetParametersList(dynamic_cast<StatementBlockAstNode *>($1->astNode));
+			auto paramsList = GetParametersList($1->astNode);
 			for(auto it = paramsList.begin(); it != paramsList.end(); it++)
 			{
-				parameters.emplace_back(dynamic_cast<VarAstNode*>(*it)->GetTableReference());
+				auto varNode = dynamic_cast<VarAstNode*>(*it);
+				if (varNode == nullptr)
+				{
+					$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, FUNCTION_INVALID_PAR_ERROR, @1),
+								nullptr);
+					break;
+				}
+				parameters.emplace_back(varNode->GetTableReference());
 				delete (*it); // we don't need it anymore
 			}
 		}
 		auto funcDefOp = dynamic_cast<TFunctionOperator*>(Context.OperatorStackTop());
 		funcDefOp->SetParametersList(parameters);
-
-		$$ = $1;
+		
+		if ($$ == nullptr) // no errors
+		{
+			$$ = $1;
+		}
 	}
 	;
 

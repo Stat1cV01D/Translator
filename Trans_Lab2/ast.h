@@ -625,7 +625,8 @@ class DeclIDAstNode: public AstNode
 	//std::string name;
 public:
 	DeclIDAstNode(BaseTypeInfo *Type)
-		: AstNode(DECL_ID_NODE, Type) 
+		: AstNode(DECL_ID_NODE, Type)
+		//, name(varName)
 	{
 	}
 

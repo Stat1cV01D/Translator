@@ -324,7 +324,7 @@ public:
 			return g_userTypeStack.back();
 	}
 
-	void DeclVar(const char *name, BaseTypeInfo *type, YYLTYPE loc)
+	TVariable *DeclVar(const char *name, BaseTypeInfo *type, YYLTYPE loc)
 	{
 		auto ns = TBlockContext::GetCurrent()->GetBlockNamepace();
 		std::string nameWithNs = ns + std::string(name);
@@ -333,11 +333,12 @@ public:
 		{
 			print_error(strcatn(5, "Identifier \"", name, "\" is already declared at namespace \"",
 								ns.c_str(), "\"."), loc);
-			return;
+			return g_VariableTable->st_get(nameWithNs);
 		}
 		TVariable *var = new TVariable(nameWithNs, type);
 		var->ReserveMemory();
 		g_VariableTable->st_put(nameWithNs, var);
+		return var;
 	}
 
 	std::string findName(const std::string name)
