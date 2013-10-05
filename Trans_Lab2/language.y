@@ -1383,6 +1383,7 @@ function_def
 		}
 		else
 		{
+			Context.AddFunction(funcDefOp);
 			$$ = createNode(new FunctionAstNode(funcDefOp, $3->astNode),
 					createPtNodeWithChildren("function_def", 3, $1->ptNode, $2->ptNode, $3->ptNode));
 		}

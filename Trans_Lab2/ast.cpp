@@ -1055,7 +1055,8 @@ int FunctionAstNode::Print3AC(TACWriter* output)
 			output->CodeWriteFormat("\tExch\t%d\n", i);
 			output->CodeWriteFormat("\tExch\t%s\n", varName.c_str());
 		}
-		output->CodeWriteFormat("\tExch\t%d\n", i);
+		if (i != 1)
+			output->CodeWriteFormat("\tExch\t%d\n", i);
 	}
 	
 	// Get all variables in the function block (and sub-blocks)

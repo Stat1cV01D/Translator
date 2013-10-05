@@ -1,13 +1,14 @@
+$L1:
 	Exch	$idfunc0:i
 	Exch	1
-	Push	ã1
-	Push	ã1
+	Push	func0:bla
+	Push	func0:i
 	$idfunc0:bla	=	$c0
 	$t1	=	$idfunc0:bla	+	$c1
 	PRINT	$t1
 $L4:
-	Pop	4ã1
-	Pop	4ã1
+	Pop	func0:i
+	Pop	func0:bla
 	Pop	$idfunc0:i
 	Return
 
@@ -61,3 +62,5 @@ $L5:
 	PRINT	$t10
 	Goto	$L2
 $L3:
+	Push	$c0
+	Call func

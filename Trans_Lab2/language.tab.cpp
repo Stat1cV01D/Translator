@@ -3249,6 +3249,7 @@ yyreduce:
 		}
 		else
 		{
+			Context.AddFunction(funcDefOp);
 			(yyval._node) = createNode(new FunctionAstNode(funcDefOp, (yyvsp[(3) - (3)]._node)->astNode),
 					createPtNodeWithChildren("function_def", 3, (yyvsp[(1) - (3)]._node)->ptNode, (yyvsp[(2) - (3)]._node)->ptNode, (yyvsp[(3) - (3)]._node)->ptNode));
 		}
