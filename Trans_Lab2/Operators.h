@@ -186,6 +186,7 @@ protected:
 	std::string name;
 	std::string blockNameSpace;
 	std::vector<TVariable*> parameters;
+	bool isUsed; // Has the function been called? (optimization-related)
 public:
 	TFunctionOperator(BaseTypeInfo *returnType, std::string &name, std::string &nameSpace, TLabel *enterLabel)
 		: TOperator(OT_FUNCTION) 
@@ -206,6 +207,15 @@ public:
 	void SetParametersList(std::vector<TVariable*> &parameters)
 	{
 		this->parameters = parameters;
+	}
+
+	void SetUsed(bool value)
+	{
+		isUsed = value;
+	}
+	bool GetUsed()
+	{
+		return isUsed;
 	}
 };
 

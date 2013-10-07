@@ -1,10 +1,12 @@
-/* Реализация интерпретатора языка псевдомашины ToyMachine.
+/* Interpreter inplementation for the pseudo-machine ToyMachine.
       
-   Распространяется под лицензией zlib,
-     см. http://www.gzip.org/zlib/zlib_license.html
+   Distributed under zlib license terms,
+     http://www.gzip.org/zlib/zlib_license.html
 
-   Разработчик - Александр Кузнецов.
-   Проект начат 25.05.2005, модифицирован 02.11.2008, 10.05.2013, 11.05.2013
+   Initial developer - Alexander Kuznetsov.
+   Started 25.05.2005, modified 02.11.2008, 10.05.2013, 11.05.2013
+
+   Heavily modified for project purposes by Stat1cV01D
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,7 +19,7 @@
 TMemoryCell*        g_MachineDataSegment = NULL;
 MachineInstruction* g_MachineCodeSegment = NULL;
 
-FILE* g_InputFile = NULL;    /* поток для файла с программой на машинном языке */
+FILE* g_InputFile = NULL;    /* input binary file */
 std::vector<STACKDATA> g_stackTop;
 std::vector<int> g_stackAddress;
 
@@ -131,8 +133,6 @@ template<typename T> int IOOperations(TMemoryCell &Accumulator, MachineInstructi
 				memcpy(&index, &g_MachineDataSegment[index], sizeof(index));
 				memcpy(&g_MachineDataSegment[index], &Accumulator, sizeof(T));
 			}
-			auto i = (int*)malloc(sizeof(int));
-			free(i);
 			break;
 		}
 	case IN_:
@@ -280,7 +280,7 @@ int main(int argc, char* argv[])
     unsigned long  ProgramCounter;
     unsigned int lastInstructionNumber;
 
-    unsigned char isHaltCommandMet = 0; /* команды HALT не было */
+    unsigned char isHaltCommandMet = 0; /* no HALT command yet */
 
     unsigned short dataSegmentSize = 0, codeSegmentSize = 0;
     const int instructionSize = sizeof (MachineInstruction);
@@ -339,7 +339,7 @@ int main(int argc, char* argv[])
         PrintFatalError("Not enough memory to load the program.");
     }
 
-    g_MachineCodeSegment = (MachineInstruction *) malloc(codeSegmentSize);
+    g_MachineCodeSegment = (MachineInstruction *) malloc(codeSegmentSize); // yeah, C here, sorry.
     if (NULL == g_MachineCodeSegment
         || 0 == fread(g_MachineCodeSegment, codeSegmentSize, 1, g_InputFile)
        )
@@ -361,11 +361,6 @@ int main(int argc, char* argv[])
     ProgramCounter = 0;
     Accumulator.Content = 0;
     PSW.Z = PSW.G = PSW.L = 0;
-
-    /* Бесконечный цикл работы загруженной программы.
-     * Условие останова в теле цикла 
-     */
-
 
     while (!0)
     {

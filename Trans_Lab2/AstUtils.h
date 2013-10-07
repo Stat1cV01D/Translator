@@ -867,7 +867,7 @@ public:
 
 		// —формировать код оператора
 		instruction.OpCode = GetTypedOperator(op, operand->GetResultType()->getID());
-		if (op < __NOARGS)
+		if (op < __NOARGS || op == EXCH)
 		{
 			// —формировать режим адресации и аргументы
 			instruction = AddAddressingModeAndArgs(instruction, operand);

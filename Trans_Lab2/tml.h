@@ -91,22 +91,22 @@ enum TMLCOMMAND : uint8_t
 	/* Increment and decrement integer value in Accumulator */
 	INC,
 	DEC,
-	/* (Un-)conditional branches */
+	/* (Un-)conditional jumps branches */
 	_JUMP_COMMANDS_,
 	JMP,
 	JMZ,
 	JMNZ,
 	JMG,
 	JML,
+	/* Function call operations */
+	CALL,
+	RET,
 	_JUMP_COMMANDS_END_,
 	/* Stack operations */
 	PUSH,
 	POP,
 	EXCH,
-	/* Function call operations */
-	CALL,
-	RET,
-	LAST_OPCODE = RET, 
+	LAST_OPCODE = EXCH, 
 };
 
 /* 256-bit memory cell */

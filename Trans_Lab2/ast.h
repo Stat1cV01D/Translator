@@ -103,6 +103,14 @@ public:
 	virtual ~IValueHolderNode() {}
 };
 
+class AstOptimizer;
+
+class IOptimizable
+{
+public:
+	virtual int Optimize(AstOptimizer* output) = 0;
+};
+
 class StatementAstNode: public AstNode
 {
 	AstNode* stmnt;
@@ -174,7 +182,7 @@ public:
 	}
 };
 
-class ConditionalAstNode: public AstNode
+class ConditionalAstNode: public AstNode, public IOptimizable
 {
 	AstNode *cond;
 	AstNode *true_block;
@@ -243,7 +251,7 @@ public:
 	}
 };
 
-class LoopAstNode: public AstNode
+class LoopAstNode: public AstNode, public IOptimizable
 {
 private:
 	LoopConditionAstNode *cond;
@@ -428,7 +436,7 @@ public:
 };
 
 // Value is referenced from the heap into the TML command argument
-class VarAstNode: public AstNode, public IValueHolderNode
+class VarAstNode: public AstNode, public IValueHolderNode, public IOptimizable
 {
 	TVariable *varTableReference;
 public:
@@ -657,7 +665,7 @@ public:
 /// writes the basic command that have 2 or 3 arguments 
 /// from other high level AST nodes.
 /// Otherwise a usual AST node.
-class OperatorAstNode: public AstNode
+class OperatorAstNode: public AstNode, public IOptimizable
 {
 	// 3-address code name 
 	std::string op_3ac_name;
@@ -719,7 +727,7 @@ public:
 	AstNode *GetResult() { return result; }
 };
 
-class SwitchAstNode: public AstNode
+class SwitchAstNode: public AstNode, public IOptimizable
 {
 private:
 	AstNode *key;
@@ -782,7 +790,7 @@ public:
 
 };
 
-class FunctionAstNode: public AstNode
+class FunctionAstNode: public AstNode, public IOptimizable
 {
 	TFunctionOperator *functionData;
 	AstNode* statementsBlock;
@@ -809,6 +817,7 @@ public:
 		, parametersList(_parametersList)
 	{
 		this->functionData = _functionData;
+		_functionData->SetUsed(true);
 	}
 
 	virtual int Print3AC(TACWriter* output);

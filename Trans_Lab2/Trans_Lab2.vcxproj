@@ -88,6 +88,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ast.cpp" />
+    <ClCompile Include="AstOptimizer.cpp" />
     <ClCompile Include="AstUtils.cpp" />
     <ClCompile Include="basic-ops.cpp" />
     <ClCompile Include="common.cpp" />
@@ -106,6 +107,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ast.h" />
+    <ClInclude Include="AstOptimizer.h" />
     <ClInclude Include="AstUtils.h" />
     <ClInclude Include="BaseTypeClass.h" />
     <ClInclude Include="basic-ops.h" />

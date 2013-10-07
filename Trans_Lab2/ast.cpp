@@ -84,6 +84,10 @@ int ConditionalAstNode::Serialize(TMLWriter* output)
 	output->Serialize(&endLabelAstNode);
 	return 0;
 }
+int ConditionalAstNode::Optimize(AstOptimizer* output)
+{
+
+}
 
 int OperatorAstNode::Print3AC(TACWriter* output)
 {
@@ -518,10 +522,21 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 			}
 		}
 		break;
-	case OP_RETURN:
+	case OP_CALL:
 		{
-			output->WriteInstruction(RET);
+			LabelAstNode *labelNode = dynamic_cast<LabelAstNode *>(left);
+			if (nullptr != labelNode)
+			{
+				output->WriteJumpInstruction(CALL, labelNode->GetLabel());
+			}
+			else
+			{
+				throw std::string("Error: GOTO node invalid!");
+			}
 		}
+		break;
+	case OP_RETURN:
+		output->WriteInstruction(RET);
 		break;
 	case OP_CASE:
 	case OP_LIST:
@@ -1134,14 +1149,98 @@ int FunctionAstNode::PrintASTree(AstPrintInfo* output)
 }
 int FunctionAstNode::Serialize(TMLWriter* output)
 {
+	auto exitLabel = output->GetContext()->GenerateNewLabel();
+
+	LabelAstNode startLabelNode(this->functionData->GetStart());
+	output->Serialize(&startLabelNode);
+
+	auto parametersList = functionData->GetParametersList();
+	if (parametersList.size() > 0)
+	{
+		// NOTE: last pushed var (parametersList[0]) might be the result var
+		VarAstNode varNode(false, parametersList[0]);
+		output->WriteTypedInstruction(EXCH, &varNode);
+
+		int i = 1;
+		for (auto it = ++parametersList.begin(); it != parametersList.end(); i++, it++)
+		{
+			VarAstNode varNode(false, (*it));
+			NumValueAstNode exchPrev(i-1), exchNext(i);
+
+			if (i != 1)
+				output->WriteTypedInstruction(EXCH, &exchPrev);
+			output->WriteTypedInstruction(EXCH, &exchNext);
+			output->WriteTypedInstruction(EXCH, &varNode);
+		}
+		if (i != 1)
+		{
+			NumValueAstNode exchNext(i);
+			output->WriteTypedInstruction(EXCH, &exchNext);
+		}
+	}
+
+	// Get all variables in the function block (and sub-blocks)
+	std::vector<TVariable*> blockVars;
+	output->GetContext()->ProcessFunctionBlockVariables(this->functionData,
+		[&blockVars](TVariable* var) -> bool
+	{
+		blockVars.emplace_back(var);
+		return true;
+	}
+	);
+
+	for (auto it = blockVars.begin(); it != blockVars.end(); it++)
+	{
+		VarAstNode varNode(false, (*it));
+		output->WriteTypedInstruction(PUSH, &varNode);
+	}
+
+	output->Serialize(this->statementsBlock);
+
+	LabelAstNode exitLabelNode(exitLabel);
+	output->Serialize(&exitLabelNode);
+
+	for (auto it = --blockVars.end(); ; it--)
+	{
+		VarAstNode varNode(false, (*it));
+		output->WriteTypedInstruction(POP, &varNode);
+
+		if (it == blockVars.begin())
+			break;
+	}
+
+	// Now we gotta reverse iterate vector<TVariable*> for
+	// the consequent pop's
+	if (parametersList.size() > 0)
+	{
+		int i = 1;
+		for (auto it = --parametersList.end(); it != parametersList.begin(); it--)
+		{
+			VarAstNode varNode(false, (*it));
+			output->WriteTypedInstruction(POP, &varNode);
+		}
+
+		VarAstNode varNode(false, (*(parametersList.begin())));
+
+		if (GetResultType()->getID() != VOID_TYPE)
+		{
+			output->WriteTypedInstruction(EXCH, &varNode);
+		}
+		else
+		{
+			output->WriteTypedInstruction(POP, &varNode);
+		}
+	}
+
+	// NOTE: OP_RETURN is just a TML command here
+	OperatorAstNode opRet(OP_RETURN, nullptr);
+	output->Serialize(&opRet);
+
 	return 0;
 }
 
 int FunctionCallAstNode::Print3AC(TACWriter* output)
-{
-	auto typeName = GetResultType()->GetName();
-	auto funcName = functionData->GetName();
-	
+{	
 	for (auto it = this->parametersList.begin(); it != this->parametersList.end(); it++)
 	{
 		output->CodeGen((*it));
@@ -1159,6 +1258,7 @@ int FunctionCallAstNode::Print3AC(TACWriter* output)
 		output->CodeWriteFormat("\tPush\t%s\n", valName.c_str());
 	}
 
+	auto funcName = functionData->GetName();
 	output->CodeWriteFormat("\tCall %s\n", funcName.c_str());
 	
 	if (GetResultType()->getID() != VOID_TYPE)
@@ -1194,5 +1294,33 @@ int FunctionCallAstNode::PrintASTree(AstPrintInfo* output)
 }
 int FunctionCallAstNode::Serialize(TMLWriter* output)
 {
+	for (auto it = this->parametersList.begin(); it != this->parametersList.end(); it++)
+	{
+		output->Serialize((*it));
+		auto valNode = output->GetLastOperationResult();
+		output->WriteTypedInstruction(LD_, valNode);
+		output->WriteInstruction(PUSH);
+	}
+
+	TVariable *resultVar = output->GetContext()->GenerateNewTmpVar(GetResultType()->Clone(), true);
+	auto resultVarNode = new VarAstNode(true, resultVar);
+
+	if (GetResultType()->getID() != VOID_TYPE)
+	{
+		output->WriteTypedInstruction(LD_, resultVarNode);
+		output->WriteInstruction(PUSH);
+	}
+
+	LabelAstNode funcStartLabel(functionData->GetStart());
+	OperatorAstNode opCall(OP_CALL, &funcStartLabel);
+	output->Serialize(&opCall);
+
+	if (GetResultType()->getID() != VOID_TYPE)
+	{
+		output->WriteInstruction(POP);
+		output->WriteTypedInstruction(ST_, resultVarNode);
+	}
+	output->SetResult(resultVarNode);
+
 	return 0;
 }

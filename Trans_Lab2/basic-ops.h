@@ -47,10 +47,12 @@ typedef enum
 	OP_LIST,
 	OP_BREAK,
 	OP_CONTINUE,
-	OP_RETURN,
 	OP_SWITCH,
 	OP_CASE,
 	OP_DEFAULT,
+	/* Function call related */
+	OP_CALL,
+	OP_RETURN,
 	/* Служебные операторы */
 	OP_ERROR,
 	OP_INVALID
