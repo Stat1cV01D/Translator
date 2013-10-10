@@ -108,10 +108,16 @@ class AstOptimizer;
 class IOptimizable
 {
 public:
-	virtual int Optimize(AstOptimizer* output) = 0;
+	enum OptResult
+	{
+		optOK,
+		optToBeDeleted,
+		optToBeReplaced,
+	};
+	virtual OptResult Optimize(AstOptimizer* output) = 0;
 };
 
-class StatementAstNode: public AstNode
+class StatementAstNode: public AstNode, public IOptimizable
 {
 	AstNode* stmnt;
 public:
@@ -126,7 +132,7 @@ public:
 	virtual int Serialize(TMLWriter* output) { return stmnt->Serialize(output); } 
 };
 
-class StatementBlockAstNode: public AstNode
+class StatementBlockAstNode: public AstNode, public IOptimizable
 {
 	std::vector<AstNode*> stmnts;
 public:
@@ -166,6 +172,8 @@ public:
 		);
 	}
 
+	virtual IOptimizable::OptResult Optimize(AstOptimizer* output);
+
 	/// <summary>
 	/// Serializes the AstNode (this) to TML code.
 	/// </summary>
@@ -201,7 +209,8 @@ public:
 	virtual int Print3AC(TACWriter* output);
 	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
-
+	virtual IOptimizable::OptResult Optimize(AstOptimizer* output);
+	
 	~ConditionalAstNode()
 	{
 		if (cond)
@@ -278,6 +287,7 @@ public:
 	virtual int Print3AC(TACWriter* output);
 	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
+	virtual IOptimizable::OptResult Optimize(AstOptimizer* output);
 
 	~LoopAstNode()
 	{
@@ -450,6 +460,7 @@ public:
 	virtual int Print3AC(TACWriter* output);
 	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
+	virtual IOptimizable::OptResult Optimize(AstOptimizer* output);
 
 	virtual std::string GetValueHolderName()
 	{
@@ -719,6 +730,7 @@ public:
 	virtual int Print3AC(TACWriter* output);
 	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
+	virtual IOptimizable::OptResult Optimize(AstOptimizer* output);
 
 	opEnum GetOpID() { return operation; }
 	const char* GetOpName() { return op_3ac_name.c_str(); }
@@ -746,6 +758,8 @@ public:
 	virtual int Print3AC(TACWriter* output);
 	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
+	virtual IOptimizable::OptResult Optimize(AstOptimizer* output);
+
 };
 
 class VerboseAstNode: public AstNode
@@ -787,6 +801,7 @@ public:
 	virtual int Print3AC(TACWriter* output) { return 0; }
 	virtual int PrintASTree(AstPrintInfo* output) { return 0; }
 	virtual int Serialize(TMLWriter* output) { return 0; }
+	virtual IOptimizable::OptResult Optimize(AstOptimizer* output);
 
 };
 
@@ -805,6 +820,8 @@ public:
 	virtual int Print3AC(TACWriter* output);
 	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
+	virtual IOptimizable::OptResult Optimize(AstOptimizer* output);
+
 };
 
 class FunctionCallAstNode: public AstNode

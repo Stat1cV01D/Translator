@@ -4,6 +4,65 @@
 #include "AstUtils.h"
 #include "tml-generator.h"
 #include "Operators.h"
+#include <vector>
+#include <hash_map>
+#include "AstOptimizer.h"
+#include <ctype.h>
+
+IOptimizable::OptResult StatementBlockAstNode::Optimize(AstOptimizer* output)
+{
+	auto result = optOK;
+	std::vector<AstNode*> DeletedStmnts;
+	std::hash_map<AstNode*, AstNode*> ReplacedStmnts;
+
+	ProcessStatements(
+		[&output, &DeletedStmnts, &ReplacedStmnts](AstNode *node) -> int
+	{
+		IOptimizable *optNode = dynamic_cast<IOptimizable *>(node);
+		if (nullptr != optNode)
+		{
+			switch (optNode->Optimize(output))
+			{
+			case optToBeDeleted:
+				DeletedStmnts.emplace_back(node);
+				break;
+			case optToBeReplaced:
+				ReplacedStmnts.insert(std::pair<AstNode*, AstNode*>(node, output->GetLastOperationResult()));
+				break;
+			}
+		}
+		return 0;
+	}
+	);
+
+	for (auto it_d = DeletedStmnts.begin(); it_d != DeletedStmnts.end(); it_d++)
+	{
+		for (auto it = stmnts.begin(); it != stmnts.end(); it++)
+		{
+			if ((*it_d) == (*it))
+			{
+				stmnts.erase(it);
+				break;
+			}
+		}
+	}
+
+	int i = 0;
+	for (auto it = stmnts.begin(); it != stmnts.end(); it++, i++)
+	{
+		auto pos = ReplacedStmnts.find((*it));
+		if (pos != ReplacedStmnts.end())
+		{
+			stmnts[i] = (*pos).second;
+		}
+	}
+
+
+	if (stmnts.size() == 0)
+		result = optToBeDeleted;
+
+	return result;
+}
 
 int ConditionalAstNode::Print3AC(TACWriter* output)
 {
@@ -84,9 +143,10 @@ int ConditionalAstNode::Serialize(TMLWriter* output)
 	output->Serialize(&endLabelAstNode);
 	return 0;
 }
-int ConditionalAstNode::Optimize(AstOptimizer* output)
-{
 
+IOptimizable::OptResult ConditionalAstNode::Optimize(AstOptimizer* output)
+{
+	
 }
 
 int OperatorAstNode::Print3AC(TACWriter* output)
