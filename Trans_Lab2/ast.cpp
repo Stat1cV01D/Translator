@@ -11,7 +11,7 @@
 
 IOptimizable::OptResult StatementBlockAstNode::Optimize(AstOptimizer* output)
 {
-	auto result = optOK;
+	/*auto result = optOK;
 	std::vector<AstNode*> DeletedStmnts;
 	std::hash_map<AstNode*, AstNode*> ReplacedStmnts;
 
@@ -57,11 +57,12 @@ IOptimizable::OptResult StatementBlockAstNode::Optimize(AstOptimizer* output)
 		}
 	}
 
-
 	if (stmnts.size() == 0)
 		result = optToBeDeleted;
 
-	return result;
+	return result;*/
+	return optOK;
+
 }
 
 int ConditionalAstNode::Print3AC(TACWriter* output)
@@ -115,6 +116,8 @@ int ConditionalAstNode::PrintASTree(AstPrintInfo* output)
 }
 int ConditionalAstNode::Serialize(TMLWriter* output)
 {
+
+
 	auto labelNumber_false = output->GetContext()->GenerateNewLabel();
 	auto labelNumber_end = labelNumber_false;
 	if (this->false_block != nullptr)
@@ -122,10 +125,14 @@ int ConditionalAstNode::Serialize(TMLWriter* output)
 
 	LabelAstNode endLabelAstNode(labelNumber_end);
 	LabelAstNode falseLabelAstNode(labelNumber_false);
+	
+	if (this->cond != nullptr) // might have been optimized
+	{
+		// 1. check the result and process true_block (TODO [SV] 14.08.13 16:14: with possible optimization|elimination?)
+		OperatorAstNode op(OP_IFFALSE, cond, &falseLabelAstNode);
+		output->Serialize(&op);
+	}
 
-	// 1. check the result and process true_block (TODO [SV] 14.08.13 16:14: with possible optimization|elimination?)
-	OperatorAstNode op(OP_IFFALSE, cond, &falseLabelAstNode);
-	output->Serialize(&op);
 	if (this->true_block != nullptr) // might be null if there are no statements (or declarations only)
 	{
 		output->Serialize(true_block);
@@ -146,7 +153,26 @@ int ConditionalAstNode::Serialize(TMLWriter* output)
 
 IOptimizable::OptResult ConditionalAstNode::Optimize(AstOptimizer* output)
 {
-	
+/*	if (output->Optimize(this->cond) == optToBeReplaced)
+	{
+		// Conditional node might be replaced to either const bool value
+		// or numeric value
+		auto numValueNode = dynamic_cast<NumValueAstNode*>(output->GetLastOperationResult());
+		if (numValueNode != nullptr)
+		{
+			switch (numValueNode->GetResultType()->getID())
+			{
+			case BOOL_TYPE:
+				numValueNode->ToInt()
+				break;
+			case INT_TYPE:
+			case FLOAT_TYPE:
+			case ROM_TYPE:
+				break;
+			}
+		}
+	}*/
+	return optOK;
 }
 
 int OperatorAstNode::Print3AC(TACWriter* output)
@@ -596,7 +622,23 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 		}
 		break;
 	case OP_RETURN:
-		output->WriteInstruction(RET);
+		{
+			if (right != nullptr)
+			{
+				OperatorAstNode opAssign(OP_ASSIGN, this->result, this->right);
+				output->Serialize(&opAssign);
+			}
+
+			LabelAstNode *labelNode = dynamic_cast<LabelAstNode *>(left);
+			if (nullptr != labelNode)
+			{
+				output->WriteJumpInstruction(JMP, labelNode->GetLabel());				// JMP FunctionRet
+			}
+			else
+			{
+				throw std::string("Error: RETURN node invalid!");
+			}
+		}
 		break;
 	case OP_CASE:
 	case OP_LIST:
@@ -615,6 +657,43 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 	}
 
 	return 0;
+}
+IOptimizable::OptResult OperatorAstNode::Optimize(AstOptimizer* output)
+{
+	// 1. Optimize right node
+/*	auto resultRight = output->Optimize(this->right);
+	if (resultRight == optToBeReplaced)
+	{
+		auto oldNode = this->right;
+		this->right = output->GetLastOperationResult();
+		delete oldNode;
+	}
+	// 2. Optimize left node
+	auto resultLeft = output->Optimize(this->left);
+	if (resultLeft == optToBeReplaced)
+	{
+		auto oldNode = this->left;
+		this->left = output->GetLastOperationResult();
+		delete oldNode;
+	}
+
+	if (this->operation == OP_ASSIGN)
+	{
+		// if this is an assignment operation, then it should be variable
+		auto varNode = dynamic_cast<VarAstNode *>(this->left);
+		auto valueNode = dynamic_cast<NumValueAstNode *>(this->right);
+		if (nullptr != valueNode && varNode->CanBeOptimized())
+		{
+			//output->GetContext()->getVar()
+		}
+	}
+
+	if (resultLeft == optToBeReplaced && resultRight == optToBeReplaced)
+	{
+
+	}*/
+	return optOK;
+
 }
 
 int VarAstNode::Print3AC(TACWriter* output)
@@ -641,6 +720,11 @@ int VarAstNode::Serialize(TMLWriter* output)
 
 	output->SetResult(this);
 	return 0;
+}
+IOptimizable::OptResult VarAstNode::Optimize(AstOptimizer* output)
+{
+	//if (GetTableReference()->)
+	return optOK;
 }
 
 int NumValueAstNode::Print3AC(TACWriter* output)
@@ -1209,7 +1293,7 @@ int FunctionAstNode::PrintASTree(AstPrintInfo* output)
 }
 int FunctionAstNode::Serialize(TMLWriter* output)
 {
-	auto exitLabel = output->GetContext()->GenerateNewLabel();
+	auto exitLabel = this->functionData->GetReturnLabel();
 
 	LabelAstNode startLabelNode(this->functionData->GetStart());
 	output->Serialize(&startLabelNode);
@@ -1274,28 +1358,23 @@ int FunctionAstNode::Serialize(TMLWriter* output)
 	if (parametersList.size() > 0)
 	{
 		int i = 1;
-		for (auto it = --parametersList.end(); it != parametersList.begin(); it--)
+		for (auto it = --parametersList.end(); ; it--)
 		{
 			VarAstNode varNode(false, (*it));
 			output->WriteTypedInstruction(POP, &varNode);
+
+			if (it == parametersList.begin())
+				break;
 		}
 
-		VarAstNode varNode(false, (*(parametersList.begin())));
-
-		if (GetResultType()->getID() != VOID_TYPE)
+		if (functionData->GetReturnValue() != nullptr)
 		{
-			output->WriteTypedInstruction(EXCH, &varNode);
-		}
-		else
-		{
-			output->WriteTypedInstruction(POP, &varNode);
+			VarAstNode resultNode(false, functionData->GetReturnValue());
+			output->WriteTypedInstruction(PUSH, &resultNode);
 		}
 	}
 
-	// NOTE: OP_RETURN is just a TML command here
-	OperatorAstNode opRet(OP_RETURN, nullptr);
-	output->Serialize(&opRet);
-
+	output->WriteInstruction(RET);
 	return 0;
 }
 

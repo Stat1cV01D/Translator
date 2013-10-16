@@ -71,7 +71,7 @@ public:
 		g_TypeTable = new THashTable<std::string, BaseTypeInfo*>(HashFunction, CompareFunction);
 		g_LiteralTable = new THashTable<std::string, TVariable*>(HashFunction, CompareFunction);
 		g_FunctionsTable = new THashTable<std::string, TFunctionOperator*>(HashFunction, CompareFunction);
-
+		
 		m_LastLabelNumber = 0;
 		m_LastTmpIndex = 0;
 	}
@@ -135,22 +135,6 @@ public:
 		g_tmpVarsTable->st_put(result->GetName(), result);
 		return result;
 	}
-	
-	//TVariable *AddLiteral(std::string& str_literal)
-	//{
-	//	if (g_LiteralTable->st_exist(str_literal))
-	//	{
-	//		return g_LiteralTable->st_get(str_literal);
-	//	}
-	//	else
-	//	{
-	//		TVariable *result = CreateVariable(new LiteralType(str_literal.size()), str_literal);
-	//		result->ReserveMemory();
-	//		g_LiteralTable->st_put(result->GetName(), result);
-	//		return result;
-	//	}
-	//}
-
 
 	TVariable *GetLastUsedTmpVar()
 	{
@@ -732,6 +716,15 @@ protected:
 				}
 			}
 			break;
+		case FUNCTION_CALL_NODE:
+			this->Serialize(operand);
+			operand = this->GetLastOperationResult();
+
+			uint32_t index;
+			instruction.AddrMode = ABSOLUTE_MODE;
+			index = dynamic_cast<IValueHolderNode*>(operand)->CalculateMemoryOffset();
+			memcpy(&instruction.Args, &index, sizeof(uint32_t));
+			break;
 		case ID_NODE:
 		case TMP_ID_NODE:
 		case VARIABLE_NODE:
@@ -867,7 +860,7 @@ public:
 
 		// —формировать код оператора
 		instruction.OpCode = GetTypedOperator(op, operand->GetResultType()->getID());
-		if (op < __NOARGS || op == EXCH)
+		if (op < __NOARGS || op == EXCH || op == PUSH || op == POP)
 		{
 			// —формировать режим адресации и аргументы
 			instruction = AddAddressingModeAndArgs(instruction, operand);

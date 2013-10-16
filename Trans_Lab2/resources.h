@@ -22,12 +22,13 @@
 #define UNEXPECTED_CONTINUE_ERROR		"unexpected continue"
 #define UNEXPECTED_RETURN_ERROR			"unexpected return outside of function"
 #define TYPE_REDEFINITION_ERROR			"type redefinition"
-#define INVALID_ASSIGN_L_VALUE			"expression on left of ':=' must be a base type variable"
+#define INVALID_ASSIGN_L_VALUE			"expression on left of assignment must be a base type variable"
 #define ERROR_DECLARATIONS_FIRST		"variable declarations should go before any statements in the block"
 #define FUNCTION_IN_FUNCTION			"can not declare function in function"
 #define FUNCTION_CALL_PAR_NUMBER_ERROR	"invalid function call parameters number"
 #define FUNCTION_INVALID_PAR_ERROR		"one of the parameters type does not match"
 #define FUNCTION_INVALID_RETURN_ERROR	"invalid return variable type"
+#define STRUCT_DECLARATION_ERROR		"invalid struct declaration"
 /* structs */
 #define UNDECLARED_STRUCT_FIELD			"undeclared struct field"
 #define STRUCT_FIELD_REDEFINITION		"struct field redefinition"
@@ -46,6 +47,8 @@
 #define REPEATED_CASE_KEY_VALUE			"case label key values mustn't be repeated"
 #define INVALID_CASE_KEY_VAL_TYPE		"case label key value must be an integer constant"
 #define INVALID_SWITCH_KEY_TYPE			"switch key must be an integer type"
+/* functions */
+#define INCOMPLETE_FUNC_DEF_ERROR		"incomplete function declaration"
 
 /* Синтаксические ошибки */
 

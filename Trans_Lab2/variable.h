@@ -166,6 +166,9 @@ public:
 	std::string GetName() { return name; }
 	bool IsInitialized() { return initialized; }
 	
+	void SetConst(bool value) { isConstValue = value; }
+	bool IsConst() { return isConstValue; }
+
 	int ValueToInt()
 	{
 		switch (typeTableRef->getID())

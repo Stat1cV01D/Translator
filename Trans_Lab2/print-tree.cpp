@@ -67,21 +67,27 @@ int main(int argc, char* argv[])
     }
 
 	yydebug = 1;
-	int errcode = yyparse();
-
-	printf("\n");
-	if(errcode)
+	try
 	{
-		printf("There are syntax errors!");
-	}
-	else
-	{
-	    if (printAst) print_astTree();
-	    if (printPt) print_ptTree();
-		if (print3AC) print_3ac();
-	}
+		int errcode = yyparse();
 
-	MakeTML();
+		printf("\n");
+		if(errcode == 0)
+		{
+			if (printAst) print_astTree();
+			if (printPt) print_ptTree();
+			if (print3AC) print_3ac();
+			MakeTML();
+		}
+		else
+		{
+			printf("There are syntax errors!");
+		}
+	}
+	catch (BisonException& e)
+	{
+		; // do nothing here
+	}
 	getchar();
     exit (0);
 }

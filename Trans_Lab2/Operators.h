@@ -181,27 +181,30 @@ public:
 class TFunctionOperator: public TOperator
 {
 protected:
-	BaseTypeInfo *returnType;		// return var type label
+	TVariable *returnValue;			// return var type label
 	TLabel *enterLabel;				// function start label
 	std::string name;
 	std::string blockNameSpace;
 	std::vector<TVariable*> parameters;
 	bool isUsed; // Has the function been called? (optimization-related)
+	TLabel *returnLabel;
 public:
-	TFunctionOperator(BaseTypeInfo *returnType, std::string &name, std::string &nameSpace, TLabel *enterLabel)
+	TFunctionOperator(TVariable *returnValue, std::string &name, std::string &nameSpace, TLabel *enterLabel, TLabel *returnLabel)
 		: TOperator(OT_FUNCTION) 
 	{
-		this->returnType = returnType;
+		this->returnValue = returnValue;
 		this->enterLabel = enterLabel;
 		this->name = name;
 		this->blockNameSpace = nameSpace;
+		this->returnLabel = returnLabel;
 	}
 	virtual ~TFunctionOperator() {}
 
 	TLabel *GetStart() { return enterLabel; }
-	BaseTypeInfo *GetResultType() { return returnType; }
+	BaseTypeInfo *GetResultType() { return (returnValue == nullptr ? new VoidType() : returnValue->GetType()); }
 	std::string GetName() { return name; }
 	std::string GetBlockNameSpace() { return blockNameSpace; }
+	TLabel* GetReturnLabel() { return returnLabel; }
 
 	std::vector<TVariable*> GetParametersList() { return parameters; }
 	void SetParametersList(std::vector<TVariable*> &parameters)
@@ -217,6 +220,15 @@ public:
 	{
 		return isUsed;
 	}
+
+	void SetReturnValue(TVariable *value)
+	{
+		returnValue = value;
+	}
+	TVariable *GetReturnValue()
+	{
+		return returnValue;
+	}	
 };
 
 class OperatorStack

@@ -1,20 +1,13 @@
-rom[10][3] b;
 int i;
+float f;
 
-void func(int i)
+void out(float f)
 {
-	int bla;
-	bla = 0;
-	print(bla+1);
+	f = f + 1.5;
+	print(f);
 }
 
-b[1][2] = CXVII;
-print(b[1][2]);
-
-for(i = 0; i < 10; i = i+1)
-{
-	b[i][1] = i;
-	print(b[i][1]);
-}
-
-func(0);
+i = 4 * 6;
+print(i);
+f = i;
+out(f);

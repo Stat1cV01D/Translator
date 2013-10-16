@@ -281,6 +281,12 @@ stmnt_block
 		$$ = createNode($stmnts->astNode, 
 				createPtNodeWithChildren("stmnt_block", 3, $st->ptNode, $stmnts->ptNode, $end->ptNode));
 	}
+	|
+	stmnt_block_start[st] declaration_list[decls] stmnt_list[stmnts] error %prec STMNT_BLOCK_ERROR
+	{
+		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_CLOSE_BRACE, @error), 
+				nullptr);
+	}
 	;
 
 expr_or_assignment:
@@ -398,7 +404,7 @@ lexemes:
 			if (funcDefOp->GetResultType()->getID() != VOID_TYPE)
 				astNode = new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, FUNCTION_INVALID_RETURN_ERROR, @1);
 			else
-				astNode = new OperatorAstNode(OP_RETURN, nullptr);
+				astNode = new OperatorAstNode(OP_RETURN, new LabelAstNode(funcDefOp->GetReturnLabel()));
 		}
 		$$ = createNode(astNode, 
 				createPtNodeWithChildren("stmnt", 1, $1->ptNode));
@@ -417,7 +423,8 @@ lexemes:
 			if (funcDefOp->GetResultType()->getID() != $2->astNode->GetResultType()->getID())
 				astNode = new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, FUNCTION_INVALID_RETURN_ERROR, @2);
 			else
-				astNode = new OperatorAstNode(OP_RETURN, $1->astNode);
+				astNode = new OperatorAstNode(OP_RETURN, new LabelAstNode(funcDefOp->GetReturnLabel()), 
+							$2->astNode, new VarAstNode(false, funcDefOp->GetReturnValue()));
 		}
 		$$ = createNode(astNode, 
 				createPtNodeWithChildren("stmnt", 2, $1->ptNode, $2->ptNode));
@@ -557,6 +564,18 @@ struct_def: struct_head struct_body struct_tail
 	{
 		$$ = $1;
 	}
+	|
+	struct_head error
+	{
+		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_CLOSE_BRACE, @error), 
+				nullptr);
+	}
+	|
+	struct_head struct_body error
+	{
+		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_CLOSE_BRACE, @error), 
+				nullptr);
+	}
 	;
 struct_head: struct_type[_struct] TOK_IDENTIFIER
 	{
@@ -577,6 +596,12 @@ struct_head: struct_type[_struct] TOK_IDENTIFIER
 		// NOTE: $_struct does NOT return Node* variable!
 		$$ = createNode(verboseNode, 
 				createPtNodeWithChildren("struct", 1, $2->ptNode));
+	}
+	|
+	struct_type[_struct] error
+	{
+		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, STRUCT_DECLARATION_ERROR, @error), 
+				nullptr);
 	}
 	;
 struct_type: 
@@ -873,22 +898,6 @@ assignment:
 		AssertOneOfTypes($right, @right, 1, type->getID());
 		
 		TVariable *var = GetVariableForAssign($left, @left);
-		
-		/* // TODO: work for 8-th lab 
-		auto constValueNode = dynamic_cast<NumValueAstNode*>($right->astNode);
-		if (constValueNode != nullptr)
-		{
-			auto varNode = dynamic_cast<IValueHolderNode*>($left->astNode);
-			if (varNode != nullptr)
-			{
-				if (varNode->SetValue(constValueNode) == 0)
-				{
-					$$ = $left;	
-					break;
-				}
-			}
-		}
-		*/
 
 		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode), 
 				createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));
@@ -1333,7 +1342,11 @@ function_def_head
 		TBlockContext::Push_FunctionParametersDef(funcName);
 		auto nameSpace = TBlockContext::GetCurrent()->GetBlockNamepace();
 
-		auto functionOp = new TFunctionOperator($1->astNode->GetResultType()->Clone(), funcName, nameSpace, callLabel);
+		TVariable *resultVar = nullptr;
+		if ($1->astNode->GetResultType()->getID() != VOID_TYPE)
+			resultVar = Context.GenerateNewTmpVar($1->astNode->GetResultType()->Clone());
+
+		auto functionOp = new TFunctionOperator(resultVar, funcName, nameSpace, callLabel, Context.GenerateNewLabel());
 		Context.OperatorStackPush(functionOp);
 	}
 	;
@@ -1387,6 +1400,18 @@ function_def
 			$$ = createNode(new FunctionAstNode(funcDefOp, $3->astNode),
 					createPtNodeWithChildren("function_def", 3, $1->ptNode, $2->ptNode, $3->ptNode));
 		}
+	}
+	/*|
+	function_def_head error // shift/reduce conflist with ID declaration error
+	{
+		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, INCOMPLETE_FUNC_DEF_ERROR, @error),
+				nullptr);
+	}*/
+	|
+	function_def_head func_declarator error
+	{
+		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, INCOMPLETE_FUNC_DEF_ERROR, @error),
+				nullptr);
 	}
 	;
 

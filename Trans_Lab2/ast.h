@@ -32,14 +32,14 @@ class AstNode
 {
     TreeType nodeType;
 	BaseTypeInfo *resultType;
-
-	int codeOffset; // offset in code segment of TML;
+	//AstNode *parentNode;
 public:
 
-	AstNode(TreeType category, BaseTypeInfo *type) 
+	AstNode(/*AstNode *parentNode, */TreeType category, BaseTypeInfo *type) 
 	{
 		nodeType = category;
 		resultType = type;
+		//this->parentNode = parentNode;
 	}
 
 	~AstNode()
@@ -68,11 +68,6 @@ public:
 	bool IsVarTypeEqual(TVariable *var)
 	{
 		return (IsNodeOfType(var->GetType()));
-	}
-
-	void SetCodeOffset(int offset)
-	{
-		this->codeOffset = offset;
 	}
 
 	/// <summary> Prints out the Three address code </summary>
@@ -107,6 +102,8 @@ class AstOptimizer;
 
 class IOptimizable
 {
+	bool canBeOptimized;
+	bool isWriteOperation;
 public:
 	enum OptResult
 	{
@@ -115,6 +112,13 @@ public:
 		optToBeReplaced,
 	};
 	virtual OptResult Optimize(AstOptimizer* output) = 0;
+
+	bool CanBeOptimized() { return canBeOptimized; }
+	void SetOptimized(bool value) { canBeOptimized = value; }
+	// Use-def chains related procedures
+	void SetWriteOperation(bool value) { isWriteOperation = value; }
+	bool IsWriteOperation() { return isWriteOperation; }
+
 };
 
 class StatementAstNode: public AstNode, public IOptimizable
@@ -150,7 +154,6 @@ public:
 				return result;
 		return 0;
 	}
-
 
 	virtual int Print3AC(TACWriter* output) 
 	{
@@ -204,6 +207,7 @@ public:
 		this->cond = cond;
 		this->true_block = true_block;
 		this->false_block = false_block;
+		SetWriteOperation(false);
 	}
 
 	virtual int Print3AC(TACWriter* output);
@@ -287,7 +291,7 @@ public:
 	virtual int Print3AC(TACWriter* output);
 	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
-	virtual IOptimizable::OptResult Optimize(AstOptimizer* output);
+	virtual IOptimizable::OptResult Optimize(AstOptimizer* output) { return optOK; }
 
 	~LoopAstNode()
 	{
@@ -732,6 +736,8 @@ public:
 	virtual int Serialize(TMLWriter* output);
 	virtual IOptimizable::OptResult Optimize(AstOptimizer* output);
 
+	NumValueAstNode *TryPropagate();
+
 	opEnum GetOpID() { return operation; }
 	const char* GetOpName() { return op_3ac_name.c_str(); }
 	AstNode *GetLeftOperand() { return left; }
@@ -758,8 +764,18 @@ public:
 	virtual int Print3AC(TACWriter* output);
 	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
-	virtual IOptimizable::OptResult Optimize(AstOptimizer* output);
+	virtual IOptimizable::OptResult Optimize(AstOptimizer* output) { return optOK; }
 
+};
+
+class BisonException
+{
+private:
+protected:
+	
+public:
+	BisonException() {}
+	~BisonException() {}
 };
 
 class VerboseAstNode: public AstNode
@@ -788,12 +804,15 @@ public:
 			//print_error(message, location);
 			break;
 		case LEVEL_WARN:
-			print_warning(message, location);
+			//print_warning(message, location);
+			// Do not print warning unless optimization algorythms are implemented
 			break;
 		case LEVEL_ERROR:
 			print_error(message, location);
 			break;
 		}
+
+		throw BisonException();
 	}
 
 	YYLTYPE GetLocation() { return location; }
@@ -801,8 +820,6 @@ public:
 	virtual int Print3AC(TACWriter* output) { return 0; }
 	virtual int PrintASTree(AstPrintInfo* output) { return 0; }
 	virtual int Serialize(TMLWriter* output) { return 0; }
-	virtual IOptimizable::OptResult Optimize(AstOptimizer* output);
-
 };
 
 class FunctionAstNode: public AstNode, public IOptimizable
@@ -820,11 +837,11 @@ public:
 	virtual int Print3AC(TACWriter* output);
 	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
-	virtual IOptimizable::OptResult Optimize(AstOptimizer* output);
+	virtual IOptimizable::OptResult Optimize(AstOptimizer* output) { return optOK; }
 
 };
 
-class FunctionCallAstNode: public AstNode
+class FunctionCallAstNode: public AstNode, public IValueHolderNode
 {
 	TFunctionOperator *functionData;
 	std::vector<AstNode *> parametersList;
@@ -840,6 +857,10 @@ public:
 	virtual int Print3AC(TACWriter* output);
 	virtual int PrintASTree(AstPrintInfo* output);
 	virtual int Serialize(TMLWriter* output);
+
+	virtual std::string GetValueHolderName() { return std::string("call: ")+functionData->GetName(); }
+	virtual int SetValue(NumValueAstNode *valueNode) { throw std::string("function result is readonly"); }
+	virtual int CalculateMemoryOffset() { return functionData->GetReturnValue()->GetMemoryOffset(); }
 };
 
 #endif // AST_H_INCLUDED

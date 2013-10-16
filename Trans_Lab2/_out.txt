@@ -1,66 +1,17 @@
 $L1:
-	Exch	$idfunc0:i
-	Exch	1
-	Push	func0:bla
-	Push	func0:i
-	$idfunc0:bla	=	$c0
-	$t1	=	$idfunc0:bla	+	$c1
-	PRINT	$t1
-$L4:
-	Pop	func0:i
-	Pop	func0:bla
-	Pop	$idfunc0:i
+	Exch	$idout0:f
+	Push	out0:f
+	$t1	=	$idout0:f	+	$c1.5
+	$idout0:f	=	$t1
+	PRINT	$idout0:f
+$L3:
+	Pop	out0:f
+	Pop	$idout0:f
 	Return
 
-	Push	$c2
-	Push	$c1
-	$t4	=	$c0
-	Pop	$t5
-	$t5	=	$t5	*	$c3
-	$t4	=	$t4	+	$t5
-	Pop	$t5
-	$t4	=	$t5	+	$t4
-	$t4	=	$t4	+	$idb
-	$t4	=	$cCXVII
-	Push	$c2
-	Push	$c1
-	$t6	=	$c0
-	Pop	$t7
-	$t7	=	$t7	*	$c3
-	$t6	=	$t6	+	$t7
-	Pop	$t7
-	$t6	=	$t7	+	$t6
-	$t6	=	$t6	+	$idb
-	PRINT	$t6
-	$idi	=	$c0
-	Goto	$L5
-$L2:
-	$t3	=	$idi	+	$c1
-	$idi	=	$t3
-$L5:
-	$t2	=	$idi	<	$c10
-	iffalse	$t2	$L3
-	Push	$c1
-	Push	$idi
-	$t8	=	$c0
-	Pop	$t9
-	$t9	=	$t9	*	$c3
-	$t8	=	$t8	+	$t9
-	Pop	$t9
-	$t8	=	$t9	+	$t8
-	$t8	=	$t8	+	$idb
-	$t8	=	$idi
-	Push	$c1
-	Push	$idi
-	$t10	=	$c0
-	Pop	$t11
-	$t11	=	$t11	*	$c3
-	$t10	=	$t10	+	$t11
-	Pop	$t11
-	$t10	=	$t11	+	$t10
-	$t10	=	$t10	+	$idb
-	PRINT	$t10
-	Goto	$L2
-$L3:
-	Push	$c0
-	Call func
+	$t2	=	$c4	*	$c6
+	$idi	=	$t2
+	PRINT	$idi
+	$idf	=	$idi
+	Push	$idf
+	Call out
