@@ -273,6 +273,7 @@ private:
 
 	TLabel *entranceLabel;
 	TLabel *outLabel;
+
 public:
 	LoopAstNode(
 		LoopConditionAstNode *cond,

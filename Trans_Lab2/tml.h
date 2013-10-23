@@ -81,6 +81,10 @@ enum TMLCOMMAND : uint8_t
 	INSERTCOMMANDS(D)
 	INSERTCOMMANDS(LD)
 	INSERTCOMMANDS(S)
+	/* Stack operations */
+	PUSH,
+	POP,
+	EXCH,
 	_TYPED_COMMANDS_END,
 
 	/* Conversions */
@@ -102,11 +106,7 @@ enum TMLCOMMAND : uint8_t
 	CALL,
 	RET,
 	_JUMP_COMMANDS_END_,
-	/* Stack operations */
-	PUSH,
-	POP,
-	EXCH,
-	LAST_OPCODE = EXCH, 
+	LAST_OPCODE = RET, 
 };
 
 /* 256-bit memory cell */

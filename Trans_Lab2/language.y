@@ -8,6 +8,7 @@
 {
 #include <stddef.h>
 #include <string.h>
+#include <string>
 #include "parser.h"
 #include "AstUtils.h"
 #include "resources.h"
@@ -101,7 +102,7 @@ struct Node;
 %left UMINUS NOTX
 %left TOK_DOT
 
-%type <_node> start declaration_list stmnt stmnt_list stmnt_block_start stmnt_block 
+%type <_node> start declaration_list stmnt stmnt_list stmnt_block_start stmnt_block functions_def_list
 %type <_node> expression_statement expr_or_assignment expr struct_item identifier declaration_stmt declaration_block struct_type
 %type <_node> if_stmt loop_decl switch_stmt print_stmt read_stmt assignment struct_def struct_head struct_body struct_tail
 %type <_node> loop_for_expr instruction_body loop_while_expr type array type_name left_assign_expr const
@@ -186,6 +187,7 @@ std::vector<AstNode*> GetParametersList(AstNode *_node)
 		
 	return result;
 }
+
 %}
 
 %%
@@ -193,32 +195,62 @@ start :  /* empty */
 	{ 
 		$$ = NULL; 
 	}
-	| 
-	declaration_list stmnt_list
+	| declaration_list stmnt_list
 	{
 		PtNode *ptNode = createPtNode("start");
 		setPtNodeChildren(ptNode, 1, $stmnt_list->ptNode);
-		astTree = $stmnt_list->astNode;
 		ptTree = ptNode;
+		astTree = $stmnt_list->astNode;
 	}
-	|
-	declaration_list
+	| declaration_list functions_def_list stmnt_list
+	{
+		PtNode *ptNode = createPtNode("start");
+		setPtNodeChildren(ptNode, 1, $stmnt_list->ptNode);
+		ptTree = ptNode;
+
+		auto startLabelNode = new LabelAstNode(Context.MakeLabel("$start"));
+
+		auto _node1 = addStmntToBlock(createNode(new OperatorAstNode(OP_GOTO, startLabelNode), createPtNodeWithChildren("goto start", 0)), $2);		
+		auto _node2 = addStmntToBlock(_node1, createNode(startLabelNode, nullptr));		
+		auto _node = addStmntToBlock(_node2, $3);
+
+		astTree = _node->astNode;
+	}
+	| declaration_list
 	{
 		$$ = NULL;
 	}
-	|
-	stmnt_list
+	| stmnt_list
 	{
 		PtNode *ptNode = createPtNode("start");
 		setPtNodeChildren(ptNode, 1, $stmnt_list->ptNode);
 		astTree = $stmnt_list->astNode;
 		ptTree = ptNode;
 	}
-	| 
-	stmnt_list declaration_list
+	| stmnt_list declaration_list
 	{
 		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, ERROR_DECLARATIONS_FIRST, @2),
 				nullptr);
+	}
+	;
+
+functions_def_list:
+	function_def
+	{
+		// Can't define function in function
+		if (Context.OnFunctionDefinition())
+		{
+			$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, FUNCTION_IN_FUNCTION, @1), 
+					nullptr);
+		}
+		else
+		{
+			$$ = $1;
+		}
+	}
+	| functions_def_list function_def
+	{	
+		$$ = addStmntToBlock($1, $2);
 	}
 	;
 
@@ -432,20 +464,6 @@ lexemes:
 	;
 
 stmnt: 
-	function_def
-	{
-		// Can't define function in function
-		if (Context.OnFunctionDefinition())
-		{
-			$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, FUNCTION_IN_FUNCTION, @1), 
-					nullptr);
-		}
-		else
-		{
-			$$ = $1;
-		}
-	}
-	|
 	expression_statement
 	{
 		$$ = $1;
@@ -647,13 +665,13 @@ print_stmt:
 				nullptr);
 	}
 	| 
-	TOK_PRINT '(' expr error
+	TOK_PRINT TOK_OPENPAR expr error
 	{
 		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_CLOSE_PARANTHESIS, @error),
 				nullptr);
 	}
 	| 
-	TOK_PRINT '(' expr ')' error
+	TOK_PRINT TOK_OPENPAR expr TOK_CLOSEPAR error
 	{
 		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_SEPARATOR, @error),
 				nullptr);
@@ -663,8 +681,23 @@ print_stmt:
 read_stmt:
 	TOK_READ TOK_OPENPAR left_assign_expr TOK_CLOSEPAR TOK_ENDEXPR
 	{
-		$$ = createNode(new OperatorAstNode(OP_INPUT, $2->astNode),
+		$$ = createNode(new OperatorAstNode(OP_INPUT, $3->astNode),
 				createPtNodeWithChildren("stmnt", 5, $1->ptNode, $2->ptNode, $3->ptNode, $4->ptNode, $5->ptNode)); 
+	}
+	| TOK_READ error
+	{
+		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_OPEN_PARANTHESIS, @error),
+				nullptr);
+	}
+	| TOK_READ TOK_OPENPAR left_assign_expr error
+	{
+		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_CLOSE_PARANTHESIS, @error),
+				nullptr);
+	}
+	| TOK_READ TOK_OPENPAR left_assign_expr TOK_CLOSEPAR error
+	{
+		$$ = createNode(new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, EXPECTED_SEPARATOR, @error),
+				nullptr);
 	}
 	;
 
@@ -897,7 +930,7 @@ assignment:
 		BaseTypeInfo *type = $left->astNode->GetResultType();
 		AssertOneOfTypes($right, @right, 1, type->getID());
 		
-		TVariable *var = GetVariableForAssign($left, @left);
+		//TVariable *var = GetVariableForAssign($left, @left);
 
 		$$ = createNode(new OperatorAstNode($op->ptNode->text, $left->astNode, $right->astNode), 
 				createPtNodeWithChildren("expr", 3, $left->ptNode, $op->ptNode, $right->ptNode));

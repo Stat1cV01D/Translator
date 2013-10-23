@@ -709,8 +709,16 @@ protected:
 					break;
 				case FLOAT_TYPE:
 					{
-						auto value = dynamic_cast<NumValueAstNode *>(operand)->ToDouble();
+						float value = dynamic_cast<NumValueAstNode *>(operand)->ToDouble();
 						memcpy(&instruction.Args, &value, sizeof(value));
+					}	
+					break;
+				case LITERAL_TYPE:
+					{
+						uint32_t index;
+						instruction.AddrMode = ABSOLUTE_MODE;
+						index = dynamic_cast<IValueHolderNode*>(operand)->CalculateMemoryOffset();
+						memcpy(&instruction.Args, &index, sizeof(uint32_t));
 					}	
 					break;
 				}
@@ -829,6 +837,13 @@ public:
 		WriteInstructionBase(instruction);
 	}
 
+	void WriteStackInstruction(TMLCOMMAND op, AstNode *operand)
+	{
+		MachineInstruction instruction;
+		memset(&instruction, 0, sizeof(instruction));
+		instruction.OpCode = op;
+		instruction = AddAddressingModeAndArgs(instruction, operand);		
+	}
 /*
 	void WritePushInstruction()
 	{

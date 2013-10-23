@@ -57,19 +57,21 @@ class TLabel
 	void Init()
 	{
 		this->instructionIndex = 0;
-		this->name = name;
 		this->usepointLineNumber = 0;
 		this->declarationLineNumber = 0;
 	}
 public:
 	
 	std::vector<TJumpIndex*> jumpList;
-	TLabel(std::string& name)
+	TLabel(std::string& _name)
+		: name()
 	{
 		Init();
+		this->name = _name;
 	}
 
 	TLabel(unsigned int number)
+		: name()
 	{
 		char buf[10];
 		

@@ -942,10 +942,7 @@ int DimensionAstNode::Serialize(TMLWriter* output)
 	if (this->next_dimension->GetExpr() != nullptr) // means next dimension node is the terminating one
 		output->Serialize(this->next_dimension);
 
-	// TODO: serialize result to TmpVar and then push 
-	output->WriteTypedInstruction(LD_, this->GetExpr());	
-	// NOTE: dimension values are generated into INT values!
-	output->WriteInstruction(PUSH);
+	output->WriteStackInstruction(PUSH, this->GetExpr());
 
 	return 0;
 }
@@ -1000,6 +997,7 @@ int ArrayAddressAstNode::Print3AC(TACWriter* output)
 	// SumTmpVarNode is the result var
 	OperatorAstNode ArrayItemOffset(OP_PLUS, &SumTmpVarNode, this->varNode, &SumTmpVarNode);
 	output->CodeGen(&ArrayItemOffset);
+
 	output->SetLastUsedValueName(SumTmpVarNode.GetValueHolderName());
 	
 	return 0;
@@ -1191,6 +1189,9 @@ int FunctionAstNode::Print3AC(TACWriter* output)
 {
 	auto exitLabel = output->GetContext()->GenerateNewLabel();
 	
+	auto funcName = this->functionData->GetName();
+
+	output->CodeWriteFormat("%s:\n", funcName.c_str());
 	LabelAstNode startLabelNode(this->functionData->GetStart());
 	output->CodeGen(&startLabelNode);
 
@@ -1252,24 +1253,23 @@ int FunctionAstNode::Print3AC(TACWriter* output)
 	if (parametersList.size() > 0)
 	{
 		int i = 1;
-		for (auto it = --parametersList.end(); it != parametersList.begin(); it--)
+		for (auto it = --parametersList.end(); ; it--)
 		{
 			VarAstNode varNode(false, (*it));
 			output->CodeGen(&varNode);
 			auto varName = output->GetLastUsedValueName();
 			output->CodeWriteFormat("\tPop\t%s\n", varName.c_str());
+
+			if (it == parametersList.begin())
+				break;
 		}
 
-		VarAstNode varNode(false, (parametersList[0]));
-		output->CodeGen(&varNode);
-		auto varName = output->GetLastUsedValueName();	
-		if (GetResultType()->getID() != VOID_TYPE)
+		if (functionData->GetReturnValue() != nullptr)
 		{
-			output->CodeWriteFormat("\tExch\t%s\n", varName.c_str());
-		}
-		else
-		{
-			output->CodeWriteFormat("\tPop\t%s\n", varName.c_str());
+			VarAstNode varNode(false, functionData->GetReturnValue());
+			output->CodeGen(&varNode);
+			auto varName = output->GetLastUsedValueName();	
+			output->CodeWriteFormat("\tPush\t%s\n", varName.c_str());
 		}
 	}
 	output->CodeWriteFormat("\tReturn\n\n"); // NOTE: double '\n' !
@@ -1303,7 +1303,7 @@ int FunctionAstNode::Serialize(TMLWriter* output)
 	{
 		// NOTE: last pushed var (parametersList[0]) might be the result var
 		VarAstNode varNode(false, parametersList[0]);
-		output->WriteTypedInstruction(EXCH, &varNode);
+		output->WriteStackInstruction(EXCH, &varNode);
 
 		int i = 1;
 		for (auto it = ++parametersList.begin(); it != parametersList.end(); i++, it++)
@@ -1312,14 +1312,14 @@ int FunctionAstNode::Serialize(TMLWriter* output)
 			NumValueAstNode exchPrev(i-1), exchNext(i);
 
 			if (i != 1)
-				output->WriteTypedInstruction(EXCH, &exchPrev);
-			output->WriteTypedInstruction(EXCH, &exchNext);
-			output->WriteTypedInstruction(EXCH, &varNode);
+				output->WriteStackInstruction(EXCH, &exchPrev);
+			output->WriteStackInstruction(EXCH, &exchNext);
+			output->WriteStackInstruction(EXCH, &varNode);
 		}
 		if (i != 1)
 		{
 			NumValueAstNode exchNext(i);
-			output->WriteTypedInstruction(EXCH, &exchNext);
+			output->WriteStackInstruction(EXCH, &exchNext);
 		}
 	}
 
@@ -1336,7 +1336,7 @@ int FunctionAstNode::Serialize(TMLWriter* output)
 	for (auto it = blockVars.begin(); it != blockVars.end(); it++)
 	{
 		VarAstNode varNode(false, (*it));
-		output->WriteTypedInstruction(PUSH, &varNode);
+		output->WriteStackInstruction(PUSH, &varNode);
 	}
 
 	output->Serialize(this->statementsBlock);
@@ -1347,7 +1347,7 @@ int FunctionAstNode::Serialize(TMLWriter* output)
 	for (auto it = --blockVars.end(); ; it--)
 	{
 		VarAstNode varNode(false, (*it));
-		output->WriteTypedInstruction(POP, &varNode);
+		output->WriteStackInstruction(POP, &varNode);
 
 		if (it == blockVars.begin())
 			break;
@@ -1361,7 +1361,7 @@ int FunctionAstNode::Serialize(TMLWriter* output)
 		for (auto it = --parametersList.end(); ; it--)
 		{
 			VarAstNode varNode(false, (*it));
-			output->WriteTypedInstruction(POP, &varNode);
+			output->WriteStackInstruction(POP, &varNode);
 
 			if (it == parametersList.begin())
 				break;
@@ -1370,7 +1370,7 @@ int FunctionAstNode::Serialize(TMLWriter* output)
 		if (functionData->GetReturnValue() != nullptr)
 		{
 			VarAstNode resultNode(false, functionData->GetReturnValue());
-			output->WriteTypedInstruction(PUSH, &resultNode);
+			output->WriteStackInstruction(PUSH, &resultNode);
 		}
 	}
 

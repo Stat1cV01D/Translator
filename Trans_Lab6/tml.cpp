@@ -458,40 +458,65 @@ int main(int argc, char* argv[])
 				break;
 			/* variant 7 additions */
 			case PUSH:
-				{
-					Push(Accumulator);
-				}
-				break;
 			case POP:
-				{
-					Accumulator = Pop().cellData;
-				}
-				break;
 			case EXCH:
-				switch (addresingMode)
 				{
-				case DIRECT_MODE:
+					TMemoryCell* cell;
+					switch (addresingMode)
 					{
-						uint32_t index; 
-						memcpy(&index, args, sizeof (uint32_t)); 
-						Exch(index);
+					case ABSOLUTE_MODE:
+						{
+							uint32_t index; 
+							memcpy(&index, args, sizeof (uint32_t)); 
+							cell = &g_MachineDataSegment[index];
+						}
+						break;
+					case ABSOLUTE_POINTER_MODE:
+						{
+							uint32_t index; 
+							memcpy(&index, args, sizeof (index)); 
+							memcpy(&index, &g_MachineDataSegment[index], sizeof(index));
+							cell = &g_MachineDataSegment[index];
+						}
+						break;
 					}
-					break;
-				case ABSOLUTE_MODE:
+
+					switch(operationCode)
 					{
-						uint32_t index; 
-						memcpy(&index, args, sizeof (uint32_t)); 
-						Exch(g_MachineDataSegment[index]);
+					case PUSH:
+						{
+							if (addresingMode == DIRECT_MODE)
+								Push(Accumulator);
+							else
+								Push(*cell);
+						}
+						break;
+					case POP:
+						{
+							if (addresingMode == DIRECT_MODE)
+								Accumulator = Pop().cellData;
+							else
+								memcpy(cell, &(Pop().cellData), sizeof(TMemoryCell));		
+						}
+						break;
+					case EXCH:
+						switch (addresingMode)
+						{
+						case DIRECT_MODE:
+							{
+								uint32_t index; 
+								memcpy(&index, args, sizeof (uint32_t)); 
+								Exch(index);
+							}
+							break;
+						case ABSOLUTE_MODE:
+						case ABSOLUTE_POINTER_MODE:
+							{
+								Exch(*cell);
+							}
+							break;
+						}
 					}
-					break;
-				case ABSOLUTE_POINTER_MODE:
-					{
-						uint32_t index; 
-						memcpy(&index, args, sizeof (index)); 
-						memcpy(&index, &g_MachineDataSegment[index], sizeof(index));
-						Exch(g_MachineDataSegment[index]);
-					}
-					break;
 				}
 				break;
 			case CALL:
@@ -501,6 +526,7 @@ int main(int argc, char* argv[])
 			case RET:
 				ProgramCounter = PopAddress();			
 				break;
+
 			default:
 				PrintError("Unknown code operation", ProgramCounter);
 			}

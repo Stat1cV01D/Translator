@@ -1,13 +1,24 @@
 int i;
+int j;
+int k;
 float f;
 
-void out(float f)
-{
-	f = f + 1.5;
-	print(f);
-}
-
+int[3][3] array;
 i = 4 * 6;
+print("please, type the number");
+read(f);
 print(i);
-f = i;
-out(f);
+k = 5;
+
+for (i = 0; i < 3; i = i+1)
+	for (j = 0; j < 3; j = j+1)
+	{
+		array[i][j] = k;
+		k = k + 1;
+	}
+
+for (i = 0; i < 3; i = i+1)
+	for (j = 0; j < 3; j = j+1)
+	{
+		print(array[i][j]);
+	}
