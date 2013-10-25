@@ -62,7 +62,7 @@ public:
 		Record *rec = st_find(name);
 		return (rec != nullptr);
 	}
-
+	
 	TVALUE& st_get(TKEY& name)
 	{
 		st_statopcount = 0;

@@ -1,32 +1,37 @@
+	$t1	=	$c4	*	$c6
+	$idi	=	$t1
+	PRINT	$cplease, type the number
+	SCAN	$idf
+	PRINT	$idi
 	$idk	=	$c5
 	$idi	=	$c0
 	Goto	$L9
 $L1:
-	$t2	=	$idi	+	$c1
-	$idi	=	$t2
+	$t3	=	$idi	+	$c1
+	$idi	=	$t3
 $L9:
-	$t1	=	$idi	<	$c3
-	iffalse	$t1	$L2
+	$t2	=	$idi	<	$c3
+	iffalse	$t2	$L2
 	$idj	=	$c0
 	Goto	$L10
 $L3:
-	$t4	=	$idj	+	$c1
-	$idj	=	$t4
+	$t5	=	$idj	+	$c1
+	$idj	=	$t5
 $L10:
-	$t3	=	$idj	<	$c3
-	iffalse	$t3	$L4
+	$t4	=	$idj	<	$c3
+	iffalse	$t4	$L4
 	Push	$idj
 	Push	$idi
-	$t10	=	$c0
-	Pop	$t11
-	$t11	=	$t11	*	$c3
-	$t10	=	$t10	+	$t11
-	Pop	$t11
-	$t10	=	$t11	+	$t10
-	$t10	=	$t10	+	$idarray
-	$t10	=	$idk
-	$t5	=	$idk	+	$c1
-	$idk	=	$t5
+	$t11	=	$c0
+	Pop	$t12
+	$t12	=	$t12	*	$c3
+	$t11	=	$t11	+	$t12
+	Pop	$t12
+	$t11	=	$t12	+	$t11
+	$t11	=	$t11	+	$idarray
+	$t11	=	$idk
+	$t6	=	$idk	+	$c1
+	$idk	=	$t6
 	Goto	$L3
 $L4:
 	Goto	$L1
@@ -34,30 +39,32 @@ $L2:
 	$idi	=	$c0
 	Goto	$L11
 $L5:
-	$t7	=	$idi	+	$c1
-	$idi	=	$t7
+	$t8	=	$idi	+	$c1
+	$idi	=	$t8
 $L11:
-	$t6	=	$idi	<	$c3
-	iffalse	$t6	$L6
+	$t7	=	$idi	<	$c3
+	iffalse	$t7	$L6
 	$idj	=	$c0
 	Goto	$L12
 $L7:
-	$t9	=	$idj	+	$c1
-	$idj	=	$t9
+	$t10	=	$idj	+	$c1
+	$idj	=	$t10
 $L12:
-	$t8	=	$idj	<	$c3
-	iffalse	$t8	$L8
+	$t9	=	$idj	<	$c3
+	iffalse	$t9	$L8
 	Push	$idj
 	Push	$idi
-	$t12	=	$c0
-	Pop	$t13
-	$t13	=	$t13	*	$c3
-	$t12	=	$t12	+	$t13
-	Pop	$t13
-	$t12	=	$t13	+	$t12
-	$t12	=	$t12	+	$idarray
-	PRINT	$t12
+	$t13	=	$c0
+	Pop	$t14
+	$t14	=	$t14	*	$c3
+	$t13	=	$t13	+	$t14
+	Pop	$t14
+	$t13	=	$t14	+	$t13
+	$t13	=	$t13	+	$idarray
+	PRINT	$t13
 	Goto	$L7
 $L8:
 	Goto	$L5
 $L6:
+	PRINT	$ck = 
+	PRINT	$idk

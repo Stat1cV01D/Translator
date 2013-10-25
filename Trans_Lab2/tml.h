@@ -81,10 +81,6 @@ enum TMLCOMMAND : uint8_t
 	INSERTCOMMANDS(D)
 	INSERTCOMMANDS(LD)
 	INSERTCOMMANDS(S)
-	/* Stack operations */
-	PUSH,
-	POP,
-	EXCH,
 	_TYPED_COMMANDS_END,
 
 	/* Conversions */
@@ -101,7 +97,11 @@ enum TMLCOMMAND : uint8_t
 	JMZ,
 	JMNZ,
 	JMG,
-	JML,
+	JML,	
+	/* Stack operations */
+	PUSH,
+	POP,
+	EXCH,
 	/* Function call operations */
 	CALL,
 	RET,

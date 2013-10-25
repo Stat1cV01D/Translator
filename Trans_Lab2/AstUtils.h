@@ -783,8 +783,10 @@ protected:
 
 		FSeek(0, SEEK_SET);
 		BinaryWrite(&header, sizeof(header));
+		delete [] preallocateBuf;
 	}
 
+	// TODO: replace 
 	std::stringstream varBuffer;
 	
 	void TMLFillDataSegment()
@@ -810,7 +812,7 @@ public:
 	TMLWriter(ParserContext *context, FILE* out)
 		: AstWriter(context, out)
 		, PushInstructionsStack()
-		, varBuffer(std::ios::binary | std::ios::in | std::ios::out)
+		, varBuffer(std::stringstream::in|std::stringstream::out|std::stringstream::binary)
 	{
 		TMLWriteHeader();
 		//TMLFillDataSegment(); // allocate var space beforehand!
@@ -833,7 +835,7 @@ public:
 		MachineInstruction instruction;
 		memset(&instruction, 0, sizeof(instruction));
 		instruction.OpCode = op;
-		instruction.AddrMode = ABSOLUTE_MODE;
+		instruction.AddrMode = DIRECT_MODE;
 		WriteInstructionBase(instruction);
 	}
 
@@ -843,6 +845,7 @@ public:
 		memset(&instruction, 0, sizeof(instruction));
 		instruction.OpCode = op;
 		instruction = AddAddressingModeAndArgs(instruction, operand);		
+		WriteInstructionBase(instruction);
 	}
 /*
 	void WritePushInstruction()

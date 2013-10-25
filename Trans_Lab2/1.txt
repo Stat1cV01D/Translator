@@ -1,20 +1,380 @@
-Warning at 6:2 - 6:3
-	Identifier "func0:f" is not initialized.
-Warning at 6:6 - 6:7
-	Identifier "func0:f" is not initialized.
-Warning at 6:2 - 6:3
-	Identifier "func0:f" is not initialized.
-Warning at 7:8 - 7:9
-	Identifier "func0:f" is not initialized.
-Warning at 10:1 - 10:2
+Warning at 7:1 - 7:2
 	Identifier "i" is not initialized.
-Warning at 10:1 - 10:2
-	Identifier "i" is not initialized.
-Warning at 11:6 - 11:7
+Warning at 9:6 - 9:7
 	Identifier "f" is not initialized.
-Warning at 12:7 - 12:8
+Warning at 10:7 - 10:8
 	Identifier "i" is not initialized.
+Warning at 11:1 - 11:2
+	Identifier "k" is not initialized.
 Warning at 13:6 - 13:7
-	Identifier "f" is not initialized.
+	Identifier "i" is not initialized.
+Warning at 13:13 - 13:14
+	Identifier "i" is not initialized.
+Warning at 13:20 - 13:21
+	Identifier "i" is not initialized.
+Warning at 13:24 - 13:25
+	Identifier "i" is not initialized.
+Warning at 14:7 - 14:8
+	Identifier "j" is not initialized.
+Warning at 14:14 - 14:15
+	Identifier "j" is not initialized.
+Warning at 14:21 - 14:22
+	Identifier "j" is not initialized.
+Warning at 14:25 - 14:26
+	Identifier "j" is not initialized.
+Warning at 16:9 - 16:10
+	Identifier "i" is not initialized.
+Warning at 16:12 - 16:13
+	Identifier "j" is not initialized.
+Warning at 16:3 - 16:8
+	Identifier "array" is not initialized.
+Warning at 16:17 - 16:18
+	Identifier "k" is not initialized.
+Warning at 17:3 - 17:4
+	Identifier "k" is not initialized.
+Warning at 17:7 - 17:8
+	Identifier "k" is not initialized.
+Warning at 20:6 - 20:7
+	Identifier "i" is not initialized.
+Warning at 20:13 - 20:14
+	Identifier "i" is not initialized.
+Warning at 20:20 - 20:21
+	Identifier "i" is not initialized.
+Warning at 20:24 - 20:25
+	Identifier "i" is not initialized.
+Warning at 21:7 - 21:8
+	Identifier "j" is not initialized.
+Warning at 21:14 - 21:15
+	Identifier "j" is not initialized.
+Warning at 21:21 - 21:22
+	Identifier "j" is not initialized.
+Warning at 21:25 - 21:26
+	Identifier "j" is not initialized.
+Warning at 23:15 - 23:16
+	Identifier "i" is not initialized.
+Warning at 23:18 - 23:19
+	Identifier "j" is not initialized.
+Warning at 23:9 - 23:14
+	Identifier "array" is not initialized.
+Warning at 27:7 - 27:8
+	Identifier "k" is not initialized.
 
-There are syntax errors!
+Abstract syntax tree:
+---------------------
+
+  INT oper [=]
+    INT identifier i
+    INT oper [*]
+      const INT 4
+      const INT 6
+  LITERAL 3 oper [output]
+    const LITERAL 3 please, type the number
+  FLOAT oper [input]
+    FLOAT identifier f
+  INT oper [output]
+    INT identifier i
+  INT oper [=]
+    INT identifier k
+    const INT 5
+  loop
+  Conditions:
+    initial:
+      INT oper [=]
+        INT identifier i
+        const INT 0
+    condition:
+      INT oper [<]
+        INT identifier i
+        const INT 3
+    post-iteration:
+      INT oper [=]
+        INT identifier i
+        INT oper [+]
+          INT identifier i
+          const INT 1
+  block:
+    loop
+    Conditions:
+      initial:
+        INT oper [=]
+          INT identifier j
+          const INT 0
+      condition:
+        INT oper [<]
+          INT identifier j
+          const INT 3
+      post-iteration:
+        INT oper [=]
+          INT identifier j
+          INT oper [+]
+            INT identifier j
+            const INT 1
+    block:
+      INT oper [=]
+        array
+          [
+            INT identifier i
+          ]
+            [
+              INT identifier j
+            ]
+        
+        INT identifier k
+      INT oper [=]
+        INT identifier k
+        INT oper [+]
+          INT identifier k
+          const INT 1
+  loop
+  Conditions:
+    initial:
+      INT oper [=]
+        INT identifier i
+        const INT 0
+    condition:
+      INT oper [<]
+        INT identifier i
+        const INT 3
+    post-iteration:
+      INT oper [=]
+        INT identifier i
+        INT oper [+]
+          INT identifier i
+          const INT 1
+  block:
+    loop
+    Conditions:
+      initial:
+        INT oper [=]
+          INT identifier j
+          const INT 0
+      condition:
+        INT oper [<]
+          INT identifier j
+          const INT 3
+      post-iteration:
+        INT oper [=]
+          INT identifier j
+          INT oper [+]
+            INT identifier j
+            const INT 1
+    block:
+      INT oper [output]
+        array
+          [
+            INT identifier i
+          ]
+            [
+              INT identifier j
+            ]
+        
+  LITERAL 1 oper [output]
+    const LITERAL 1 k = 
+  INT oper [output]
+    INT identifier k
+
+Parse tree:
+-----------
+
+  start
+    expression_statement
+      expr
+        identifier
+          identifier [i]
+        assign_op [=]
+        expr
+          const
+            int_const [4]
+          ar_mul [*]
+          const
+            int_const [6]
+      end_expr [;]
+    stmnt
+      print [print]
+      open_par [(]
+      const
+        string_literal [please, type the number]
+      close_par [)]
+      end_expr [;]
+    stmnt
+      read [read]
+      open_par [(]
+      identifier
+        identifier [f]
+      close_par [)]
+      end_expr [;]
+    stmnt
+      print [print]
+      open_par [(]
+      identifier
+        identifier [i]
+      close_par [)]
+      end_expr [;]
+    expression_statement
+      expr
+        identifier
+          identifier [k]
+        assign_op [=]
+        const
+          int_const [5]
+      end_expr [;]
+    loop
+      for_decl [for]
+      loop_statements
+        open_par [(]
+        expression_statement
+          expr
+            identifier
+              identifier [i]
+            assign_op [=]
+            const
+              int_const [0]
+          end_expr [;]
+        expression_statement
+          expr
+            identifier
+              identifier [i]
+            comp_op [<]
+            const
+              int_const [3]
+          end_expr [;]
+        expr
+          identifier
+            identifier [i]
+          assign_op [=]
+          expr
+            identifier
+              identifier [i]
+            ar_plus [+]
+            const
+              int_const [1]
+        close_par [)]
+      loop
+        for_decl [for]
+        loop_statements
+          open_par [(]
+          expression_statement
+            expr
+              identifier
+                identifier [j]
+              assign_op [=]
+              const
+                int_const [0]
+            end_expr [;]
+          expression_statement
+            expr
+              identifier
+                identifier [j]
+              comp_op [<]
+              const
+                int_const [3]
+            end_expr [;]
+          expr
+            identifier
+              identifier [j]
+            assign_op [=]
+            expr
+              identifier
+                identifier [j]
+              ar_plus [+]
+              const
+                int_const [1]
+          close_par [)]
+        stmnt_block
+          open_br [{]
+          expression_statement
+            expr
+              identifier
+                identifier [array]
+              assign_op [=]
+              identifier
+                identifier [k]
+            end_expr [;]
+          close_br [}]
+    loop
+      for_decl [for]
+      loop_statements
+        open_par [(]
+        expression_statement
+          expr
+            identifier
+              identifier [i]
+            assign_op [=]
+            const
+              int_const [0]
+          end_expr [;]
+        expression_statement
+          expr
+            identifier
+              identifier [i]
+            comp_op [<]
+            const
+              int_const [3]
+          end_expr [;]
+        expr
+          identifier
+            identifier [i]
+          assign_op [=]
+          expr
+            identifier
+              identifier [i]
+            ar_plus [+]
+            const
+              int_const [1]
+        close_par [)]
+      loop
+        for_decl [for]
+        loop_statements
+          open_par [(]
+          expression_statement
+            expr
+              identifier
+                identifier [j]
+              assign_op [=]
+              const
+                int_const [0]
+            end_expr [;]
+          expression_statement
+            expr
+              identifier
+                identifier [j]
+              comp_op [<]
+              const
+                int_const [3]
+            end_expr [;]
+          expr
+            identifier
+              identifier [j]
+            assign_op [=]
+            expr
+              identifier
+                identifier [j]
+              ar_plus [+]
+              const
+                int_const [1]
+          close_par [)]
+        stmnt_block
+          open_br [{]
+          stmnt
+            print [print]
+            open_par [(]
+            identifier
+              identifier [array]
+            close_par [)]
+            end_expr [;]
+          close_br [}]
+    stmnt
+      print [print]
+      open_par [(]
+      const
+        string_literal [k = ]
+      close_par [)]
+      end_expr [;]
+    stmnt
+      print [print]
+      open_par [(]
+      identifier
+        identifier [k]
+      close_par [)]
+      end_expr [;]
+

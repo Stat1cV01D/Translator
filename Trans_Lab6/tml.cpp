@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include "..\Trans_Lab2\tml.h"
 #include <vector>
+#include <utility>
 
 TMemoryCell*        g_MachineDataSegment = NULL;
 MachineInstruction* g_MachineCodeSegment = NULL;
@@ -588,24 +589,18 @@ void Push(TMemoryCell Data)
 // Exchange stack top and stack [top-1] by default
 void Exch(int index)
 {
-	STACKDATA Data;
-	Data = g_stackTop[ g_stackTop.size() - 1 - index ];
-	g_stackTop[ g_stackTop.size() - 1 - index ] = g_stackTop[ g_stackTop.size() - 1];
-	g_stackTop[ g_stackTop.size() - 1 ] = Data;
+	std::swap(g_stackTop[ g_stackTop.size() - 1 - index ], g_stackTop.back());
 }
 
 // Exchange stack top and Data
 void Exch(TMemoryCell &_Data)
 {
-	STACKDATA tmp;
 	STACKDATA Data;
 	Data.cellData = _Data;
 
-	tmp = Data;
-	Data = g_stackTop[ g_stackTop.size() - 1 ];
-	g_stackTop[ g_stackTop.size() - 1 ] = tmp;
-
-	_Data = tmp.cellData;
+	std::swap(Data, g_stackTop.back());
+	
+	_Data = Data.cellData;
 }
 
 STACKDATA Pop(void)

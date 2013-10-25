@@ -2,8 +2,8 @@ int i;
 int j;
 int k;
 float f;
-
 int[3][3] array;
+
 i = 4 * 6;
 print("please, type the number");
 read(f);
@@ -22,3 +22,6 @@ for (i = 0; i < 3; i = i+1)
 	{
 		print(array[i][j]);
 	}
+
+print("k = ");
+print(k);
