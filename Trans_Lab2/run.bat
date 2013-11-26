@@ -1,6 +1,6 @@
 @echo on
-@echo Bison/Flex compilation turned off!
-goto end
+rem @echo Bison/Flex compilation turned off!
+rem goto end
 :lbl
 cls
 win_bison -dlvt language.y -o language.tab.cpp

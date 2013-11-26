@@ -91,6 +91,7 @@ do_decl				do
 					 yylloc.last_column = 1;
 					 yylloc.last_line++;
 					}
+"//".*\n			{ }
 {int_const}			{ REACTION(int_const,		TOK_INT_CONST) }
 {rom_const}			{ REACTION(rom_const,		TOK_ROM_CONST) }
 {float_const}		{ REACTION(float_const,		TOK_FLOAT_CONST) }

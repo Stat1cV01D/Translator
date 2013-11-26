@@ -19,6 +19,66 @@ class TMLWriter;
 class AstPrintInfo;
 class AstWriter;
 class TACWriter;
+/*
+class TMemoryStream
+{
+	char *streamBuffer;
+	int pos;
+	int size;
+private:
+	void *FMemory;
+	int FSize, FPosition;
+
+	int FCapacity;
+	void SetCapacity(int NewCapacity);
+protected:
+	void *Realloc(int &NewCapacity);
+	
+public:
+	void Clear();
+	void LoadFromStream(TMemoryStream &stream);
+	void SetSize(int NewSize);
+	int Write(const void *Buffer, int Count);
+	int Read(void *Buffer, int Count);
+	int Seek(int Offset, int Origin);
+
+	TMemoryStream();
+	~TMemoryStream();
+
+	TMemoryStream(const TMemoryStream &in)
+		: streamBuffer()
+	{
+		streamBuffer = in.streamBuffer;
+	}
+
+	void seek(int pos, int origin)
+	{
+		switch (origin)
+		{
+		case SEEK_CUR:
+			this->pos += pos;
+			break;
+		case SEEK_SET:
+			this->pos = pos;
+			break;
+		case SEEK_END:
+			this->pos = streamBuffer.size() - pos;
+			break;
+		}
+	}
+
+	void read(char *buffer, size_t size)
+	{
+		strcpy_s(buffer, size, streamBuffer.data());
+	}
+
+	void write(char *buffer, size_t size)
+	{
+		for
+		streamBuffer.
+	}
+};
+*/
 
 // Holds all the data required for 
 // programming language and TAC parsing
@@ -739,6 +799,7 @@ protected:
 		case TMP_VAR_NODE:
 		case STRUCT_ITEM_NODE:
 		case UNION_TYPE:
+		case OPER_NODE:
 			{
 				this->Serialize(operand);
 				operand = this->GetLastOperationResult();
@@ -748,7 +809,7 @@ protected:
 				index = dynamic_cast<IValueHolderNode*>(operand)->CalculateMemoryOffset();
 				memcpy(&instruction.Args, &index, sizeof(uint32_t));
 			}
-			break;		
+			break;	
 		case ARRAY_ITEM_NODE:
 			{
 				WriteInstruction(PUSH); // Save what's been in the VM's accumulator register
@@ -786,13 +847,12 @@ protected:
 		delete [] preallocateBuf;
 	}
 
-	// TODO: replace 
 	std::stringstream varBuffer;
 	
 	void TMLFillDataSegment()
 	{
 		FSeek(sizeof(TMLHeader) + ((g_lastInstructionIndex+1)*sizeof(MachineInstruction)), SEEK_SET);
-		auto Str = varBuffer.str();
+		auto Str = varBuffer.str(); // TODO: replace it with the binary stream that can serialize beyond '\0' 
 		BinaryWrite(Str.c_str(), Str.size());
 	}
 	
@@ -818,7 +878,6 @@ public:
 		//TMLFillDataSegment(); // allocate var space beforehand!
 		int offset = FSeek(0, SEEK_CUR);
 		g_lastInstructionIndex = -1; // so that first increment returns 0
-
 	}
 
 	virtual ~TMLWriter()

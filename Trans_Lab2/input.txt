@@ -1,27 +1,14 @@
-int i;
-int j;
-int k;
-float f;
-int[3][3] array;
+int[5] a;
+int max;
 
-i = 4 * 6;
-print("please, type the number");
-read(f);
-print(i);
-k = 5;
+for (i = 0; i < 5; i = i+1)
+	a[i] = (i + 4) % 7;
 
-for (i = 0; i < 3; i = i+1)
-	for (j = 0; j < 3; j = j+1)
-	{
-		array[i][j] = k;
-		k = k + 1;
-	}
+for (i = 0; i < 5; i = i+1)
+	print(a[i]);
 
-for (i = 0; i < 3; i = i+1)
-	for (j = 0; j < 3; j = j+1)
-	{
-		print(array[i][j]);
-	}
-
-print("k = ");
-print(k);
+max = a[0];
+for (i = 1; i < 5; i = i+1)
+	if (max < a[i])
+		max = a[i];
+print(max);

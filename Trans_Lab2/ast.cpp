@@ -257,6 +257,7 @@ int OperatorAstNode::Print3AC(TACWriter* output)
 	case OP_AND:
 	case OP_XOR:
 	case OP_EQ:
+	case OP_MOD:
 	case OP_NOT_EQ:
 	case OP_LARGER:
 	case OP_LARGER_OR_EQ:
@@ -374,6 +375,7 @@ int OperatorAstNode::Serialize(TMLWriter *output)
 		case OP_DIV:
 		case OP_UMIN:
 		case OP_NOT:
+		case OP_MOD:
 		case OP_AND:
 		case OP_OR:
 		case OP_XOR:
@@ -406,6 +408,9 @@ int OperatorAstNode::SerializeProcessor(TMLWriter* output)
 		break;
 	case OP_DIV:
 		output->WriteTypedInstruction(DIV_, right); // DIV A
+		break;
+	case OP_MOD:
+		output->WriteTypedInstruction(MOD_, right);
 		break;
 
 	// Unary arithmetics

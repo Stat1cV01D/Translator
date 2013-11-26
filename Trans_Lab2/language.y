@@ -1114,8 +1114,7 @@ identifier:
 		}
 		else
 		{
-			print_error("unknown identifier", @id); // I guess this would be better
-			//astNode = new VarAstNode(id_name, VOID_TYPE, false, false, $ar_decl->astNode);
+			astNode = new VerboseAstNode(VerboseAstNode::LEVEL_ERROR, UNDECLARED_VARIABLE_ERROR, @id);
 		}
 
 		$$ = createNode(astNode, 
